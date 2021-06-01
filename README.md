@@ -1,2 +1,2 @@
 # eyewa-go-lib
-Shared GoLib for Eyewa's microservices
+Shared Go Lib for Eyewa's microservices
