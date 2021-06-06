@@ -2,8 +2,6 @@ package brokers
 
 import "github.com/stretchr/testify/mock"
 
-const Mock BrokerType = "mock"
-
 type ClientMock struct {
 	mock.Mock
 }

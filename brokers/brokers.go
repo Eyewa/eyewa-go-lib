@@ -2,6 +2,7 @@ package brokers
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/eyewa/eyewa-go-lib/brokers/kafka"
@@ -20,28 +21,30 @@ var (
 )
 
 // OpenConnection opens a connection to the message broker
-func OpenConnection(brokerType string) error {
-	switch strings.ToLower(brokerType) {
+func OpenConnection() (*MessageBrokerClient, error) {
+	switch strings.ToLower(os.Getenv("MESSAGE_BROKER")) {
 	case string(RabbitMQ):
 		broker = &MessageBrokerClient{RabbitMQ, new(rabbitmq.RMQClient)}
 	case string(SQS):
 		broker = &MessageBrokerClient{SQS, new(sqs.SQSClient)}
 	case string(Kafka):
 		broker = &MessageBrokerClient{Kafka, new(kafka.KafkaClient)}
+	default:
+		broker = new(MessageBrokerClient)
 	}
 
-	return connect(broker)
+	return broker.connect()
 }
 
-func connect(broker *MessageBrokerClient) error {
+func (*MessageBrokerClient) connect() (*MessageBrokerClient, error) {
 	if broker.Client != nil {
 		err := broker.Client.Connect()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		return nil
+		return broker, nil
 	}
 
-	return errors.New("Client not recognized.")
+	return nil, errors.New("Client not recognized.")
 }
