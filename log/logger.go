@@ -1,8 +1,10 @@
 package log
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/ory/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -20,12 +22,14 @@ func init() {
 		"fatal": zap.FatalLevel,
 		"error": zap.ErrorLevel,
 	}
-
-	setLogLevel()
 }
 
-func setLogLevel() {
+// SetLogLevel sets the log level detected from the env - LOG_LEVEL
+// If the LOG_LEVEL is not set/found, the log level will default to INFO
+func SetLogLevel() {
+	viper.AutomaticEnv()
 	level := os.Getenv("LOG_LEVEL")
+	fmt.Println("I am LEVEL", level)
 
 	lvl, ok := logLevels[level]
 	if !ok {
