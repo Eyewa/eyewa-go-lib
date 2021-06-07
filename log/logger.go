@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/ory/viper"
@@ -29,7 +28,6 @@ func init() {
 func SetLogLevel() {
 	viper.AutomaticEnv()
 	level := os.Getenv("LOG_LEVEL")
-	fmt.Println("I am LEVEL", level)
 
 	lvl, ok := logLevels[level]
 	if !ok {

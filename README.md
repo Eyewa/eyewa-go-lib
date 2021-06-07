@@ -22,9 +22,15 @@ go env -w GOPRIVATE=github.com/eyewa/eyewa-go-lib
 Now you can include the lib your app:
 
 ```bash
-go get github.com/eyewa/eyewa-go-lib@dev //pulls the dev branch
+go get github.com/eyewa/eyewa-go-lib@dev // pulls the dev branch
 ```
 
 ```bash
-go get github.com/eyewa/eyewa-go-lib //pulls the lastest merg
+go get github.com/eyewa/eyewa-go-lib // pulls the lastest merg
+```
+
+Updating dependencies for the lib
+
+```bash
+go get -u all
 ```

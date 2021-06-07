@@ -1,10 +1,10 @@
 package sqs
 
-// EnvConfig for all SQS env vars
-type EnvConfig struct {
-	Region    string `env:"AWS_REGION,required"`
-	AccessKey string `env:"AWS_ACCESS_KEY_ID,required"`
-	Secret    string `env:"AWS_SECRET_ACCESS_KEY,required"`
+// Config for all SQS env vars
+type Config struct {
+	Region          string `mapstructure:"aws_region"`
+	AccessKeyID     string `mapstructure:"aws_access_key_id"`
+	SecretAccessKey string `mapstructure:"aws_secret_access_key"`
 }
 
 // SQSClient SQS client for implementing the MessageBroker interface and handling all things SQS.

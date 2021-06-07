@@ -20,6 +20,10 @@ var (
 	broker *MessageBrokerClient
 )
 
+func NewMessageBrokerClient(brokerType BrokerType, client MessageBroker) *MessageBrokerClient {
+	return &MessageBrokerClient{brokerType, client}
+}
+
 // OpenConnection opens a connection to the message broker
 func OpenConnection() (*MessageBrokerClient, error) {
 	switch strings.ToLower(os.Getenv("MESSAGE_BROKER")) {
@@ -47,4 +51,39 @@ func (*MessageBrokerClient) connect() (*MessageBrokerClient, error) {
 	}
 
 	return nil, errors.New("Client not recognized.")
+}
+
+// NewConsumerClient creates a new consumer client
+func NewConsumerClient(brokerType BrokerType) *MessageBrokerConsumerClient {
+	client := getClient(brokerType)
+	if client != nil {
+		return &MessageBrokerConsumerClient{brokerType, client}
+	}
+
+	return new(MessageBrokerConsumerClient)
+}
+
+// NewPublisherClient creates a new publisher client
+func NewPublisherClient(brokerType BrokerType) *MessageBrokerPublisherClient {
+	client := getClient(brokerType)
+	if client != nil {
+		return &MessageBrokerPublisherClient{brokerType, client}
+	}
+
+	return new(MessageBrokerPublisherClient)
+}
+
+func getClient(brokerType BrokerType) MessageBroker {
+	clientMap := map[BrokerType]MessageBroker{
+		RabbitMQ: rabbitmq.NewRMQClient(),
+		SQS:      sqs.NewSQSClient(),
+		Kafka:    kafka.NewKafkaClient(),
+		Mock:     NewMockClient(),
+	}
+
+	if broker, ok := clientMap[brokerType]; ok {
+		return broker
+	}
+
+	return nil
 }

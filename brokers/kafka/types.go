@@ -2,9 +2,9 @@ package kafka
 
 // EnvConfig for all Kafka env vars
 type EnvConfig struct {
-	Brokers           []string `env:"KAFKA_BROKERS,required" envSeparator:","`
-	NumPartitions     int      `env:"KAFKA_NUM_PARTITIONS,required"`
-	ReplicationFactor int      `env:"KAFKA_REPLICATION_FACTOR,required" envDefault:"1"`
+	Brokers           []string `mapstructure:"kafka_brokers"`
+	NumPartitions     int      `mapstructure:"kafka_num_partitions"`
+	ReplicationFactor int      `mapstructure:"kafka_replication_factor"`
 }
 
 // KafkaClient Kafka client for implementing the MessageBroker interface and handling all things Kafka.

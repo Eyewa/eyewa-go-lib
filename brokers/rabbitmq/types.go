@@ -1,13 +1,17 @@
 package rabbitmq
 
-// EnvConfig for all RabbitMQ env vars
-type EnvConfig struct {
-	RabbitMQServer    string `env:"RABBITMQ_SERVER,required"`
-	RabbitMQPort      int    `env:"RABBITMQ_AMQP_PORT,required"`
-	RabbitMQAdminPort int    `env:"RABBITMQ_ADMIN_PORT,required"`
-	RabbitMQUsername  string `env:"RABBITMQ_USERNAME,required"`
-	RabbitMQPassword  string `env:"RABBITMQ_PASSWORD,required"`
+import "github.com/streadway/amqp"
+
+// Config for all RabbitMQ env vars
+type Config struct {
+	Server   string `mapstructure:"rabbitmq_server"`
+	Port     string `mapstructure:"rabbitmq_amqp_port"`
+	Username string `mapstructure:"rabbitmq_username"`
+	Password string `mapstructure:"rabbitmq_password"`
 }
 
 // RMQClient RMQ client for implementing the MessageBroker interface and handling all things RMQ.
-type RMQClient struct{}
+type RMQClient struct {
+	connection *amqp.Connection
+	channel    *amqp.Channel
+}
