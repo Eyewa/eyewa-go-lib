@@ -13,13 +13,13 @@ login {YOUR_GITHUB_USER_NAME}
 password {YOUR_PERSONAL_ACCESS_TOKEN_FROM_GITHUB}
 ```
 
-Update the `GOPRIVATE` variable for your Go environment to allow the Go to look for private repo in the location as a source and not use a proxy.
+Update the `GOPRIVATE` variable in your Go environment to allow Go to look for the private repo at the location as a source and not use a proxy.
 
 ```bash
 go env -w GOPRIVATE=github.com/eyewa/eyewa-go-lib
 ```
 
-Now you can include the lib your app:
+Now you can include the lib into your app:
 
 ```bash
 go get github.com/eyewa/eyewa-go-lib@dev // pulls the dev branch
