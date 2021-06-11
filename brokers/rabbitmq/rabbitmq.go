@@ -2,35 +2,68 @@ package rabbitmq
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
 )
 
-var config Config
+var (
+	config        Config
+	exchangeTypes = []string{
+		amqp.ExchangeDirect,
+		amqp.ExchangeFanout,
+		amqp.ExchangeHeaders,
+		amqp.ExchangeTopic,
+	}
+	defaultPrefetchCount = 5
+)
 
 // NewRMQClient new rmq client
 func NewRMQClient() *RMQClient {
 	return new(RMQClient)
 }
 
-// Connect Establishes connnection to the message broker of choice
+// Connect establishes connnection to the message broker of choice
 func (rmq *RMQClient) Connect() error {
+	// if a connection already exists, back off.
+	if rmq.connection != nil {
+		return nil
+	}
+
+	// init configs
 	_, connStr, err := initConfig()
 	if err != nil {
 		return err
 	}
 
+	// if no queues are specified, back off.
+	if config.ConsumerQueueName == "" && config.PublisherQueueName == "" {
+		return fmt.Errorf("No queues to consume or publish to specified!")
+	}
+
+	// establish connection
 	conn, err := amqp.Dial(connStr)
 	if err != nil {
 		return err
 	}
 
 	rmq.connection = conn
+	rmq.mutex = new(sync.Mutex)
+	rmq.channels = make(map[string]*amqp.Channel)
 
-	rmq.channel, err = conn.Channel()
-	if err != nil {
+	rmq.mutex.Lock()
+	defer rmq.mutex.Unlock()
+
+	// create channel for consuming (if any)
+	if err := rmq.createConsumeChannel(); err != nil {
+		return err
+	}
+
+	// create channel for publish (if any)
+	if err := rmq.createPublishChannel(); err != nil {
 		return err
 	}
 
@@ -66,6 +99,11 @@ func initConfig() (Config, string, error) {
 		"RABBITMQ_AMQP_PORT",
 		"RABBITMQ_USERNAME",
 		"RABBITMQ_PASSWORD",
+		"PUBLISHER_QUEUE_NAME",
+		"CONSUMER_QUEUE_NAME",
+		"QUEUE_PREFETCH_COUNT",
+		"RABBITMQ_PUBLISHER_EXCHANGE_TYPE",
+		"RABBITMQ_CONSUMER_EXCHANGE_TYPE",
 	}
 
 	for _, v := range envVars {
@@ -78,5 +116,89 @@ func initConfig() (Config, string, error) {
 	}
 
 	return config, fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password,
-		config.Server, config.Port), nil
+		config.Server, config.AmqpPort), nil
+}
+
+func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType string) error {
+	if channel == nil {
+		if err := rmq.createNewChannel(queue); err != nil {
+			return err
+		}
+	}
+
+	exchType := func() string {
+		for _, ex := range exchangeTypes {
+			if exchangeType == ex {
+				return ex
+			}
+		}
+		return ""
+	}()
+
+	q, err := rmq.channels[queue].QueueDeclare(queue, true, false, false, false, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to declare queue(%s). %s", q.Name, err)
+	}
+
+	err = rmq.channels[queue].ExchangeDeclare(queue, exchType, true, false, false, false, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to declare an exchange for queue(%s). %s", q.Name, err)
+	}
+
+	return nil
+}
+
+func (rmq *RMQClient) createConsumeChannel() error {
+	if _, ok := rmq.channels[config.ConsumerQueueName]; !ok {
+		conCh, err := rmq.connection.Channel()
+		if err != nil {
+			return err
+		}
+
+		rmq.channels[config.ConsumerQueueName] = conCh
+
+		prefetchCount, _ := strconv.Atoi(config.QueuePrefetchCount)
+		if prefetchCount == 0 {
+			prefetchCount = defaultPrefetchCount
+		}
+
+		if err := conCh.Qos(prefetchCount, 0, true); err != nil {
+			return err
+		}
+
+		if err := rmq.declareQueue(conCh, config.ConsumerQueueName, config.ConsumerExchangeType); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (rmq *RMQClient) createPublishChannel() error {
+	if _, ok := rmq.channels[config.PublisherQueueName]; !ok {
+		pubCh, err := rmq.connection.Channel()
+		if err != nil {
+			return err
+		}
+
+		rmq.channels[config.PublisherQueueName] = pubCh
+	}
+
+	return nil
+}
+
+func (rmq *RMQClient) createNewChannel(queue string) error {
+	if rmq.connection != nil {
+		rmq.mutex.Lock()
+		defer rmq.mutex.Unlock()
+
+		channel, err := rmq.connection.Channel()
+		if err != nil {
+			return fmt.Errorf("Cannot create new channel for queue(%s). %s", queue, err)
+		}
+
+		rmq.channels[queue] = channel
+	}
+
+	return nil
 }

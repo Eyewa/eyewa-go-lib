@@ -23,7 +23,7 @@ func TestConnectionConfig(t *testing.T) {
 	assert.NotZero(t, cfg)
 	assert.Nil(t, err)
 	assert.True(t, true)
-	assert.Equal(t, str, fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password, config.Server, config.Port))
+	assert.Equal(t, str, fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password, config.Server, config.AmqpPort))
 
 	os.Clearenv()
 }
