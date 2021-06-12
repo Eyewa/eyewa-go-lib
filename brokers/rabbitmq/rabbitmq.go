@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,83 +13,14 @@ import (
 
 var (
 	config        Config
-	exchangeTypes = []string{
-		amqp.ExchangeDirect,
-		amqp.ExchangeFanout,
-		amqp.ExchangeHeaders,
-		amqp.ExchangeTopic,
+	exchangeTypes = map[string]string{
+		amqp.ExchangeDirect:  amqp.ExchangeDirect,
+		amqp.ExchangeFanout:  amqp.ExchangeFanout,
+		amqp.ExchangeHeaders: amqp.ExchangeHeaders,
+		amqp.ExchangeTopic:   amqp.ExchangeTopic,
 	}
 	defaultPrefetchCount = 5
 )
-
-// NewRMQClient new rmq client
-func NewRMQClient() *RMQClient {
-	return new(RMQClient)
-}
-
-// Connect establishes connnection to the message broker of choice
-func (rmq *RMQClient) Connect() error {
-	// if a connection already exists, back off.
-	if rmq.connection != nil {
-		return nil
-	}
-
-	// init configs
-	_, connStr, err := initConfig()
-	if err != nil {
-		return err
-	}
-
-	// if no queues are specified, back off.
-	if config.ConsumerQueueName == "" && config.PublisherQueueName == "" {
-		return fmt.Errorf("No queues to consume or publish to specified!")
-	}
-
-	// establish connection
-	conn, err := amqp.Dial(connStr)
-	if err != nil {
-		return err
-	}
-
-	rmq.connection = conn
-	rmq.mutex = new(sync.Mutex)
-	rmq.channels = make(map[string]*amqp.Channel)
-
-	rmq.mutex.Lock()
-	defer rmq.mutex.Unlock()
-
-	// create channel for consuming (if any)
-	if err := rmq.createConsumeChannel(); err != nil {
-		return err
-	}
-
-	// create channel for publish (if any)
-	if err := rmq.createPublishChannel(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Publish publishes a message to a queue
-func (rmq *RMQClient) Publish(queue string) error {
-	return nil
-}
-
-// CloseConnection closes a connection as well as any
-// underlying channels associated to it.
-func (rmq *RMQClient) CloseConnection() error {
-	if rmq.connection != nil {
-		return rmq.connection.Close()
-	}
-
-	return nil
-}
-
-// Consume consumes messages from a queue
-func (rmq *RMQClient) Consume(queue string) error {
-	return nil
-}
 
 func initConfig() (Config, string, error) {
 	viper.AutomaticEnv()
@@ -119,36 +51,122 @@ func initConfig() (Config, string, error) {
 		config.Server, config.AmqpPort), nil
 }
 
-func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType string) error {
-	if channel == nil {
-		if err := rmq.createNewChannel(queue); err != nil {
+// NewRMQClient new rmq client
+func NewRMQClient() *RMQClient {
+	return &RMQClient{
+		mutex:      new(sync.Mutex),
+		connection: nil,
+		channels:   make(map[string]*amqp.Channel),
+	}
+}
+
+// Connect establishes connnection to the message broker of choice
+func (rmq *RMQClient) Connect() error {
+	// if a connection already exists, back off.
+	if rmq.connection != nil {
+		return nil
+	}
+
+	// init configs
+	_, connStr, err := initConfig()
+	if err != nil {
+		return err
+	}
+
+	// if no queues are specified, back off.
+	if config.ConsumerQueueName == "" && config.PublisherQueueName == "" {
+		return errors.New("No queues to consume or publish to specified!")
+	}
+
+	// establish connection
+	conn, err := amqp.Dial(connStr)
+	if err != nil {
+		return err
+	}
+
+	rmq.connection = conn
+	rmq.mutex = new(sync.Mutex)
+	rmq.channels = make(map[string]*amqp.Channel)
+
+	rmq.mutex.Lock()
+	defer rmq.mutex.Unlock()
+
+	// create channel for consuming (if any)
+	if config.ConsumerQueueName != "" {
+		if err := rmq.createConsumerChannel(); err != nil {
 			return err
 		}
 	}
 
-	exchType := func() string {
-		for _, ex := range exchangeTypes {
-			if exchangeType == ex {
-				return ex
-			}
+	// create channel for publish (if any)
+	if config.PublisherQueueName != "" {
+		if err := rmq.createPublisherChannel(); err != nil {
+			return err
 		}
-		return ""
-	}()
-
-	q, err := rmq.channels[queue].QueueDeclare(queue, true, false, false, false, nil)
-	if err != nil {
-		return fmt.Errorf("Failed to declare queue(%s). %s", q.Name, err)
-	}
-
-	err = rmq.channels[queue].ExchangeDeclare(queue, exchType, true, false, false, false, nil)
-	if err != nil {
-		return fmt.Errorf("Failed to declare an exchange for queue(%s). %s", q.Name, err)
 	}
 
 	return nil
 }
 
-func (rmq *RMQClient) createConsumeChannel() error {
+// Consume consumes messages from a queue
+func (rmq *RMQClient) Consume(queue string) error {
+	return nil
+}
+
+// Publish publishes a message to a queue
+func (rmq *RMQClient) Publish(queue string) error {
+	return nil
+}
+
+// CloseConnection closes a connection as well as any
+// underlying channels associated to it.
+func (rmq *RMQClient) CloseConnection() error {
+	if rmq.connection != nil {
+		return rmq.connection.Close()
+	}
+
+	rmq.mutex.Lock()
+	defer rmq.mutex.Unlock()
+	rmq.channels = make(map[string]*amqp.Channel)
+
+	return nil
+}
+
+func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType string) error {
+	if channel == nil {
+		if err := rmq.CreateNewChannel(queue); err != nil {
+			return err
+		}
+	}
+
+	exchType := exchangeTypes[exchangeType]
+
+	// declare queue
+	q, err := rmq.channels[queue].QueueDeclare(queue, true, false, false, false, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to declare queue(%s). %s", q.Name, err)
+	}
+
+	// declare exchange
+	err = rmq.channels[queue].ExchangeDeclare(queue, exchType, true, false, false, false, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to declare an exchange for queue(%s). %s", q.Name, err)
+	}
+
+	// bind them together
+	err = rmq.channels[queue].QueueBind(queue, queue, queue, false, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to bind exchange to queue(%s). %s", q.Name, err)
+	}
+
+	return nil
+}
+
+func (rmq *RMQClient) createConsumerChannel() error {
+	if config.ConsumerQueueName == "" {
+		return errors.New("No queue specified to consume from!")
+	}
+
 	if _, ok := rmq.channels[config.ConsumerQueueName]; !ok {
 		conCh, err := rmq.connection.Channel()
 		if err != nil {
@@ -174,7 +192,11 @@ func (rmq *RMQClient) createConsumeChannel() error {
 	return nil
 }
 
-func (rmq *RMQClient) createPublishChannel() error {
+func (rmq *RMQClient) createPublisherChannel() error {
+	if config.PublisherQueueName == "" {
+		return errors.New("No queue specified to publish to!")
+	}
+
 	if _, ok := rmq.channels[config.PublisherQueueName]; !ok {
 		pubCh, err := rmq.connection.Channel()
 		if err != nil {
@@ -187,7 +209,8 @@ func (rmq *RMQClient) createPublishChannel() error {
 	return nil
 }
 
-func (rmq *RMQClient) createNewChannel(queue string) error {
+// CreateNewChannel creates a new channel for specified queue
+func (rmq *RMQClient) CreateNewChannel(queue string) error {
 	if rmq.connection != nil {
 		rmq.mutex.Lock()
 		defer rmq.mutex.Unlock()
