@@ -110,6 +110,20 @@ func (rmq *RMQClient) Connect() error {
 
 // Consume consumes messages from a queue
 func (rmq *RMQClient) Consume(queue string) error {
+	if channel, ok := rmq.channels[queue]; ok {
+		if channel != nil {
+			msgs, err := channel.Consume(queue, queue, false, false, false, false, nil)
+			if err != nil {
+				for msg := range msgs {
+					fmt.Println(string(msg.Body))
+					err := msg.Ack(false)
+					if err != nil {
+						return fmt.Errorf("Failed to acknowledge message")
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 
