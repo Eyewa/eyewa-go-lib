@@ -1,6 +1,10 @@
 package brokers
 
-import "github.com/stretchr/testify/mock"
+import (
+	"sync"
+
+	"github.com/stretchr/testify/mock"
+)
 
 const Mock BrokerType = "mock"
 
@@ -32,7 +36,5 @@ func (mock *ClientMock) Publish(queue string) error {
 	return args.Error(0)
 }
 
-func (mock *ClientMock) Consume(queue string) error {
-	args := mock.Called()
-	return args.Error(0)
+func (mock *ClientMock) Consume(wg *sync.WaitGroup, queue string, errChan chan<- error) {
 }

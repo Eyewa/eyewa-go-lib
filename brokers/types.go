@@ -1,5 +1,7 @@
 package brokers
 
+import "sync"
+
 // BrokerType represents a type of broker - sqs, rmq etc.
 type BrokerType string
 
@@ -36,7 +38,7 @@ type MessageBroker interface {
 type Consumer interface {
 	Connect() error
 	CloseConnection() error
-	Consume(queue string) error
+	Consume(wg *sync.WaitGroup, queue string, errChan chan<- error)
 }
 
 // Publisher a contract any publisher should fulfil.

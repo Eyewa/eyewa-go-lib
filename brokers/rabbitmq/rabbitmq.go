@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
 )
@@ -93,7 +94,7 @@ func (rmq *RMQClient) Connect() error {
 
 	// create channel for consuming (if any)
 	if config.ConsumerQueueName != "" {
-		if err := rmq.createConsumerChannel(); err != nil {
+		for err := range rmq.createConsumerChannel() {
 			return err
 		}
 	}
@@ -109,22 +110,28 @@ func (rmq *RMQClient) Connect() error {
 }
 
 // Consume consumes messages from a queue
-func (rmq *RMQClient) Consume(queue string) error {
+func (rmq *RMQClient) Consume(wg *sync.WaitGroup, queue string, errChan chan<- error) {
+	defer wg.Done()
+
 	if channel, ok := rmq.channels[queue]; ok {
 		if channel != nil {
+			log.Debug(fmt.Sprintf("Listening to %s for new messages...", queue))
+
 			msgs, err := channel.Consume(queue, queue, false, false, false, false, nil)
 			if err != nil {
-				for msg := range msgs {
-					fmt.Println(string(msg.Body))
-					err := msg.Ack(false)
-					if err != nil {
-						return fmt.Errorf("Failed to acknowledge message")
-					}
+				errChan <- fmt.Errorf("Failed to consume from queue(%s). %s", queue, err)
+				return
+			}
+
+			for msg := range msgs {
+				fmt.Println(string(msg.Body))
+				err := msg.Ack(false)
+				if err != nil {
+					errChan <- fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue)
 				}
 			}
 		}
 	}
-	return nil
 }
 
 // Publish publishes a message to a queue
@@ -147,8 +154,10 @@ func (rmq *RMQClient) CloseConnection() error {
 }
 
 func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType string) error {
+	var err error
+
 	if channel == nil {
-		if err := rmq.CreateNewChannel(queue); err != nil {
+		if channel, err = rmq.CreateNewChannel(queue); err != nil {
 			return err
 		}
 	}
@@ -156,19 +165,19 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 	exchType := exchangeTypes[exchangeType]
 
 	// declare queue
-	q, err := rmq.channels[queue].QueueDeclare(queue, true, false, false, false, nil)
+	q, err := channel.QueueDeclare(queue, true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("Failed to declare queue(%s). %s", q.Name, err)
 	}
 
 	// declare exchange
-	err = rmq.channels[queue].ExchangeDeclare(queue, exchType, true, false, false, false, nil)
+	err = channel.ExchangeDeclare(queue, exchType, true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("Failed to declare an exchange for queue(%s). %s", q.Name, err)
 	}
 
 	// bind them together
-	err = rmq.channels[queue].QueueBind(queue, queue, queue, false, nil)
+	err = channel.QueueBind(queue, queue, queue, false, nil)
 	if err != nil {
 		return fmt.Errorf("Failed to bind exchange to queue(%s). %s", q.Name, err)
 	}
@@ -176,18 +185,20 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 	return nil
 }
 
-func (rmq *RMQClient) createConsumerChannel() error {
+func (rmq *RMQClient) createConsumerChannel() chan error {
+	errChan := make(chan error)
+
 	if config.ConsumerQueueName == "" {
-		return errors.New("No queue specified to consume from!")
+		errChan <- errors.New("No queue specified to consume from!")
+		return errChan
 	}
 
-	if _, ok := rmq.channels[config.ConsumerQueueName]; !ok {
+	if _, exists := rmq.channels[config.ConsumerQueueName]; !exists {
 		conCh, err := rmq.connection.Channel()
 		if err != nil {
-			return err
+			errChan <- err
+			return errChan
 		}
-
-		rmq.channels[config.ConsumerQueueName] = conCh
 
 		prefetchCount, _ := strconv.Atoi(config.QueuePrefetchCount)
 		if prefetchCount == 0 {
@@ -195,15 +206,29 @@ func (rmq *RMQClient) createConsumerChannel() error {
 		}
 
 		if err := conCh.Qos(prefetchCount, 0, true); err != nil {
-			return err
+			errChan <- err
+			return errChan
 		}
 
 		if err := rmq.declareQueue(conCh, config.ConsumerQueueName, config.ConsumerExchangeType); err != nil {
-			return err
+			errChan <- err
+			return errChan
 		}
+
+		rmq.channels[config.ConsumerQueueName] = conCh
+
+		wg := new(sync.WaitGroup)
+		wg.Add(1)
+
+		go rmq.Consume(wg, config.ConsumerQueueName, errChan)
+		go func() {
+			fmt.Println("Error fired: ", <-errChan)
+		}()
+
+		wg.Wait()
 	}
 
-	return nil
+	return errChan
 }
 
 func (rmq *RMQClient) createPublisherChannel() error {
@@ -224,18 +249,39 @@ func (rmq *RMQClient) createPublisherChannel() error {
 }
 
 // CreateNewChannel creates a new channel for specified queue
-func (rmq *RMQClient) CreateNewChannel(queue string) error {
+func (rmq *RMQClient) CreateNewChannel(queue string) (*amqp.Channel, error) {
 	if rmq.connection != nil {
 		rmq.mutex.Lock()
 		defer rmq.mutex.Unlock()
 
 		channel, err := rmq.connection.Channel()
 		if err != nil {
-			return fmt.Errorf("Cannot create new channel for queue(%s). %s", queue, err)
+			return nil, fmt.Errorf("Cannot create new channel for queue(%s). %s", queue, err)
 		}
 
 		rmq.channels[queue] = channel
+		return rmq.channels[queue], nil
 	}
 
-	return nil
+	return nil, errors.New("No connection to RMQ exists!")
+}
+
+// QueueInspect inspects a queue and returns no. of consumers + messages
+// currently unacked.
+func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
+	var inspect = make(map[string]int, 2)
+
+	if channel, exists := rmq.channels[queue]; exists {
+		q, err := channel.QueueInspect(queue)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to inspect queue(%s). %s", queue, err)
+		}
+
+		inspect["Total Consumers"] = q.Consumers
+		inspect["Total Messages"] = q.Messages
+
+		return inspect, nil
+	}
+
+	return nil, fmt.Errorf("Queue specified to inspect doesn't exist queue(%s)", queue)
 }
