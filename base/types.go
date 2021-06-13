@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// Event a base representation of an event either fired/received
-type Event struct {
+// EyewaEvent a base representation of an event either fired/received
+type EyewaEvent struct {
 	ID        string `json:"id"`         // can be used for tracing
 	Name      string `json:"name"`       // name of event - ProductUpdated, ProductDeleted etc
 	EventType string `json:"event_type"` // type of event's entity - Product, Order etc
@@ -19,7 +19,7 @@ type Event struct {
 	Payload json.RawMessage `json:"payload"`
 
 	// ts of when event was created
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt string `json:"created_at"` // time in RFC3339 format
 }
 
 // Error a structural info about an error within the ecosystem
