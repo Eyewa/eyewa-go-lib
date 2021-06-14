@@ -2,7 +2,6 @@ package base
 
 import (
 	"encoding/json"
-	"time"
 )
 
 // EyewaEvent a base representation of an event either fired/received
@@ -24,7 +23,7 @@ type EyewaEvent struct {
 
 // Error a structural info about an error within the ecosystem
 type Error struct {
-	ErrorCode int        `json:"error_code"` // custom or http code should suffice
-	Message   string     `json:"message"`    // error being reported
-	CreatedAt *time.Time `json:"created_at"`
+	ErrorCode int    `json:"error_code"` // custom or http code should suffice
+	Message   string `json:"message"`    // error being reported
+	CreatedAt string `json:"created_at"` // time in RFC3339 format
 }

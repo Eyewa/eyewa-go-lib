@@ -57,7 +57,7 @@ func initConfig() (Config, string, error) {
 // NewRMQClient new rmq client
 func NewRMQClient() *RMQClient {
 	return &RMQClient{
-		mutex:      new(sync.Mutex),
+		mutex:      new(sync.RWMutex),
 		connection: nil,
 		channels:   make(map[string]*amqp.Channel),
 	}
@@ -88,11 +88,8 @@ func (rmq *RMQClient) Connect() error {
 	}
 
 	rmq.connection = conn
-	rmq.mutex = new(sync.Mutex)
+	rmq.mutex = new(sync.RWMutex)
 	rmq.channels = make(map[string]*amqp.Channel)
-
-	rmq.mutex.Lock()
-	defer rmq.mutex.Unlock()
 
 	// create channel for consuming (if any)
 	if config.ConsumerQueueName != "" {
@@ -115,7 +112,11 @@ func (rmq *RMQClient) Connect() error {
 func (rmq *RMQClient) Consume(wg *sync.WaitGroup, queue string, errChan chan<- error) {
 	defer wg.Done()
 
-	if channel, ok := rmq.channels[queue]; ok {
+	rmq.mutex.RLock()
+	channel, exists := rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	if exists {
 		if channel != nil {
 			log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
 
@@ -132,12 +133,13 @@ func (rmq *RMQClient) Consume(wg *sync.WaitGroup, queue string, errChan chan<- e
 				if err != nil {
 					// TODO: add message to deadletter queue
 					errChan <- fmt.Errorf("Failed to unmarshaling event from queue(%s). %s", queue, err)
+					rmq.sendToDeadletterQueue(msg)
+
 					err = msg.Nack(false, false)
 					if err != nil {
 						errChan <- err
 					}
 				} else {
-					fmt.Println(string(msg.Body))
 					// TODO: save event to db
 					err = msg.Ack(false)
 					if err != nil {
@@ -214,6 +216,9 @@ func (rmq *RMQClient) createConsumerChannel() chan error {
 		return errChan
 	}
 
+	rmq.mutex.Lock()
+	defer rmq.mutex.Unlock()
+
 	if _, exists := rmq.channels[config.ConsumerQueueName]; !exists {
 		conCh, err := rmq.connection.Channel()
 		if err != nil {
@@ -247,7 +252,10 @@ func (rmq *RMQClient) createPublisherChannel() error {
 		return libErrs.ErrorNoPublisherQueueSpecified
 	}
 
-	if _, ok := rmq.channels[config.PublisherQueueName]; !ok {
+	rmq.mutex.Lock()
+	defer rmq.mutex.Unlock()
+
+	if _, exists := rmq.channels[config.PublisherQueueName]; !exists {
 		pubCh, err := rmq.connection.Channel()
 		if err != nil {
 			return err
@@ -282,7 +290,11 @@ func (rmq *RMQClient) CreateNewChannel(queue string) (*amqp.Channel, error) {
 func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
 	var inspect = make(map[string]int, 2)
 
-	if channel, exists := rmq.channels[queue]; exists {
+	rmq.mutex.RLock()
+	channel, exists := rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	if exists {
 		q, err := channel.QueueInspect(queue)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to inspect queue(%s). %s", queue, err)
@@ -295,4 +307,16 @@ func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
 	}
 
 	return nil, fmt.Errorf("Queue specified to inspect doesn't exist queue(%s)", queue)
+}
+
+func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery) {
+	deadletterQ := fmt.Sprintf("%s-%s", "deadletter", config.ConsumerQueueName)
+
+	rmq.mutex.RLock()
+	_, exists := rmq.channels[deadletterQ]
+	defer rmq.mutex.RUnlock()
+
+	if exists {
+		// TODO: Publish to Deadletter
+	}
 }

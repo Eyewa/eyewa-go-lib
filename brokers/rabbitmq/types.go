@@ -29,7 +29,7 @@ type Config struct {
 
 // RMQClient RMQ client for implementing the MessageBroker interface and handling all things RMQ.
 type RMQClient struct {
-	mutex *sync.Mutex
+	mutex *sync.RWMutex
 
 	connection *amqp.Connection
 
