@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
+	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,14 +50,14 @@ func TestOpenConnectionFail(t *testing.T) {
 	rmqMock.AssertNotCalled(t, "Connect")
 	_, err = OpenConnection()
 	assert.Error(t, err)
-	assert.Equal(t, "Client not recognized.", err.Error())
+	assert.EqualError(t, libErrs.ErrorBrokerClientNoRecognized, err.Error())
 
 	os.Setenv("MESSAGE_BROKER", "")
 	rmqMock = new(ClientMock)
 	rmqMock.AssertNotCalled(t, "Connect")
 	_, err = OpenConnection()
 	assert.Error(t, err)
-	assert.Equal(t, "Client not recognized.", err.Error())
+	assert.EqualError(t, libErrs.ErrorBrokerClientNoRecognized, err.Error())
 }
 
 func TestGetClient(t *testing.T) {

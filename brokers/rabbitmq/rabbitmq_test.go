@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,4 +35,15 @@ func TestConnectionConfigNotSet(t *testing.T) {
 	assert.Zero(t, cfg)
 	assert.Nil(t, err)
 	assert.True(t, true)
+}
+
+func TestConnect(t *testing.T) {
+	var rmqMock RMQClientMock
+	rmqMock = RMQClientMock{}
+	rmqMock.On("Connect").Return(nil)
+	assert.NoError(t, rmqMock.Connect())
+
+	rmqMock = RMQClientMock{}
+	rmqMock.On("Connect").Return(libErrs.ErrorNoRMQConnection)
+	assert.Error(t, rmqMock.Connect())
 }

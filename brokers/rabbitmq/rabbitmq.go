@@ -1,12 +1,14 @@
 package rabbitmq
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/eyewa/eyewa-go-lib/base"
+	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
@@ -76,7 +78,7 @@ func (rmq *RMQClient) Connect() error {
 
 	// if no queues are specified, back off.
 	if config.ConsumerQueueName == "" && config.PublisherQueueName == "" {
-		return errors.New("No queues to consume or publish to specified!")
+		return libErrs.ErrorNoQueuesSpecified
 	}
 
 	// establish connection
@@ -115,19 +117,32 @@ func (rmq *RMQClient) Consume(wg *sync.WaitGroup, queue string, errChan chan<- e
 
 	if channel, ok := rmq.channels[queue]; ok {
 		if channel != nil {
-			log.Debug(fmt.Sprintf("Listening to %s for new messages...", queue))
+			log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
 
 			msgs, err := channel.Consume(queue, queue, false, false, false, false, nil)
 			if err != nil {
 				errChan <- fmt.Errorf("Failed to consume from queue(%s). %s", queue, err)
-				return
 			}
 
 			for msg := range msgs {
+				var event *base.EyewaEvent
 				fmt.Println(string(msg.Body))
-				err := msg.Ack(false)
+
+				err := json.Unmarshal(msg.Body, &event)
 				if err != nil {
-					errChan <- fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue)
+					// TODO: add message to deadletter queue
+					errChan <- fmt.Errorf("Failed to unmarshaling event from queue(%s). %s", queue, err)
+					err = msg.Nack(false, false)
+					if err != nil {
+						errChan <- err
+					}
+				} else {
+					fmt.Println(string(msg.Body))
+					// TODO: save event to db
+					err = msg.Ack(false)
+					if err != nil {
+						errChan <- fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue)
+					}
 				}
 			}
 		}
@@ -192,9 +207,10 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 
 func (rmq *RMQClient) createConsumerChannel() chan error {
 	errChan := make(chan error)
+	defer close(errChan)
 
 	if config.ConsumerQueueName == "" {
-		errChan <- errors.New("No queue specified to consume from!")
+		errChan <- libErrs.ErrorNoConsumerQueueSpecified
 		return errChan
 	}
 
@@ -221,16 +237,6 @@ func (rmq *RMQClient) createConsumerChannel() chan error {
 		}
 
 		rmq.channels[config.ConsumerQueueName] = conCh
-
-		wg := new(sync.WaitGroup)
-		wg.Add(1)
-
-		go rmq.Consume(wg, config.ConsumerQueueName, errChan)
-		go func() {
-			fmt.Println("Error fired: ", <-errChan)
-		}()
-
-		wg.Wait()
 	}
 
 	return errChan
@@ -238,7 +244,7 @@ func (rmq *RMQClient) createConsumerChannel() chan error {
 
 func (rmq *RMQClient) createPublisherChannel() error {
 	if config.PublisherQueueName == "" {
-		return errors.New("No queue specified to publish to!")
+		return libErrs.ErrorNoPublisherQueueSpecified
 	}
 
 	if _, ok := rmq.channels[config.PublisherQueueName]; !ok {
@@ -268,7 +274,7 @@ func (rmq *RMQClient) CreateNewChannel(queue string) (*amqp.Channel, error) {
 		return rmq.channels[queue], nil
 	}
 
-	return nil, errors.New("No connection to RMQ exists!")
+	return nil, libErrs.ErrorNoRMQConnection
 }
 
 // QueueInspect inspects a queue and returns no. of consumers + messages
