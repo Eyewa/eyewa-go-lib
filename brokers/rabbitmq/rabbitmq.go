@@ -136,6 +136,7 @@ func (rmq *RMQClient) Consume(wg *sync.WaitGroup, queue string, errChan chan<- e
 
 // Publish publishes a message to a queue
 func (rmq *RMQClient) Publish(queue string) error {
+	// rmq.channels[queue].Publish()
 	return nil
 }
 
@@ -163,6 +164,10 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 	}
 
 	exchType := exchangeTypes[exchangeType]
+	exchName := ""
+	if exchType != "" {
+		exchName = fmt.Sprintf("%s.%s", queue, exchType)
+	}
 
 	// declare queue
 	q, err := channel.QueueDeclare(queue, true, false, false, false, nil)
@@ -171,13 +176,13 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 	}
 
 	// declare exchange
-	err = channel.ExchangeDeclare(queue, exchType, true, false, false, false, nil)
+	err = channel.ExchangeDeclare(exchName, exchType, true, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("Failed to declare an exchange for queue(%s). %s", q.Name, err)
 	}
 
 	// bind them together
-	err = channel.QueueBind(queue, queue, queue, false, nil)
+	err = channel.QueueBind(queue, queue, exchName, false, nil)
 	if err != nil {
 		return fmt.Errorf("Failed to bind exchange to queue(%s). %s", q.Name, err)
 	}
