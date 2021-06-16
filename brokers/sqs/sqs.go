@@ -15,12 +15,12 @@ func (sqs *SQSClient) Connect() error {
 	return nil
 }
 
-func (sqs *SQSClient) Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup) {
+func (sqs *SQSClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 }
 
 func (sqs *SQSClient) CloseConnection() error {
 	return nil
 }
 
-func (sqs *SQSClient) Consume(queue string, callback base.ConsumeCallbackFunc) {
+func (sqs *SQSClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
 }

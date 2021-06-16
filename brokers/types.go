@@ -42,12 +42,12 @@ type MessageBroker interface {
 type Consumer interface {
 	Connect() error
 	CloseConnection() error
-	Consume(queue string, callback base.ConsumeCallbackFunc)
+	Consume(queue string, callback base.MessageBrokerCallbackFunc)
 }
 
 // Publisher a contract any publisher should fulfil.
 type Publisher interface {
 	Connect() error
 	CloseConnection() error
-	Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup)
+	Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup)
 }

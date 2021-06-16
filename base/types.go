@@ -37,6 +37,6 @@ type EyewaEventError struct {
 	CreatedAt    string `json:"created_at"`    // time in RFC3339 format
 }
 
-// ConsumeCallbackFunc all broker clients should define this callback fn
-// so as to react to the state of events consumed - success/failure
-type ConsumeCallbackFunc func(event *EyewaEvent, err error)
+// MessageBrokerCallbackFunc all broker clients should define this callback fn
+// so as to react to the state of events published/consumed - success/failure
+type MessageBrokerCallbackFunc func(event *EyewaEvent, err error)

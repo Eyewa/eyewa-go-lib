@@ -25,10 +25,10 @@ func (mock *RMQClientMock) Connect() error {
 	return args.Error(0)
 }
 
-func (mock *RMQClientMock) Publish(wg *sync.WaitGroup, queue string, eyewaEvent base.EyewaEvent, errChan chan<- error) chan<- error {
-	args := mock.Called()
-	return args.Get(0).(chan error)
+func (mock *RMQClientMock) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+	_ = mock.Called()
 }
 
-func (mock *RMQClientMock) Consume(wg *sync.WaitGroup, queue string, errChan chan<- error) {
+func (mock *RMQClientMock) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
+	_ = mock.Called()
 }

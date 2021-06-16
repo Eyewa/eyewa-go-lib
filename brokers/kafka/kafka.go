@@ -15,12 +15,12 @@ func (kafka *KafkaClient) Connect() error {
 	return nil
 }
 
-func (kafka *KafkaClient) Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup) {
+func (kafka *KafkaClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 }
 
 func (kafka *KafkaClient) CloseConnection() error {
 	return nil
 }
 
-func (kafka *KafkaClient) Consume(queue string, callback base.ConsumeCallbackFunc) {
+func (kafka *KafkaClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
 }

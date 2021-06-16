@@ -111,7 +111,7 @@ func (rmq *RMQClient) Connect() error {
 }
 
 // Consume consumes messages from a queue
-func (rmq *RMQClient) Consume(queue string, callback base.ConsumeCallbackFunc) {
+func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
@@ -179,26 +179,24 @@ func (rmq *RMQClient) Consume(queue string, callback base.ConsumeCallbackFunc) {
 }
 
 // Publish publishes a message to a queue
-func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup) {
+func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	defer wg.Done()
-
-	fmt.Println(1)
 
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
-	fmt.Println(2)
 
+	// determine if channel exists for queue
 	if !exists && channel == nil {
 		channel, err := rmq.CreateNewChannel(config.PublisherQueueName)
 		if err != nil {
-			errChan <- err
+			callback(event, err)
 			return
 		}
 
 		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType)
 		if errQ != nil {
-			errChan <- errQ
+			callback(event, errQ)
 			return
 		}
 	}
@@ -207,22 +205,27 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, errChan chan
 	channel, exists = rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
-	fmt.Println(3)
-
 	if exists && channel != nil {
-		err := channel.Publish("", config.PublisherQueueName, false, false,
+		// attempt to marshal event for publishing
+		eventJSON, err := json.Marshal(&event)
+		if err != nil {
+			callback(event, err)
+			return
+		}
+
+		// attempt to publish event
+		err = channel.Publish("", config.PublisherQueueName, false, false,
 			amqp.Publishing{
 				ContentType:  "application/json",
-				Body:         []byte(`{"test": "place something"}`),
+				Body:         eventJSON,
 				DeliveryMode: amqp.Persistent,
 			})
 		if err != nil {
-			log.Error(libErrs.ErrorFailedToPublishToDeadletter.Error(),
-				zap.String("event", "place something"),
-				zap.String("deadletter_queue", config.PublisherQueueName), zap.Error(err))
-			errChan <- err
-			return
+			callback(event, libErrs.ErrorFailedToPublishEvent)
 		}
+
+		callback(event, nil)
+		return
 	}
 }
 

@@ -32,10 +32,10 @@ func (mock *ClientMock) Connect() error {
 	return args.Error(0)
 }
 
-func (mock *ClientMock) Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup) {
+func (mock *ClientMock) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	_ = mock.Called()
 }
 
-func (mock *ClientMock) Consume(queue string, callback base.ConsumeCallbackFunc) {
+func (mock *ClientMock) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
 	_ = mock.Called()
 }
