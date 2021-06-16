@@ -2,7 +2,7 @@
 Shared Go Lib for Eyewa's microservices.
 
 # metrics
-This package is simply a wrapper for OpenTelemetry package.
+This package is simply a wrapper for OpenTelemetry metric package.
 
 # How to use it
 Basically launch metric server and create new meter from it, then create
