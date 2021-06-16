@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// EyewaEvent a base representation of an event either fired/received
+// EyewaEvent a base representation of an event fired/received
 type EyewaEvent struct {
 	ID        string `json:"id"`         // can be used for tracing
 	Name      string `json:"name"`       // name of event - ProductUpdated, ProductDeleted etc
