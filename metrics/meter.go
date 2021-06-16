@@ -1,4 +1,4 @@
-package metric
+package metrics
 
 import (
 	"context"
@@ -55,7 +55,7 @@ func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) Va
 	}
 }
 
-// Callback is for asynchronous metric.
+// Callback is for asynchronous metrics.
 // The Callback function reports the absolute value of the counter
 // User code is recommended not to provide more than one Measurement with the same attributes in a single callback.
 // If it happens, the SDK can decide how to handle it. For example, during the callback invocation

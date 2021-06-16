@@ -1,4 +1,4 @@
-package metric
+package metrics
 
 import (
 	"errors"
@@ -39,7 +39,7 @@ func startRuntimeInstrument() error {
 	return nil
 }
 
-// Option is for metric package initiation.
+// Option is for metrics package initiation.
 // CollectPeriod sets period interval exporter.
 type Option struct {
 	CollectPeriod time.Duration
@@ -78,7 +78,7 @@ func Launch(option Option) error {
 	go func() {
 		err := http.ListenAndServe(Port, nil)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("failed to start metric server: %v", err))
+			log.Fatal(fmt.Sprintf("failed to start metrics server: %v", err))
 		}
 	}()
 

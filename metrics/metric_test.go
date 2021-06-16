@@ -1,7 +1,8 @@
-package metric
+package metrics
 
 import (
 	"fmt"
+	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/otel/attribute"
 	"io/ioutil"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestCounter_Add(t *testing.T) {
+	log.SetLogLevel()
 	option := Option{
 		CollectPeriod: 10 * time.Millisecond,
 	}
