@@ -6,12 +6,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/eyewa/eyewa-go-lib/base"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
+	"go.uber.org/zap"
 )
 
 var (
@@ -93,7 +95,7 @@ func (rmq *RMQClient) Connect() error {
 
 	// create channel for consuming (if any)
 	if config.ConsumerQueueName != "" {
-		for err := range rmq.createConsumerChannel() {
+		if err := rmq.createConsumerChannel(); err != nil {
 			return err
 		}
 	}
@@ -109,52 +111,119 @@ func (rmq *RMQClient) Connect() error {
 }
 
 // Consume consumes messages from a queue
-func (rmq *RMQClient) Consume(wg *sync.WaitGroup, queue string, errChan chan<- error) {
-	defer wg.Done()
-
+func (rmq *RMQClient) Consume(queue string, callback base.ConsumeCallbackFunc) {
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
-	if exists {
-		if channel != nil {
-			log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
+	// check if channel exists for queue
+	// if not create it
+	if !exists && channel == nil {
+		channel, err := rmq.CreateNewChannel(config.ConsumerQueueName)
+		if err != nil {
+			callback(nil, err)
+			return
+		}
 
-			msgs, err := channel.Consume(queue, queue, false, false, false, false, nil)
+		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
+		if errQ != nil {
+			callback(nil, errQ)
+			return
+		}
+	}
+
+	rmq.mutex.RLock()
+	channel, exists = rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	if exists && channel != nil {
+		log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
+
+		// attempt to consume events from broker
+		msgs, err := channel.Consume(queue, queue, false, false, false, false, nil)
+		if err != nil {
+			callback(nil, fmt.Errorf("Failed to consume from queue(%s). %s", queue, err))
+			return
+		}
+
+		var event *base.EyewaEvent
+		for msg := range msgs {
+			// attempt to unmarshal event
+			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
-				errChan <- fmt.Errorf("Failed to consume from queue(%s). %s", queue, err)
-			}
+				errMsg := fmt.Errorf("Failed to unmarshal event from queue(%s). %s", queue, err)
+				callback(nil, errMsg)
 
-			for msg := range msgs {
-				var event *base.EyewaEvent
-				fmt.Println(string(msg.Body))
-
-				err := json.Unmarshal(msg.Body, &event)
+				// nack message and remove from queue
+				err = msg.Nack(false, false)
 				if err != nil {
-					// TODO: add message to deadletter queue
-					errChan <- fmt.Errorf("Failed to unmarshaling event from queue(%s). %s", queue, err)
-					rmq.sendToDeadletterQueue(msg)
-
-					err = msg.Nack(false, false)
-					if err != nil {
-						errChan <- err
-					}
-				} else {
-					// TODO: save event to db
-					err = msg.Ack(false)
-					if err != nil {
-						errChan <- fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue)
-					}
+					callback(nil, err)
 				}
+
+				// publish message to DL
+				err := rmq.sendToDeadletterQueue(msg, errMsg)
+				if err != nil {
+					callback(nil, err)
+				}
+			} else {
+				// ack message and send event to callback fn
+				err = msg.Ack(false)
+				if err != nil {
+					callback(nil, fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue))
+				}
+
+				callback(event, nil)
 			}
 		}
 	}
 }
 
 // Publish publishes a message to a queue
-func (rmq *RMQClient) Publish(queue string) error {
-	// rmq.channels[queue].Publish()
-	return nil
+func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	fmt.Println(1)
+
+	rmq.mutex.RLock()
+	channel, exists := rmq.channels[queue]
+	rmq.mutex.RUnlock()
+	fmt.Println(2)
+
+	if !exists && channel == nil {
+		channel, err := rmq.CreateNewChannel(config.PublisherQueueName)
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType)
+		if errQ != nil {
+			errChan <- errQ
+			return
+		}
+	}
+
+	rmq.mutex.RLock()
+	channel, exists = rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	fmt.Println(3)
+
+	if exists && channel != nil {
+		err := channel.Publish("", config.PublisherQueueName, false, false,
+			amqp.Publishing{
+				ContentType:  "application/json",
+				Body:         []byte(`{"test": "place something"}`),
+				DeliveryMode: amqp.Persistent,
+			})
+		if err != nil {
+			log.Error(libErrs.ErrorFailedToPublishToDeadletter.Error(),
+				zap.String("event", "place something"),
+				zap.String("deadletter_queue", config.PublisherQueueName), zap.Error(err))
+			errChan <- err
+			return
+		}
+	}
 }
 
 // CloseConnection closes a connection as well as any
@@ -207,13 +276,9 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 	return nil
 }
 
-func (rmq *RMQClient) createConsumerChannel() chan error {
-	errChan := make(chan error)
-	defer close(errChan)
-
+func (rmq *RMQClient) createConsumerChannel() error {
 	if config.ConsumerQueueName == "" {
-		errChan <- libErrs.ErrorNoConsumerQueueSpecified
-		return errChan
+		return libErrs.ErrorNoConsumerQueueSpecified
 	}
 
 	rmq.mutex.Lock()
@@ -222,8 +287,7 @@ func (rmq *RMQClient) createConsumerChannel() chan error {
 	if _, exists := rmq.channels[config.ConsumerQueueName]; !exists {
 		conCh, err := rmq.connection.Channel()
 		if err != nil {
-			errChan <- err
-			return errChan
+			return err
 		}
 
 		prefetchCount, _ := strconv.Atoi(config.QueuePrefetchCount)
@@ -232,19 +296,17 @@ func (rmq *RMQClient) createConsumerChannel() chan error {
 		}
 
 		if err := conCh.Qos(prefetchCount, 0, true); err != nil {
-			errChan <- err
-			return errChan
+			return err
 		}
 
 		if err := rmq.declareQueue(conCh, config.ConsumerQueueName, config.ConsumerExchangeType); err != nil {
-			errChan <- err
-			return errChan
+			return err
 		}
 
 		rmq.channels[config.ConsumerQueueName] = conCh
 	}
 
-	return errChan
+	return nil
 }
 
 func (rmq *RMQClient) createPublisherChannel() error {
@@ -261,6 +323,19 @@ func (rmq *RMQClient) createPublisherChannel() error {
 			return err
 		}
 
+		prefetchCount, _ := strconv.Atoi(config.QueuePrefetchCount)
+		if prefetchCount == 0 {
+			prefetchCount = defaultPrefetchCount
+		}
+
+		if err := pubCh.Qos(prefetchCount, 0, true); err != nil {
+			return err
+		}
+
+		if err := rmq.declareQueue(pubCh, config.PublisherQueueName, config.PublisherExchangeType); err != nil {
+			return err
+		}
+
 		rmq.channels[config.PublisherQueueName] = pubCh
 	}
 
@@ -270,15 +345,15 @@ func (rmq *RMQClient) createPublisherChannel() error {
 // CreateNewChannel creates a new channel for specified queue
 func (rmq *RMQClient) CreateNewChannel(queue string) (*amqp.Channel, error) {
 	if rmq.connection != nil {
-		rmq.mutex.Lock()
-		defer rmq.mutex.Unlock()
-
 		channel, err := rmq.connection.Channel()
 		if err != nil {
 			return nil, fmt.Errorf("Cannot create new channel for queue(%s). %s", queue, err)
 		}
 
+		rmq.mutex.Lock()
 		rmq.channels[queue] = channel
+		rmq.mutex.Unlock()
+
 		return rmq.channels[queue], nil
 	}
 
@@ -309,14 +384,58 @@ func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
 	return nil, fmt.Errorf("Queue specified to inspect doesn't exist queue(%s)", queue)
 }
 
-func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery) {
+func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery, eventErr error) error {
 	deadletterQ := fmt.Sprintf("%s-%s", "deadletter", config.ConsumerQueueName)
 
 	rmq.mutex.RLock()
-	_, exists := rmq.channels[deadletterQ]
-	defer rmq.mutex.RUnlock()
+	channel, exists := rmq.channels[deadletterQ]
+	rmq.mutex.RUnlock()
 
-	if exists {
-		// TODO: Publish to Deadletter
+	// channel doesn't exist yet for DL - create one
+	if !exists && channel == nil {
+		channel, err := rmq.CreateNewChannel(deadletterQ)
+		if err != nil {
+			return err
+		}
+
+		errQ := rmq.declareQueue(channel, deadletterQ, amqp.ExchangeDirect)
+		if errQ != nil {
+			return errQ
+		}
 	}
+
+	// define error
+	eyewaEventErr := base.EyewaEventError{
+		Event:        string(msg.Body),
+		ErrorMessage: eventErr.Error(),
+		CreatedAt:    time.Now().Format(time.RFC3339),
+	}
+
+	errJSON, err := json.Marshal(eyewaEventErr)
+	if err != nil {
+		return err
+	}
+
+	rmq.mutex.RLock()
+	channel, exists = rmq.channels[deadletterQ]
+	rmq.mutex.RUnlock()
+
+	// publish event error to DL exchange
+	if exists && channel != nil {
+		err = channel.Publish("", deadletterQ, false, false,
+			amqp.Publishing{
+				ContentType:  "application/json",
+				Body:         errJSON,
+				DeliveryMode: amqp.Persistent,
+			})
+		if err != nil {
+			log.Error(libErrs.ErrorFailedToPublishToDeadletter.Error(),
+				zap.String("event", string(errJSON)),
+				zap.String("deadletter_queue", deadletterQ), zap.Error(err))
+
+			return err
+		}
+	}
+
+	return nil
 }

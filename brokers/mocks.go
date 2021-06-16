@@ -3,6 +3,7 @@ package brokers
 import (
 	"sync"
 
+	"github.com/eyewa/eyewa-go-lib/base"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -31,10 +32,10 @@ func (mock *ClientMock) Connect() error {
 	return args.Error(0)
 }
 
-func (mock *ClientMock) Publish(queue string) error {
-	args := mock.Called()
-	return args.Error(0)
+func (mock *ClientMock) Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup) {
+	_ = mock.Called()
 }
 
-func (mock *ClientMock) Consume(wg *sync.WaitGroup, queue string, errChan chan<- error) {
+func (mock *ClientMock) Consume(queue string, callback base.ConsumeCallbackFunc) {
+	_ = mock.Called()
 }

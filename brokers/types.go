@@ -1,6 +1,10 @@
 package brokers
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/eyewa/eyewa-go-lib/base"
+)
 
 // BrokerType represents a type of broker - sqs, rmq etc.
 type BrokerType string
@@ -38,12 +42,12 @@ type MessageBroker interface {
 type Consumer interface {
 	Connect() error
 	CloseConnection() error
-	Consume(wg *sync.WaitGroup, queue string, errChan chan<- error)
+	Consume(queue string, callback base.ConsumeCallbackFunc)
 }
 
 // Publisher a contract any publisher should fulfil.
 type Publisher interface {
 	Connect() error
 	CloseConnection() error
-	Publish(queue string) error
+	Publish(queue string, event *base.EyewaEvent, errChan chan<- error, wg *sync.WaitGroup)
 }

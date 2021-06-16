@@ -12,7 +12,7 @@ type EyewaEvent struct {
 
 	// a representation on an error. provides reasons when a message ends up back
 	// in the queue
-	Error []Error `json:"error" binding:"omitempty"`
+	Errors []Error `json:"errors" binding:"omitempty"`
 
 	// actual event payload
 	Payload json.RawMessage `json:"payload"`
@@ -23,7 +23,20 @@ type EyewaEvent struct {
 
 // Error a structural info about an error within the ecosystem
 type Error struct {
-	ErrorCode int    `json:"error_code"` // custom or http code should suffice
-	Message   string `json:"message"`    // error being reported
-	CreatedAt string `json:"created_at"` // time in RFC3339 format
+	ErrorCode    int    `json:"error_code"`    // custom or http code should suffice
+	ErrorMessage string `json:"error_message"` // error being reported
+	CreatedAt    string `json:"created_at"`    // time in RFC3339 format
 }
+
+// EyewaEventError a structural error info about an event that failed
+// during processing by a consumer - usecase: for publishing to a deadletter queue
+// It is paramount to keep records of an event that failed and why.
+type EyewaEventError struct {
+	Event        string `json:"event"`         // string representation of event that was consumed off the queue but failed.
+	ErrorMessage string `json:"error_message"` // error being reported
+	CreatedAt    string `json:"created_at"`    // time in RFC3339 format
+}
+
+// ConsumeCallbackFunc all broker clients should define this callback fn
+// so as to react to the state of events consumed - success/failure
+type ConsumeCallbackFunc func(event *EyewaEvent, err error)
