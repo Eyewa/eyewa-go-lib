@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
+	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,4 +47,24 @@ func TestConnect(t *testing.T) {
 	rmqMock = RMQClientMock{}
 	rmqMock.On("Connect").Return(libErrs.ErrorNoRMQConnection)
 	assert.Error(t, rmqMock.Connect())
+}
+
+func TestGetNameForChannel(t *testing.T) {
+	os.Setenv("SERVICE_NAME", "cashmoney")
+	config = Config{}
+	_, _, _ = initConfig()
+	assert.Contains(t, getNameForChannel("catalogconsumer"), "cashmoney")
+
+	os.Unsetenv("SERVICE_NAME")
+	config = Config{}
+	_, _, _ = initConfig()
+	assert.NotContains(t, getNameForChannel("catalogconsumer"), "cashmoney")
+	assert.Contains(t, getNameForChannel("catalogconsumer"), "catalogconsumer")
+}
+
+func TestNewClient(t *testing.T) {
+	client := NewRMQClient()
+	assert.Nil(t, client.connection)
+	assert.Equal(t, map[string]*amqp.Channel{}, client.channels)
+	assert.NotNil(t, client.mutex)
 }

@@ -6,6 +6,7 @@ This package provides an abstraction layer for any underlying third party pkgs w
 
 A client can either be a **Consumer**, a **Publisher** or **both** - there are contracts in place to cater for such scenarios. On calling the `OpenConnection`, a client will be regarded as requiring both capabilities. If otherwise, there are direct client calls for initiating either a consumer/publisher for any client of choice.
 
+# How to use
 
 ```go
 package myservice
@@ -69,7 +70,7 @@ func main() {
 			zap.String("queue", config.Config.RabbitMQ.ConsumerQueueName),
 			zap.Error(err))
 
-		log.Debug("Event recieved", zap.Any("event", event))
+		log.Debug("Event received", zap.Any("event", event))
 	})
 
 	wg.Wait()

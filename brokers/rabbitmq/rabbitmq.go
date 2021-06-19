@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,6 +33,7 @@ func initConfig() (Config, string, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	envVars := []string{
+		"SERVICE_NAME",
 		"RABBITMQ_SERVER",
 		"RABBITMQ_AMQP_PORT",
 		"RABBITMQ_USERNAME",
@@ -140,7 +142,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 		log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
 
 		// attempt to consume events from broker
-		msgs, err := channel.Consume(queue, queue, false, false, false, false, nil)
+		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 		if err != nil {
 			callback(nil, fmt.Errorf("Failed to consume from queue(%s). %s", queue, err))
 			return
@@ -441,4 +443,12 @@ func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 	}
 
 	return nil
+}
+
+func getNameForChannel(queue string) string {
+	if config.ServiceName == "" {
+		return fmt.Sprintf("%s.%d", queue, rand.Uint64())
+	}
+
+	return fmt.Sprintf("%s.%d", config.ServiceName, rand.Uint64())
 }

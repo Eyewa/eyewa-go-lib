@@ -25,6 +25,9 @@ type Config struct {
 	// Exchanges to bind consumer + publisher queues to
 	PublisherExchangeType string `mapstructure:"rabbitmq_publisher_exchange_type"`
 	ConsumerExchangeType  string `mapstructure:"rabbitmq_consumer_exchange_type"`
+
+	// Purely for identifying what service/service instance is connected to a RMQ channel
+	ServiceName string `mapstructure:"service_name"`
 }
 
 // RMQClient RMQ client for implementing the MessageBroker interface and handling all things RMQ.
@@ -33,6 +36,6 @@ type RMQClient struct {
 
 	connection *amqp.Connection
 
-	// map of channels for all queues
+	// Map of channels for all queues
 	channels map[string]*amqp.Channel
 }
