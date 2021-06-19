@@ -19,11 +19,13 @@ type ExportOption struct {
 	CollectPeriod time.Duration
 }
 
+// PrometheusExporter is a pull-based exporter
 type PrometheusExporter struct {
 	exportOption ExportOption
 	exporter     *prometheus.Exporter
 }
 
+// NewPrometheusExporter creates new PrometheusExporter with given ExportOption
 func NewPrometheusExporter(option ExportOption) (*PrometheusExporter, error) {
 	config := prometheus.Config{}
 	c := controller.New(
@@ -49,10 +51,12 @@ func NewPrometheusExporter(option ExportOption) (*PrometheusExporter, error) {
 	}, nil
 }
 
+// ServeHTTP implements http.Handler.
 func (p *PrometheusExporter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.exporter.ServeHTTP(w, r)
 }
 
+// MeterProvider returns the MeterProvider of this exporter.
 func (p *PrometheusExporter) MeterProvider() metric.MeterProvider {
 	return p.exporter.MeterProvider()
 }

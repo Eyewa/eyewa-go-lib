@@ -19,6 +19,7 @@ const (
 	Prometheus ExporterType = "prometheus"
 )
 
+// Exporter is a manifest for pull based metric exporters like Prometheus
 type Exporter interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 	MeterProvider() metric.MeterProvider
