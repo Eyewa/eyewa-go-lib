@@ -25,7 +25,7 @@ type Exporter interface {
 	MeterProvider() metric.MeterProvider
 }
 
-// MetricLauncher is used for serving metrics
+// MetricLauncher is used for serving metrics. It's a wrapper for OpenTelemetry
 type MetricLauncher struct {
 	Exporter                Exporter
 	enableHostInstrument    bool
