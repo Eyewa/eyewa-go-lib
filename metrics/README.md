@@ -2,7 +2,8 @@
 Shared Go Lib for Eyewa's microservices.
 
 # metrics
-This package is simply a wrapper for OpenTelemetry metric package.
+This package is simply a wrapper for OpenTelemetry metric package. It uses Prometheus
+Exporter to export metrics. Metrics is exported from **2222** port
 
 # How to use it
 Basically launch metric server and create new meter from it, then create

@@ -2,51 +2,52 @@ package metrics
 
 import (
 	"github.com/eyewa/eyewa-go-lib/log"
+	"github.com/eyewa/eyewa-go-lib/metrics/prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
-	export "go.opentelemetry.io/otel/sdk/export/metric"
-	"go.opentelemetry.io/otel/sdk/metric/aggregator/histogram"
-	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
-	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 	"net/http"
 	"time"
 )
 
 const LauncherPort = ":2222"
 
-// ExportOption is configuration for MetricLauncher.
-type ExportOption struct {
-	// CollectPeriod sets period interval exporter.
-	CollectPeriod time.Duration
+type ExporterType string
+
+const (
+	Prometheus ExporterType = "prometheus"
+)
+
+type Exporter interface {
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
+	MeterProvider() metric.MeterProvider
 }
 
 // MetricLauncher is used for serving metrics
 type MetricLauncher struct {
-	Exporter                *prometheus.Exporter
+	Exporter                Exporter
 	enableHostInstrument    bool
 	enableRuntimeInstrument bool
 }
 
 // NewMetricLauncher initializes OpenTelemetry Prometheus Exporter.
-func NewMetricLauncher(option ExportOption) (*MetricLauncher, error) {
-	config := prometheus.Config{}
-	c := controller.New(
-		processor.New(
-			selector.NewWithHistogramDistribution(
-				histogram.WithExplicitBoundaries(config.DefaultHistogramBoundaries),
-			),
-			export.CumulativeExportKindSelector(),
-			processor.WithMemory(true),
-		),
-		controller.WithCollectPeriod(option.CollectPeriod),
+func NewMetricLauncher(exporterType ExporterType) (*MetricLauncher, error) {
+	var (
+		exporter Exporter
+		err      error
 	)
 
-	exporter, err := prometheus.New(config, c)
-	if err != nil {
-		return nil, PrometheusExporterInitFailedError.Inner(err)
+	switch string(exporterType) {
+	case string(Prometheus):
+		option := prometheus.ExportOption{
+			CollectPeriod: 1 * time.Second,
+		}
+
+		exporter, err = prometheus.NewPrometheusExporter(option)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &MetricLauncher{
