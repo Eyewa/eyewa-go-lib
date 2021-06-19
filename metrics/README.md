@@ -55,7 +55,12 @@ func main() {
 	_ = meter.NewValueObserver("value_observer", callback)
 }
 ```
-
+---
+// startHostInstrument starts Host instrumentation.
+// https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0
+---
+// startHostInstrument starts Runtime instrumentation.
+// https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0
 ---
 ### Programming Model
 https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model

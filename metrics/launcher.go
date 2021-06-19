@@ -1,0 +1,103 @@
+package metrics
+
+import (
+	"github.com/eyewa/eyewa-go-lib/log"
+	"go.opentelemetry.io/contrib/instrumentation/host"
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
+	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/metric/global"
+	export "go.opentelemetry.io/otel/sdk/export/metric"
+	"go.opentelemetry.io/otel/sdk/metric/aggregator/histogram"
+	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
+	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
+	"net/http"
+	"time"
+)
+
+const LauncherPort = ":2222"
+
+// ExportOption is configuration for MetricLauncher.
+type ExportOption struct {
+	// CollectPeriod sets period interval exporter.
+	CollectPeriod time.Duration
+}
+
+// MetricLauncher is used for serving metrics
+type MetricLauncher struct {
+	Exporter                *prometheus.Exporter
+	enableHostInstrument    bool
+	enableRuntimeInstrument bool
+}
+
+// NewMetricLauncher initializes OpenTelemetry Prometheus Exporter.
+func NewMetricLauncher(option ExportOption) (*MetricLauncher, error) {
+	config := prometheus.Config{}
+	c := controller.New(
+		processor.New(
+			selector.NewWithHistogramDistribution(
+				histogram.WithExplicitBoundaries(config.DefaultHistogramBoundaries),
+			),
+			export.CumulativeExportKindSelector(),
+			processor.WithMemory(true),
+		),
+		controller.WithCollectPeriod(option.CollectPeriod),
+	)
+
+	exporter, err := prometheus.New(config, c)
+	if err != nil {
+		return nil, PrometheusExporterInitFailedError.Inner(err)
+	}
+
+	return &MetricLauncher{
+		exporter,
+		false,
+		false,
+	}, nil
+}
+
+// SetMeterProvider sets prometheus meter provider globally
+func (ml *MetricLauncher) SetMeterProvider() *MetricLauncher {
+	global.SetMeterProvider(ml.Exporter.MeterProvider())
+	return ml
+}
+
+// EnableHostInstrument enables host instrumentation
+func (ml *MetricLauncher) EnableHostInstrument() *MetricLauncher {
+	ml.enableHostInstrument = true
+	return ml
+}
+
+// EnableRuntimeInstrument enables runtime instrumentation
+func (ml *MetricLauncher) EnableRuntimeInstrument() *MetricLauncher {
+	ml.enableRuntimeInstrument = true
+	return ml
+}
+
+// Launch starts serving metrics. Also starts Host and Runtime instruments if they are enabled.
+func (ml MetricLauncher) Launch() <-chan error {
+	if ml.enableHostInstrument {
+		err := host.Start()
+		if err != nil {
+			log.Fatal(FailedToStartRuntimeMetricsError.Inner(err).Error())
+		}
+	}
+
+	if ml.enableRuntimeInstrument {
+		err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
+		if err != nil {
+			log.Fatal(FailedToStartHostMetricsError.Inner(err).Error())
+		}
+	}
+
+	http.HandleFunc("/", ml.Exporter.ServeHTTP)
+
+	errCh := make(chan error)
+	go func(errCh chan<- error) {
+		defer close(errCh)
+
+		errCh <- http.ListenAndServe(LauncherPort, nil)
+	}(errCh)
+
+	return errCh
+}
