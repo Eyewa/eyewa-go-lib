@@ -35,7 +35,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 	meter := metrics.NewMeter("test.meter", nil)
 
 	Describe(fmt.Sprintf("When counter is initialized and being increased with expected value %f", expectedValue), func() {
-		It("should return counted metric result", func() {
+		It("should return expected metric result", func() {
 			counter := meter.NewCounter(expectedCounterName,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)

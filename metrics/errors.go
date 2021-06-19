@@ -29,6 +29,7 @@ func (e *Error) Inner(err error) error {
 	return e
 }
 
+// defineError defines error with prefix, id and description
 func defineError(prefix string, id int, desc string) Error {
 	return Error{
 		prefix,
