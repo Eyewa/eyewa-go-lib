@@ -6,7 +6,7 @@ import (
 
 const MetricPrefix = "MET"
 
-// Error is wrapper for error interface
+// Error is wrapper for error
 type Error struct {
 	prefix string
 	id     int

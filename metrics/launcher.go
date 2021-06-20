@@ -24,14 +24,14 @@ type Exporter interface {
 	MeterProvider() metric.MeterProvider
 }
 
-// MetricLauncher is used for serving metrics. It's a wrapper for OpenTelemetry
+// MetricLauncher is used for serving metrics.
 type MetricLauncher struct {
 	Exporter                Exporter
 	enableHostInstrument    bool
 	enableRuntimeInstrument bool
 }
 
-// NewMetricLauncher initializes OpenTelemetry Prometheus Exporter.
+// NewMetricLauncher initializes MetricLauncher.
 func NewMetricLauncher(exporter Exporter) *MetricLauncher {
 	return &MetricLauncher{
 		exporter,
@@ -40,7 +40,7 @@ func NewMetricLauncher(exporter Exporter) *MetricLauncher {
 	}
 }
 
-// SetMeterProvider sets prometheus meter provider globally
+// SetMeterProvider sets meter provider globally
 func (ml *MetricLauncher) SetMeterProvider() *MetricLauncher {
 	global.SetMeterProvider(ml.Exporter.MeterProvider())
 	return ml

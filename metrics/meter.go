@@ -25,7 +25,7 @@ func NewMeter(name string, ctx context.Context) *Meter {
 	}
 }
 
-// NewCounter creates new Counter instrumentation for Meter
+// NewCounter creates a new Counter instrumentation for Meter
 func (m *Meter) NewCounter(name string, iop ...metric.InstrumentOption) Counter {
 	counter := metric.Must(m.Meter).NewFloat64Counter(name, iop...)
 
@@ -35,7 +35,7 @@ func (m *Meter) NewCounter(name string, iop ...metric.InstrumentOption) Counter 
 	}
 }
 
-// NewUpDownCounter creates new UpDownCounter instrumentation for Meter
+// NewUpDownCounter creates a new UpDownCounter instrumentation for Meter
 func (m *Meter) NewUpDownCounter(name string, iop ...metric.InstrumentOption) UpDownCounter {
 	upDownCounter := metric.Must(m.Meter).NewFloat64UpDownCounter(name, iop...)
 
@@ -45,7 +45,7 @@ func (m *Meter) NewUpDownCounter(name string, iop ...metric.InstrumentOption) Up
 	}
 }
 
-// NewValueRecorder creates new ValueRecorder instrumentation for Meter
+// NewValueRecorder creates a new ValueRecorder instrumentation for Meter
 func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) ValueRecorder {
 	valueRecorder := metric.Must(m.Meter).NewFloat64ValueRecorder(name, iop...)
 
@@ -66,21 +66,21 @@ func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) Va
 // such that when recorded, observations from a single callback MUST be reported with identical timestamps.
 type Callback metric.Float64ObserverFunc
 
-// NewSumObserver creates new SumObserver instrumentation for Meter
+// NewSumObserver creates a new SumObserver instrumentation for Meter
 func (m *Meter) NewSumObserver(name string, cb Callback, iop ...metric.InstrumentOption) SumObserver {
 	sumObserver := metric.Must(m.Meter).NewFloat64SumObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
 	return SumObserver(sumObserver)
 }
 
-// NewUpDownSumObserver creates new UpDownSumObserver for Meter
+// NewUpDownSumObserver creates a new UpDownSumObserver for Meter
 func (m *Meter) NewUpDownSumObserver(name string, cb Callback, iop ...metric.InstrumentOption) UpDownSumObserver {
 	upDownSumObserver := metric.Must(m.Meter).NewFloat64UpDownSumObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
 	return UpDownSumObserver(upDownSumObserver)
 }
 
-// NewValueObserver creates new ValueObserver for Meter
+// NewValueObserver creates a new ValueObserver for Meter
 func (m *Meter) NewValueObserver(name string, cb Callback, iop ...metric.InstrumentOption) ValueObserver {
 	valueObserver := metric.Must(m.Meter).NewFloat64ValueObserver(name, metric.Float64ObserverFunc(cb), iop...)
 

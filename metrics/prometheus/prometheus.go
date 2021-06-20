@@ -15,7 +15,7 @@ import (
 
 // ExportOption is configuration for MetricLauncher.
 type ExportOption struct {
-	// CollectPeriod sets period interval exporter.
+	// CollectPeriod sets period interval of exporting process.
 	CollectPeriod time.Duration
 }
 
@@ -25,7 +25,7 @@ type PrometheusExporter struct {
 	exporter     *prometheus.Exporter
 }
 
-// NewPrometheusExporter creates new PrometheusExporter with given ExportOption
+// NewPrometheusExporter creates a new PrometheusExporter with given ExportOption
 func NewPrometheusExporter(option ExportOption) (*PrometheusExporter, error) {
 	config := prometheus.Config{}
 	c := controller.New(
