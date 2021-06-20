@@ -18,7 +18,6 @@ func TestSpecs(t *testing.T) {
 
 var (
 	ts    *httptest.Server
-	errCh <-chan error
 )
 
 var _ = BeforeSuite(func() {

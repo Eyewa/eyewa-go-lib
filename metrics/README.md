@@ -41,7 +41,7 @@ Set Global Meter Provider. It'll set Exporter's Meter Provider globally. See als
 ```go
 ml.SetMeterProvider()
 ```
-Enable Host Instrumentation. See also [Host Instrumentation Metris](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
+Enable Host Instrumentation. See also [Host Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
 ```go
 ml.EnableHostInstrumentation()
 ```
