@@ -55,6 +55,15 @@ alright. It is receive-only channel.
 ```go
 errCh := ml.Launch()
 ```
+or put them together
+```go
+ metrics.NewMetricLauncher(exporter).
+    SetMeterProvider().
+    EnableHostInstrumentation().
+    EnableRuntimeInstrumentation().
+    Launch()
+	
+```
 # Instrumentation
 Please see [Instrumentation](INSTRUMENTATION.md) from here
 
