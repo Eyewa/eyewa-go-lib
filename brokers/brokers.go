@@ -1,13 +1,13 @@
 package brokers
 
 import (
-	"errors"
 	"os"
 	"strings"
 
 	"github.com/eyewa/eyewa-go-lib/brokers/kafka"
 	"github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
 	"github.com/eyewa/eyewa-go-lib/brokers/sqs"
+	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 )
 
 const (
@@ -50,7 +50,7 @@ func (*MessageBrokerClient) connect() (*MessageBrokerClient, error) {
 		return broker, nil
 	}
 
-	return nil, errors.New("Client not recognized.")
+	return nil, libErrs.ErrorBrokerClientNoRecognized
 }
 
 // NewConsumerClient creates a new consumer client
