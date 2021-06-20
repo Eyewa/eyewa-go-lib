@@ -20,7 +20,7 @@ func NewMeter(name string, ctx context.Context) *Meter {
 	}
 
 	return &Meter{
-		Meter: global.Meter(name,metric.WithInstrumentationVersion("1.0.0")),
+		Meter: global.Meter(name, metric.WithInstrumentationVersion("1.0.0")),
 		ctx:   ctx,
 	}
 }
