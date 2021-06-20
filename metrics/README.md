@@ -60,6 +60,7 @@ Please see [Instrumentation](INSTRUMENTATION.md) from here
 
 ---
 ### Global Setting
+
 When using OpenTelemetry, it’s a good practice to set a global tracer provider and 
 a global meter provider. Doing so will make it easier for libraries and other dependencies 
 that use the OpenTelemetry API to easily discover the SDK, and emit telemetry data.\
