@@ -6,106 +6,67 @@ This package is simply a wrapper for OpenTelemetry metric package. It uses Prome
 Exporter to export metrics. Metrics is exported from **2222** port
 
 # How to use it
-Basically launch metric server and create new meter from it, then create
-new instruments from the meter. After launching, prometheus exporter take
-care exporting.
+Metrics package consists of **_MetricLauncher_**, **_Exporter_** and **_Instrumentation_**. \
+**_MetricLauncher_** serves metrics over http and works with **_Exporter_**. \
+**_Exporter_** is used for scrapping data like **Prometheus**. \
+Then use any kind of **_Instrumentation_** to create metrics. 
 
-```Go
+Create a Prometheus exporter.
+```go
 package demo
 
 import (
-	"context"
+	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/eyewa/eyewa-go-lib/metrics"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
-	"math/rand"
-	"sync"
+	"github.com/eyewa/eyewa-go-lib/metrics/prometheus"
 	"time"
 )
 
 func main() {
-	_ := metrics.Launch(metrics.Option{
-		CollectPeriod: 100 * time.Millisecond,
-	})
-
-	meter := metrics.NewMeter("custom.meter", nil)
-
-	counter := meter.NewCounter("customer.counter", attribute.Any("version", "1.0.0"))
-	counter.Add(1, attribute.Any("label", "new request arrived"))
-
-	updownCounter := meter.NewUpDownCounter("ilk_updown_counter",
-		attribute.Any("description", "new updown counter"))
-	updownCounter.Add(1)
-
-	valueRecorder := meter.NewValueRecorder("ilk_value_recorder")
-	valueRecorder.Record(14)
-
-	observerLock := new(sync.RWMutex)
-	observerValueToReport := new(float64)
-	observerLabelsToReport := new([]attribute.KeyValue)
-	callback := func(ctx context.Context, result metric.Float64ObserverResult) {
-		(*observerLock).RLock()
-		value := *observerValueToReport
-		labels := *observerLabelsToReport
-		(*observerLock).RUnlock()
-		result.Observe(value, labels...)
+	option := prometheus.ExportOption{
+		CollectPeriod: 1 * time.Second,
 	}
-
-	_ = meter.NewSumObserver("sum_observer", callback)
-	_ = meter.NewUpDownSumObserver("updownsum_observer", callback)
-	_ = meter.NewValueObserver("value_observer", callback)
+	
+	exporter, err := prometheus.NewPrometheusExporter(option)
+	if err != nil {
+		log.Error(metrics.FailedToInitPrometheusExporterError.Inner(err).Error())
+	}
 }
 ```
----
-// startHostInstrument starts Host instrumentation.
-// https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0
----
-// startHostInstrument starts Runtime instrumentation.
-// https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0
----
-### Programming Model
-https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model
+Create metric launcher with predefined Exporter
+```go
+ml := metrics.NewMetricLauncher(exporter)
+```
+Set Global Meter Provider. It'll set Exporter's Meter Provider globally. See also [Global Setting](#global-setting).
+```go
+ml.SetMeterProvider()
+```
+Enable Host Instrumentation. See also [Host Instrumentation Metris](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
+```go
+ml.EnableHostInstrumentation()
+```
+Enable Runtime Instrumentation. See also [Runtime Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0#pkg-overview)
+```go
+ml.EnableRuntimeInstrumentation()
+```
+Then Launch. Launch will start Metric Server on port 2222 on different goroutine \
+not to block main process, so it returns error channel to check that is everything \
+alright. It is receive-only channel.
+```go
+errCh := ml.Launch()
+```
+# Instrumentation
+Please see [Instrumentation](INSTRUMENTATION.md) from here
 
 ---
-Additive instruments may be monotonic, in which case they are non-decreasing and naturally define a rate.
-
-The synchronous instrument names are: 
-
-**Counter**:           additive, monotonic \
-**UpDownCounter**:     additive \
-**ValueRecorder**:     grouping 
-
-and the asynchronous instruments are: 
-
-**SumObserver**:       additive, monotonic \
-**UpDownSumObserver**: additive \
-**ValueObserver**:     grouping \
-https://pkg.go.dev/go.opentelemetry.io/otel/metric
-
----
-### Instrument Naming Convetions
-Instruments are associated with the Meter during creation, and are identified by the name:
-
-Meter implementations MUST return an error when multiple Instruments are registered under 
-the same Meter instance using the same name.Different Meters MUST be treated as separate namespaces.
-The names of the Instruments under one Meter SHOULD NOT interfere with Instruments under another Meter.
-
-Instrument names MUST conform to the following syntax (described using the Augmented Backus-Naur Form):
-
-**instrument-name** = **ALPHA** 0*62 ("_" / "." / "-" / **ALPHA** / **DIGIT**)
-
-**ALPHA** = %x41-5A / %x61-7A; A-Z / a-z \
-**DIGIT** = %x30-39 ; 0-9 \
-They are not null or empty strings. \
-They are case-insensitive, ASCII strings. \
-The first character must be an alphabetic character. \
-Subsequent characters must belong to the alphanumeric characters, '_', '.', and '-'. \
-They can have a maximum length of 63 characters.
-
----
-### Global setting
+### Global Setting
 When using OpenTelemetry, it’s a good practice to set a global tracer provider and 
 a global meter provider. Doing so will make it easier for libraries and other dependencies 
 that use the OpenTelemetry API to easily discover the SDK, and emit telemetry data.\
-https://opentelemetry.io/docs/go/getting-started/
+[Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
+---
+### Programming Model under the hood
+You can check Open Telemetry programming model here. [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)
 
+---
+Read more [Metrics API](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md)

@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"github.com/eyewa/eyewa-go-lib/log"
-	"github.com/eyewa/eyewa-go-lib/metrics/prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/metric"
@@ -19,7 +18,7 @@ const (
 	Prometheus ExporterType = "prometheus"
 )
 
-// Exporter is a manifest for pull based metric exporters like Prometheus
+// Exporter is a manifest for pull-based metric exporters like Prometheus
 type Exporter interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 	MeterProvider() metric.MeterProvider
@@ -33,29 +32,12 @@ type MetricLauncher struct {
 }
 
 // NewMetricLauncher initializes OpenTelemetry Prometheus Exporter.
-func NewMetricLauncher(exporterType ExporterType) (*MetricLauncher, error) {
-	var (
-		exporter Exporter
-		err      error
-	)
-
-	switch string(exporterType) {
-	case string(Prometheus):
-		option := prometheus.ExportOption{
-			CollectPeriod: 1 * time.Second,
-		}
-
-		exporter, err = prometheus.NewPrometheusExporter(option)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func NewMetricLauncher(exporter Exporter) *MetricLauncher {
 	return &MetricLauncher{
 		exporter,
 		false,
 		false,
-	}, nil
+	}
 }
 
 // SetMeterProvider sets prometheus meter provider globally

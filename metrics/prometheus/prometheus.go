@@ -42,7 +42,7 @@ func NewPrometheusExporter(option ExportOption) (*PrometheusExporter, error) {
 	exporter, err := prometheus.New(config, c)
 
 	if err != nil {
-		return nil, metrics.PrometheusExporterInitFailedError.Inner(err)
+		return nil, metrics.FailedToInitPrometheusExporterError.Inner(err)
 	}
 
 	return &PrometheusExporter{

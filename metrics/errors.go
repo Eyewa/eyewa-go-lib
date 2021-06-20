@@ -40,7 +40,7 @@ func defineError(prefix string, id int, desc string) Error {
 }
 
 var (
-	PrometheusExporterInitFailedError = defineError(MetricPrefix, 1, "Failed to initialize prometheus exporter.")
+	FailedToInitPrometheusExporterError = defineError(MetricPrefix, 1, "Failed to initialize prometheus exporter.")
 	FailedToStartRuntimeMetricsError  = defineError(MetricPrefix, 2, "Failed to start runtime metrics.")
 	FailedToStartHostMetricsError     = defineError(MetricPrefix, 3, "Failed to start host metrics.")
 	FailedToStartMetricServerError    = defineError(MetricPrefix, 4, "Failed to start metric server.")
