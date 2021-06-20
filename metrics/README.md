@@ -65,6 +65,7 @@ When using OpenTelemetry, it’s a good practice to set a global tracer provider
 a global meter provider. Doing so will make it easier for libraries and other dependencies 
 that use the OpenTelemetry API to easily discover the SDK, and emit telemetry data.\
 [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
+
 ---
 ### Programming Model under the hood
 You can check Open Telemetry programming model here. [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)
