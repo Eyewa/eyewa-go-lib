@@ -47,4 +47,5 @@ They are case-insensitive, ASCII strings. \
 The first character must be an alphabetic character. \
 Subsequent characters must belong to the alphanumeric characters, '_', '.', and '-'. \
 They can have a maximum length of 63 characters.
+
 ---
