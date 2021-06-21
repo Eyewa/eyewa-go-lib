@@ -11,7 +11,7 @@ The Metrics package consists of the following:
 - A Metrics Exporter - is used for scrapping data for Prometheus
 - A Metrics Instrumentation - any instrumentation of choice to create metrics.
 
-Create a Prometheus exporter.
+## How to create a Prometheus exporter.
 ```go
 package demo
 
@@ -33,19 +33,20 @@ func main() {
 	}
 }
 ```
+## How to create a metric launcher
 Create metric launcher with predefined Exporter
 ```go
 ml := metrics.NewMetricLauncher(exporter)
 ```
-Set Global Meter Provider. It will set the Exporter's Meter Provider globally. See also [Global Setting](#global-setting).
+Set global meter provider. It will set the Exporter's Meter Provider globally. See also [Global Setting](#global-setting).
 ```go
 ml.SetMeterProvider()
 ```
-Enable Host Instrumentation. See also [Host Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
+Enable host instrumentation. See also [Host Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
 ```go
 ml.EnableHostInstrumentation()
 ```
-Enable Runtime Instrumentation. See also [Runtime Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0#pkg-overview)
+Enable runtime instrumentation. See also [Runtime Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0#pkg-overview)
 ```go
 ml.EnableRuntimeInstrumentation()
 ```
@@ -55,7 +56,7 @@ alright. It is receive-only channel.
 ```go
 errCh := ml.Launch()
 ```
-or put them together
+or put them together.
 ```go
  metrics.NewMetricLauncher(exporter).
     SetMeterProvider().
