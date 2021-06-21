@@ -6,10 +6,10 @@ This package is simply a wrapper for OpenTelemetry metric package. It uses Prome
 Exporter to export metrics. Metrics is exported from **2222** port
 
 # How to use it
-Metrics package consists of **_MetricLauncher_**, **_Exporter_** and **_Instrumentation_**. \
-**_MetricLauncher_** serves metrics over http and works with **_Exporter_**. \
-**_Exporter_** is used for scrapping data like **Prometheus**. \
-Then use any kind of **_Instrumentation_** to create metrics. 
+The Metrics package consists of the following:
+- A Metrics Launcher - serves metrics over HTTP and works with the Metrics Exporter.
+- A Metrics Exporter - is used for scrapping data for Prometheus
+- A Metrics Instrumentation - any instrumentation of choice to create metrics.
 
 Create a Prometheus exporter.
 ```go
