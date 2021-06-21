@@ -15,7 +15,7 @@ type Counter struct {
 
 // Add adds the value to the counter's sum. The labels should contain
 // the keys and values to be associated with this value.
-func (b Counter) Add(value float64, labels ...attribute.KeyValue) {
+func (c Counter) Add(value float64, labels ...attribute.KeyValue) {
 	b.Float64Counter.Add(b.ctx, value, labels...)
 }
 
