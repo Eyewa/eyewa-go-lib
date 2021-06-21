@@ -44,7 +44,7 @@ func (ml *MetricLauncher) EnableRuntimeInstrument() *MetricLauncher {
 }
 
 // Launch starts serving metrics. Also starts Host and Runtime instruments if they are enabled.
-func (ml MetricLauncher) Launch() <-chan error {
+func (ml *MetricLauncher) Launch() <-chan error {
 	if ml.enableHostInstrument {
 		err := host.Start()
 		if err != nil {
