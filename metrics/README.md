@@ -37,7 +37,7 @@ Create metric launcher with predefined Exporter
 ```go
 ml := metrics.NewMetricLauncher(exporter)
 ```
-Set Global Meter Provider. It'll set Exporter's Meter Provider globally. See also [Global Setting](#global-setting).
+Set Global Meter Provider. It will set the Exporter's Meter Provider globally. See also [Global Setting](#global-setting).
 ```go
 ml.SetMeterProvider()
 ```
