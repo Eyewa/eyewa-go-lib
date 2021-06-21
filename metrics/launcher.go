@@ -5,6 +5,7 @@ import (
 	"github.com/eyewa/eyewa-go-lib/log"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
+	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric/global"
 	"net/http"
 	"time"
@@ -12,13 +13,13 @@ import (
 
 // MetricLauncher is used for serving metrics.
 type MetricLauncher struct {
-	Exporter                *PrometheusExporter
+	exporter                *prometheus.Exporter
 	enableHostInstrument    bool
 	enableRuntimeInstrument bool
 }
 
 // NewMetricLauncher initializes MetricLauncher.
-func NewMetricLauncher(exporter *PrometheusExporter) *MetricLauncher {
+func NewMetricLauncher(exporter *prometheus.Exporter) *MetricLauncher {
 	return &MetricLauncher{
 		exporter,
 		false,
@@ -27,7 +28,7 @@ func NewMetricLauncher(exporter *PrometheusExporter) *MetricLauncher {
 }
 
 func (ml *MetricLauncher) SetMeterProvider() *MetricLauncher {
-	global.SetMeterProvider(ml.Exporter.MeterProvider())
+	global.SetMeterProvider(ml.exporter.MeterProvider())
 	return ml
 }
 
@@ -59,7 +60,7 @@ func (ml *MetricLauncher) Launch() <-chan error {
 		}
 	}
 
-	http.HandleFunc("/", ml.Exporter.ServeHTTP)
+	http.HandleFunc("/", ml.exporter.ServeHTTP)
 
 	errCh := make(chan error)
 	go func(errCh chan<- error) {

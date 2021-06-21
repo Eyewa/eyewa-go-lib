@@ -29,7 +29,7 @@ var _ = BeforeSuite(func() {
 	ml := metrics.NewMetricLauncher(exporter)
 	ml.SetMeterProvider()
 
-	ts = httptest.NewServer(http.HandlerFunc(ml.Exporter.ServeHTTP))
+	ts = httptest.NewServer(http.HandlerFunc(exporter.ServeHTTP))
 })
 
 var _ = AfterSuite(func() {
