@@ -1,6 +1,6 @@
 module github.com/eyewa/eyewa-go-lib
 
-go 1.15
+go 1.16
 
 require (
 	github.com/google/uuid v1.0.0
