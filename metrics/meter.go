@@ -64,7 +64,7 @@ func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) Va
 // drop the entire data, pick the last one, or something else.
 // The API must treat observations from a single callback as logically taking place at a single instant,
 // such that when recorded, observations from a single callback MUST be reported with identical timestamps.
-type Callback metric.Float64ObserverFunc
+type MetricsCallback metric.Float64ObserverFunc
 
 // NewSumObserver creates a new SumObserver instrumentation for Meter
 func (m *Meter) NewSumObserver(name string, cb Callback, iop ...metric.InstrumentOption) SumObserver {
