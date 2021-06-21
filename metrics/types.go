@@ -46,7 +46,7 @@ type UpDownSumObserver metric.Float64UpDownSumObserver
 // at a point in time.
 type ValueObserver metric.Float64ValueObserver
 
-// Callback is for asynchronous metrics.
+// Float64ObserverCallback is for asynchronous metrics.
 // The Callback function reports the absolute value of the counter
 // User code is recommended not to provide more than one Measurement with the same attributes in a single callback.
 // If it happens, the SDK can decide how to handle it. For example, during the callback invocation
@@ -55,4 +55,4 @@ type ValueObserver metric.Float64ValueObserver
 // drop the entire data, pick the last one, or something else.
 // The API must treat observations from a single callback as logically taking place at a single instant,
 // such that when recorded, observations from a single callback MUST be reported with identical timestamps.
-type MetricsCallback metric.Float64ObserverFunc
+type Float64ObserverCallback metric.Float64ObserverFunc

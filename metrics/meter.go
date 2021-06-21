@@ -7,13 +7,13 @@ import (
 )
 
 // NewMeter creates a new Meter
-func NewMeter(name string, ctx context.Context) *Meter {
+func NewMeter(name string, ctx context.Context, opts ...metric.MeterOption) *Meter {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	return &Meter{
-		Meter: global.Meter(name, metric.WithInstrumentationVersion("1.0.0")),
+		Meter: global.Meter(name, opts...),
 		ctx:   ctx,
 	}
 }
@@ -48,24 +48,22 @@ func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) Va
 	}
 }
 
-
-
 // NewSumObserver creates a new SumObserver instrumentation for Meter
-func (m *Meter) NewSumObserver(name string, cb MetricsCallback, iop ...metric.InstrumentOption) SumObserver {
+func (m *Meter) NewSumObserver(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) SumObserver {
 	sumObserver := metric.Must(m.Meter).NewFloat64SumObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
 	return SumObserver(sumObserver)
 }
 
 // NewUpDownSumObserver creates a new UpDownSumObserver for Meter
-func (m *Meter) NewUpDownSumObserver(name string, cb MetricsCallback, iop ...metric.InstrumentOption) UpDownSumObserver {
+func (m *Meter) NewUpDownSumObserver(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) UpDownSumObserver {
 	upDownSumObserver := metric.Must(m.Meter).NewFloat64UpDownSumObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
 	return UpDownSumObserver(upDownSumObserver)
 }
 
 // NewValueObserver creates a new ValueObserver for Meter
-func (m *Meter) NewValueObserver(name string, cb MetricsCallback, iop ...metric.InstrumentOption) ValueObserver {
+func (m *Meter) NewValueObserver(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) ValueObserver {
 	valueObserver := metric.Must(m.Meter).NewFloat64ValueObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
 	return ValueObserver(valueObserver)
