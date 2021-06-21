@@ -1,38 +1,24 @@
 package metrics
 
 import (
+	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 	"net/http"
 	"time"
 )
 
-const LauncherPort = ":2222"
-
-type ExporterType string
-
-const (
-	Prometheus ExporterType = "prometheus"
-)
-
-// Exporter is a manifest for pull-based metric exporters like Prometheus
-type Exporter interface {
-	ServeHTTP(w http.ResponseWriter, r *http.Request)
-	MeterProvider() metric.MeterProvider
-}
-
 // MetricLauncher is used for serving metrics.
 type MetricLauncher struct {
-	Exporter                Exporter
+	Exporter                PrometheusExporter
 	enableHostInstrument    bool
 	enableRuntimeInstrument bool
 }
 
 // NewMetricLauncher initializes MetricLauncher.
-func NewMetricLauncher(exporter Exporter) *MetricLauncher {
+func NewMetricLauncher(exporter PrometheusExporter) *MetricLauncher {
 	return &MetricLauncher{
 		exporter,
 		false,
@@ -40,7 +26,6 @@ func NewMetricLauncher(exporter Exporter) *MetricLauncher {
 	}
 }
 
-// SetMeterProvider sets meter provider globally
 func (ml *MetricLauncher) SetMeterProvider() *MetricLauncher {
 	global.SetMeterProvider(ml.Exporter.MeterProvider())
 	return ml
@@ -63,14 +48,14 @@ func (ml MetricLauncher) Launch() <-chan error {
 	if ml.enableHostInstrument {
 		err := host.Start()
 		if err != nil {
-			log.Fatal(FailedToStartRuntimeMetricsError.Inner(err).Error())
+			log.Error(errors.FailedToStartRuntimeMetricsError.Error())
 		}
 	}
 
 	if ml.enableRuntimeInstrument {
 		err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
 		if err != nil {
-			log.Fatal(FailedToStartHostMetricsError.Inner(err).Error())
+			log.Error(errors.FailedToStartHostMetricsError.Error())
 		}
 	}
 
@@ -80,7 +65,7 @@ func (ml MetricLauncher) Launch() <-chan error {
 	go func(errCh chan<- error) {
 		defer close(errCh)
 
-		errCh <- http.ListenAndServe(LauncherPort, nil)
+		errCh <- http.ListenAndServe(":2222", nil)
 	}(errCh)
 
 	return errCh

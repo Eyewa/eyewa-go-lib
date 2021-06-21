@@ -1,7 +1,7 @@
-package prometheus
+package metrics
 
 import (
-	"github.com/eyewa/eyewa-go-lib/metrics"
+	"github.com/eyewa/eyewa-go-lib/errors"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
 	export "go.opentelemetry.io/otel/sdk/export/metric"
@@ -40,9 +40,8 @@ func NewPrometheusExporter(option ExportOption) (*PrometheusExporter, error) {
 	)
 
 	exporter, err := prometheus.New(config, c)
-
 	if err != nil {
-		return nil, metrics.FailedToInitPrometheusExporterError.Inner(err)
+		return nil, errors.FailedToInitPrometheusExporterError
 	}
 
 	return &PrometheusExporter{

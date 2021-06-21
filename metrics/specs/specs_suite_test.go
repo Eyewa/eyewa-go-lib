@@ -2,7 +2,6 @@ package specs
 
 import (
 	"github.com/eyewa/eyewa-go-lib/metrics"
-	"github.com/eyewa/eyewa-go-lib/metrics/prometheus"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"net/http"
@@ -21,10 +20,10 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	option := prometheus.ExportOption{
+	option := metrics.ExportOption{
 		CollectPeriod: 1 * time.Second,
 	}
-	exporter, err := prometheus.NewPrometheusExporter(option)
+	exporter, err := metrics.NewPrometheusExporter(option)
 	Expect(err).Should(BeNil())
 
 	ml := metrics.NewMetricLauncher(exporter)
