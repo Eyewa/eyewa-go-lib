@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
+var (
+	ts    *httptest.Server
+)
+
 func TestSpecs(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Specs Suite")
 }
-
-var (
-	ts    *httptest.Server
-)
 
 var _ = BeforeSuite(func() {
 	option := metrics.ExportOption{
