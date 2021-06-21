@@ -12,13 +12,13 @@ import (
 
 // MetricLauncher is used for serving metrics.
 type MetricLauncher struct {
-	Exporter                PrometheusExporter
+	Exporter                *PrometheusExporter
 	enableHostInstrument    bool
 	enableRuntimeInstrument bool
 }
 
 // NewMetricLauncher initializes MetricLauncher.
-func NewMetricLauncher(exporter PrometheusExporter) *MetricLauncher {
+func NewMetricLauncher(exporter *PrometheusExporter) *MetricLauncher {
 	return &MetricLauncher{
 		exporter,
 		false,
