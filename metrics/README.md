@@ -38,7 +38,7 @@ Create metric launcher with predefined Exporter
 ```go
 ml := metrics.NewMetricLauncher(exporter)
 ```
-Set global meter provider. It will set the Exporter's Meter Provider globally. See also [Global Setting](#global-setting).
+Set global meter rovider. It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
 ```go
 ml.SetMeterProvider()
 ```
@@ -56,7 +56,7 @@ alright. It is receive-only channel.
 ```go
 errCh := ml.Launch()
 ```
-or put them together.
+or put them together
 ```go
  metrics.NewMetricLauncher(exporter).
     SetMeterProvider().
@@ -69,16 +69,8 @@ or put them together.
 Please see [Instrumentation](INSTRUMENTATION.md) from here
 
 ---
-### Global Setting
-
-When using OpenTelemetry, it’s a good practice to set a global tracer provider and 
-a global meter provider. Doing so will make it easier for libraries and other dependencies 
-that use the OpenTelemetry API to easily discover the SDK, and emit telemetry data.\
-[Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
-
----
 ### Programming Model under the hood
-You can check Open Telemetry programming model here. [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)
+You can check Open Telemetry programming model here [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)
 
 ---
 Read more [Metrics API](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md)

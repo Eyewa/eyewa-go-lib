@@ -26,7 +26,7 @@ var _ = BeforeSuite(func() {
 	exporter, err := metrics.NewPrometheusExporter(option)
 	Expect(err).Should(BeNil())
 
-	ml := metrics.NewMetricLauncher(exporter)
+	ml := metrics.NewLauncher(exporter)
 	ml.SetMeterProvider()
 
 	ts = httptest.NewServer(http.HandlerFunc(exporter.ServeHTTP))
