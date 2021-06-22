@@ -38,7 +38,7 @@ Create metric launcher with predefined Exporter
 ```go
 ml := metrics.NewMetricLauncher(exporter)
 ```
-Set global meter rovider. It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
+Set global meter provider. It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
 ```go
 ml.SetMeterProvider()
 ```
@@ -70,7 +70,7 @@ Please see [Instrumentation](INSTRUMENTATION.md) from here
 
 ---
 ### Programming Model under the hood
-You can check Open Telemetry programming model here [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)
+Open Telemetry [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)
 
 ---
 Read more [Metrics API](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md)
