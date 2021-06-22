@@ -50,7 +50,7 @@ func (*MessageBrokerClient) connect() (*MessageBrokerClient, error) {
 		return broker, nil
 	}
 
-	return nil, libErrs.ErrorBrokerClientNoRecognized
+	return nil, libErrs.ErrorBrokerClientNotRecognized
 }
 
 // NewConsumerClient creates a new consumer client
