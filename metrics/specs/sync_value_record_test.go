@@ -16,8 +16,6 @@ var _ = Describe("Given that metric launcher is launched", func() {
 	var (
 		expectedInstrumentName      = "test_value_recorder"
 		expectedInstrumentVersion   = "1.0.0"
-		firstRecordValue            = 35.0
-		secondRecordValue           = 55.0
 		expectedInstrumentationType = "HISTOGRAM"
 		valueRecorder               metrics.ValueRecorder
 		once                        sync.Once
@@ -36,6 +34,8 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			var (
 				expectedMetricCount = 1
 				expectedSampleCount = uint64(2)
+				firstRecordValue    = 35.0
+				secondRecordValue   = 55.0
 			)
 			// first record
 			valueRecorder.Record(firstRecordValue, attribute.Any("Name", "FirstMetric"))
@@ -76,6 +76,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			var (
 				expectedMetricCount = 2
 				expectedSampleCount = uint64(1)
+				firstRecordValue    = 40.0
 			)
 
 			valueRecorder.Record(firstRecordValue, attribute.Any("Name", "SecondMetric"))
