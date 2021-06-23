@@ -42,7 +42,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			// second record
 			valueRecorder.Record(secondRecordValue, attribute.Any("Name", "FirstMetric"))
 
-			res, err := http.Get(ts.URL)
+			res, err := http.Get(URL)
 			Expect(err).Should(BeNil())
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
 
@@ -81,7 +81,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 
 			valueRecorder.Record(firstRecordValue, attribute.Any("Name", "SecondMetric"))
 
-			res, err := http.Get(ts.URL)
+			res, err := http.Get(URL)
 			Expect(err).Should(BeNil())
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
 
@@ -97,6 +97,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				metrics := v.GetMetric()
 				Expect(metrics).Should(HaveLen(expectedMetricCount))
 
+				// pick second metric
 				metric := v.GetMetric()[1]
 
 				actualSampleCount := metric.Histogram.SampleCount

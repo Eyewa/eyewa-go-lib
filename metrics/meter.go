@@ -48,23 +48,23 @@ func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) Va
 	}
 }
 
-// NewSumObserver creates a new SumObserver instrumentation for Meter
-func (m *Meter) NewSumObserver(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) SumObserver {
+// NewAsyncCounter creates a new AsyncCounter instrumentation for Meter
+func (m *Meter) NewAsyncCounter(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) AsyncCounter {
 	sumObserver := metric.Must(m.Meter).NewFloat64SumObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
-	return SumObserver(sumObserver)
+	return AsyncCounter(sumObserver)
 }
 
-// NewUpDownSumObserver creates a new UpDownSumObserver for Meter
-func (m *Meter) NewUpDownSumObserver(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) UpDownSumObserver {
+// NewAsyncUpDownCounter creates a new AsyncUpDownCounter for Meter
+func (m *Meter) NewAsyncUpDownCounter(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) AsyncUpDownCounter {
 	upDownSumObserver := metric.Must(m.Meter).NewFloat64UpDownSumObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
-	return UpDownSumObserver(upDownSumObserver)
+	return AsyncUpDownCounter(upDownSumObserver)
 }
 
-// NewValueObserver creates a new ValueObserver for Meter
-func (m *Meter) NewValueObserver(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) ValueObserver {
+// NewAsyncValueRecorder creates a new AsyncValueRecorder for Meter
+func (m *Meter) NewAsyncValueRecorder(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) AsyncValueRecorder {
 	valueObserver := metric.Must(m.Meter).NewFloat64ValueObserver(name, metric.Float64ObserverFunc(cb), iop...)
 
-	return ValueObserver(valueObserver)
+	return AsyncValueRecorder(valueObserver)
 }

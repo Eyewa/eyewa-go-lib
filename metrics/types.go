@@ -2,14 +2,29 @@ package metrics
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
+	"time"
 )
+
+// Launcher is used for serving metrics.
+type Launcher struct {
+	exporter                *prometheus.Exporter
+	enableHostInstrument    bool
+	enableRuntimeInstrument bool
+}
 
 // Meter reports given instruments specified by OpenTelemetry
 type Meter struct {
 	metric.Meter
 
 	ctx context.Context
+}
+
+// ExportOption is configuration for MetricLauncher.
+type ExportOption struct {
+	// CollectPeriod sets period interval of exporting process.
+	CollectPeriod time.Duration
 }
 
 // Counter is counter instrument accumulates float64 values
@@ -34,17 +49,17 @@ type ValueRecorder struct {
 	ctx context.Context
 }
 
-// SumObserver is a metrics that captures a precomputed sum of
+// AsyncCounter is a metrics that captures a precomputed sum of
 // float64 values at a point in time.
-type SumObserver metric.Float64SumObserver
+type AsyncCounter metric.Float64SumObserver
 
-// UpDownSumObserver is a metrics that captures a precomputed sum of
+// AsyncUpDownCounter is a metrics that captures a precomputed sum of
 // float64 values at a point in time.
-type UpDownSumObserver metric.Float64UpDownSumObserver
+type AsyncUpDownCounter metric.Float64UpDownSumObserver
 
-// ValueObserver is a metrics that captures a set of float64 values
+// AsyncValueRecorder is a metrics that captures a set of float64 values
 // at a point in time.
-type ValueObserver metric.Float64ValueObserver
+type AsyncValueRecorder metric.Float64ValueObserver
 
 // Float64ObserverCallback is for asynchronous metrics.
 // The Callback function reports the absolute value of the counter

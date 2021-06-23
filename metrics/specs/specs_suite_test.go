@@ -4,14 +4,12 @@ import (
 	"github.com/eyewa/eyewa-go-lib/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
 var (
-	ts    *httptest.Server
 	meter *metrics.Meter
+	URL   = "http://localhost:2222"
 )
 
 func TestSpecs(t *testing.T) {
@@ -23,17 +21,10 @@ var _ = BeforeSuite(func() {
 	option := metrics.ExportOption{
 		CollectPeriod: 0,
 	}
-	exporter, err := metrics.NewPrometheusExporter(option)
+	ml, err := metrics.NewLauncher(option)
 	Expect(err).Should(BeNil())
 
-	ml := metrics.NewLauncher(exporter)
-	ml.SetMeterProvider()
+	ml.SetMeterProvider().Launch()
 
 	meter = metrics.NewMeter("test.meter", nil)
-
-	ts = httptest.NewServer(http.HandlerFunc(exporter.ServeHTTP))
-})
-
-var _ = AfterSuite(func() {
-	ts.Close()
 })

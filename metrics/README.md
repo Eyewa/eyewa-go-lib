@@ -11,7 +11,8 @@ The Metrics package consists of the following:
 - A Metrics Exporter - is used for scrapping data for Prometheus
 - A Metrics Instrumentation - any instrumentation of choice to create metrics.
 
-## How to create a Prometheus exporter.
+## How to create a metric launcher
+
 ```go
 package demo
 
@@ -19,26 +20,27 @@ import (
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/eyewa/eyewa-go-lib/metrics"
 	"github.com/eyewa/eyewa-go-lib/metrics/prometheus"
+	"github.com/eyewa/eyewa-go-lib/errors"
 	"time"
 )
 
 func main() {
-	option := prometheus.ExportOption{
+	option := metrics.ExportOption{
 		CollectPeriod: 1 * time.Second,
 	}
-	
-	exporter, err := prometheus.NewPrometheusExporter(option)
+
+	ml, err := metrics.NewLauncher(option)
 	if err != nil {
-		log.Error(metrics.FailedToInitPrometheusExporterError.Inner(err).Error())
+		log.Error(errors.FailedToStartMetricServerError.Error())
 	}
+
+	ml.SetMeterProvider().
+		EnableHostInstrument().
+		EnableRuntimeInstrument().
+		Launch()
 }
 ```
-## How to create a metric launcher
-Create metric launcher with predefined Exporter
-```go
-ml := metrics.NewMetricLauncher(exporter)
-```
-Set global meter provider. It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
+It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
 ```go
 ml.SetMeterProvider()
 ```
@@ -50,21 +52,12 @@ Enable runtime instrumentation. See also [Runtime Instrumentation Metrics](https
 ```go
 ml.EnableRuntimeInstrumentation()
 ```
-Then Launch. Launch will start Metric Server on port 2222 on different goroutine \
-not to block main process, so it returns error channel to check that is everything \
-alright. It is receive-only channel.
+Launch will start Metric Server on port 2222 on different goroutine 
+not to block main process.
 ```go
-errCh := ml.Launch()
+ml.Launch()
 ```
-or put them together
-```go
- metrics.NewMetricLauncher(exporter).
-    SetMeterProvider().
-    EnableHostInstrumentation().
-    EnableRuntimeInstrumentation().
-    Launch()
-	
-```
+
 # Instrumentation
 Please see [Instrumentation](INSTRUMENTATION.md) from here
 

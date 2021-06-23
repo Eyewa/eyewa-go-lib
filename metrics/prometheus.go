@@ -8,17 +8,10 @@ import (
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
-	"time"
 )
 
-// ExportOption is configuration for MetricLauncher.
-type ExportOption struct {
-	// CollectPeriod sets period interval of exporting process.
-	CollectPeriod time.Duration
-}
-
-// NewPrometheusExporter creates a new PrometheusExporter with given ExportOption
-func NewPrometheusExporter(option ExportOption) (*prometheus.Exporter, error) {
+// newPrometheusExporter creates a new PrometheusExporter with given ExportOption
+func newPrometheusExporter(option ExportOption) (*prometheus.Exporter, error) {
 	config := prometheus.Config{}
 	c := controller.New(
 		processor.New(

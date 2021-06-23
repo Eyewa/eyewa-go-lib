@@ -5,26 +5,23 @@ import (
 	"github.com/eyewa/eyewa-go-lib/log"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric/global"
 	"net/http"
 	"time"
 )
 
-// Launcher is used for serving metrics.
-type Launcher struct {
-	exporter                *prometheus.Exporter
-	enableHostInstrument    bool
-	enableRuntimeInstrument bool
-}
-
 // NewLauncher initializes MetricLauncher.
-func NewLauncher(exporter *prometheus.Exporter) *Launcher {
+func NewLauncher(option ExportOption) (*Launcher, error) {
+	exporter, err := newPrometheusExporter(option)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Launcher{
 		exporter,
 		false,
 		false,
-	}
+	}, nil
 }
 
 func (ml *Launcher) SetMeterProvider() *Launcher {
@@ -45,7 +42,7 @@ func (ml *Launcher) EnableRuntimeInstrument() *Launcher {
 }
 
 // Launch starts serving metrics. Also starts Host and Runtime instruments if they are enabled.
-func (ml *Launcher) Launch() <-chan error {
+func (ml *Launcher) Launch() {
 	if ml.enableHostInstrument {
 		err := host.Start()
 		if err != nil {
@@ -62,12 +59,10 @@ func (ml *Launcher) Launch() <-chan error {
 
 	http.HandleFunc("/", ml.exporter.ServeHTTP)
 
-	errCh := make(chan error)
-	go func(errCh chan<- error) {
-		defer close(errCh)
-
-		errCh <- http.ListenAndServe(":2222", nil)
-	}(errCh)
-
-	return errCh
+	go func() {
+		err := http.ListenAndServe(":2222", nil)
+		if err != nil {
+			log.Error(errors.FailedToStartMetricServerError.Error())
+		}
+	}()
 }

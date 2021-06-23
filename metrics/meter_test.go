@@ -37,23 +37,23 @@ func TestMeter_NewValueRecorder(t *testing.T) {
 	assert.NotNil(t, valueRecorder.ctx)
 }
 
-func TestMeter_NewSumObserver(t *testing.T) {
+func TestMeter_NewAsyncCounter(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
-	sumObserver := meter.NewSumObserver("test.sumObserver", nil)
+	sumObserver := meter.NewAsyncCounter("test.sumObserver", nil)
 
 	assert.NotNil(t, sumObserver)
 }
 
-func TestMeter_NewUpDownSumObserver(t *testing.T) {
+func TestMeter_NewAsyncUpDownCounter(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
-	upDownSumObserver := meter.NewUpDownSumObserver("test.upDownSumObserver", nil)
+	upDownSumObserver := meter.NewAsyncUpDownCounter("test.upDownSumObserver", nil)
 
 	assert.NotNil(t, upDownSumObserver)
 }
 
-func TestMeter_NewValueObserver(t *testing.T) {
+func TestMeter_NewAsyncValueRecorder(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
-	valueObserver := meter.NewValueObserver("test.valueObserver", nil)
+	valueObserver := meter.NewAsyncValueRecorder("test.valueObserver", nil)
 
 	assert.NotNil(t, valueObserver)
 }
