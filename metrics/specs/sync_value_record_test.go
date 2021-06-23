@@ -20,10 +20,10 @@ var _ = Describe("Given that metric launcher is launched", func() {
 		secondRecordValue           = 55.0
 		expectedInstrumentationType = "HISTOGRAM"
 		valueRecorder               metrics.ValueRecorder
+		once                        sync.Once
 	)
 
 	BeforeEach(func() {
-		var once sync.Once
 		once.Do(func() {
 			valueRecorder = meter.NewValueRecorder(expectedInstrumentName,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
