@@ -35,24 +35,15 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			mf, err := parser.TextToMetricFamilies(res.Body)
 			Expect(err).Should(BeNil())
 
-			isMeasurementExist := false
-			for actualCounterName, v := range mf {
-				fmt.Println(v)
-				if actualCounterName != expectedInstrumentName {
-					continue
-				}
-
-				isMeasurementExist = true
-				Expect(actualCounterName).Should(Equal(expectedInstrumentName))
-
+			if v, ok := mf[expectedInstrumentName]; ok {
 				actualInstrumentationType := v.GetType().String()
 				Expect(actualInstrumentationType).Should(Equal(expectedInstrumentationType))
 
 				actualValue := v.GetMetric()[0].Counter.Value
 				Expect(*actualValue).Should(Equal(expectedValue))
+			}else{
+				Fail("Measurement couldn't find")
 			}
-
-			Expect(isMeasurementExist).Should(Equal(true))
 		})
 	})
 })

@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Given that metric launcher is launched", func() {
 	var (
-		expectedInstrumentName   = "test_updown_counter"
+		expectedInstrumentName      = "test_updown_counter"
 		expectedInstrumentVersion   = "1.0.0"
 		expectedValue               = 35.0
 		expectedInstrumentationType = "GAUGE"
@@ -32,23 +32,15 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			mf, err := parser.TextToMetricFamilies(res.Body)
 			Expect(err).Should(BeNil())
 
-			isMeasurementExist := false
-			for actualCounterName, v := range mf {
-				if actualCounterName != expectedInstrumentName{
-					continue
-				}
-
-				isMeasurementExist = true
-				Expect(actualCounterName).Should(Equal(expectedInstrumentName))
-
+			if v, ok := mf[expectedInstrumentName]; ok {
 				actualInstrumentationType := v.GetType().String()
 				Expect(actualInstrumentationType).Should(Equal(expectedInstrumentationType))
 
 				actualValue := v.GetMetric()[0].Gauge.Value
 				Expect(*actualValue).Should(Equal(expectedValue))
+			}else{
+				Fail("Measurement couldn't find")
 			}
-
-			Expect(isMeasurementExist).Should(Equal(true))
 		})
 	})
 })
