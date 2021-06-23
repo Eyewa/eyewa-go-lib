@@ -2,7 +2,6 @@ package specs
 
 import (
 	"fmt"
-	"github.com/eyewa/eyewa-go-lib/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/common/expfmt"
@@ -12,17 +11,15 @@ import (
 
 var _ = Describe("Given that metric launcher is launched", func() {
 	var (
-		expectedInstrumentName      = "test_counter"
+		expectedInstrumentName   = "test_updown_counter"
 		expectedInstrumentVersion   = "1.0.0"
-		expectedValue               = 45.0
-		expectedInstrumentationType = "COUNTER"
+		expectedValue               = 35.0
+		expectedInstrumentationType = "GAUGE"
 	)
 
-	meter := metrics.NewMeter("test.meter", nil)
-
-	Describe(fmt.Sprintf("When counter is initialized and being increased with value %f", expectedValue), func() {
+	Describe(fmt.Sprintf("When updown counter is initialized and being increased with value %f", expectedValue), func() {
 		It("should return expected metric result", func() {
-			counter := meter.NewCounter(expectedInstrumentName,
+			counter := meter.NewUpDownCounter(expectedInstrumentName,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)
 			counter.Add(expectedValue)
@@ -37,8 +34,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 
 			isMeasurementExist := false
 			for actualCounterName, v := range mf {
-				fmt.Println(v)
-				if actualCounterName != expectedInstrumentName {
+				if actualCounterName != expectedInstrumentName{
 					continue
 				}
 
@@ -48,7 +44,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				actualInstrumentationType := v.GetType().String()
 				Expect(actualInstrumentationType).Should(Equal(expectedInstrumentationType))
 
-				actualValue := v.GetMetric()[0].Counter.Value
+				actualValue := v.GetMetric()[0].Gauge.Value
 				Expect(*actualValue).Should(Equal(expectedValue))
 			}
 

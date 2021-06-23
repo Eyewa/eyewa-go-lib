@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
 var (
 	ts    *httptest.Server
+	meter *metrics.Meter
 )
 
 func TestSpecs(t *testing.T) {
@@ -21,13 +21,15 @@ func TestSpecs(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	option := metrics.ExportOption{
-		CollectPeriod: 1 * time.Second,
+		CollectPeriod: 0,
 	}
 	exporter, err := metrics.NewPrometheusExporter(option)
 	Expect(err).Should(BeNil())
 
 	ml := metrics.NewLauncher(exporter)
 	ml.SetMeterProvider()
+
+	meter = metrics.NewMeter("test.meter", nil)
 
 	ts = httptest.NewServer(http.HandlerFunc(exporter.ServeHTTP))
 })
