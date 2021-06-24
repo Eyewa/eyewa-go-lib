@@ -60,28 +60,27 @@ ml.Launch()
 ```
 ## How to create a instrument
 ```go
-    //Start to create meters
-	httpMeter := metrics.NewMeter("http.meter", nil)
+    //Start to create meters 
+    httpMeter := metrics.NewMeter("http.meter", nil)
 
-	// Create a new instrument from meter
-	requestCounter, err := httpMeter.NewCounter("request.counter")
-	if err != nil {
-		log.Error(errors.FailedToCreateInstrumentError.Error())
-	}
-	
-	// increase measurement
-	requestCounter.Add(1)
-
-	// Create async counter with callback
-	cb := func(ctx context.Context, result metric.Float64ObserverResult) {
-		// increase measurement
-		result.Observe(1)
-	}
-
-	_, err = httpMeter.NewAsyncCounter("request.async.counter", cb)
-	if err != nil {
-		log.Error(errors.FailedToCreateInstrumentError.Error())
-	}
+    // Create a new instrument from meter
+    requestCounter, err := httpMeter.NewCounter("request.counter")
+    if err != nil {
+        log.Error(errors.FailedToCreateInstrumentError.Error())
+    }
+    
+    // increase measurement
+    requestCounter.Add(1)
+    
+    // Create async counter with callback
+    cb := func(ctx context.Context, result metric.Float64ObserverResult) {
+        // increase measurement
+        result.Observe(1)
+    }
+    _, err = httpMeter.NewAsyncCounter("request.async.counter", cb)
+    if err != nil {
+        log.Error(errors.FailedToCreateInstrumentError.Error())
+    }
 ```
 # Instruments
 There are two type of instrument sync and async. Sync instruments are;
