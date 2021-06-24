@@ -51,7 +51,7 @@ func TestNewAsyncUpDownMeterCounter(t *testing.T) {
 	assert.NotNil(t, upDownSumObserver)
 }
 
-func TestMeter_NewAsyncValueRecorder(t *testing.T) {
+func TestNewAsyncValueMeterRecorder(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
 	valueObserver := meter.NewAsyncValueRecorder("test.valueObserver", nil)
 
