@@ -19,7 +19,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 
 	Describe(fmt.Sprintf("When updown counter is initialized and being increased with value %f", expectedValue), func() {
 		It("should return expected metric result", func() {
-			counter,err := meter.NewUpDownCounter(expectedInstrumentName,
+			counter, err := meter.NewUpDownCounter(expectedInstrumentName,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)
 			Expect(err).Should(BeNil())
@@ -40,7 +40,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 
 				actualValue := v.GetMetric()[0].Gauge.Value
 				Expect(*actualValue).Should(Equal(expectedValue))
-			}else{
+			} else {
 				Fail("Measurement couldn't find")
 			}
 		})

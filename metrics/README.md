@@ -27,7 +27,7 @@ import (
 
 func main() {
 	option := metrics.ExportOption{
-		CollectPeriod: 1 * time.Second,
+		CollectPeriod: 10 * time.Second,
 	}
 
 	ml, err := metrics.NewLauncher(option)
