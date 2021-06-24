@@ -40,7 +40,7 @@ func main() {
 		EnableRuntimeInstrument().
 		Launch()
 
-	//Start to create instruments
+	//Start to create meters
 	httpMeter := metrics.NewMeter("http.meter", nil)
 
 	// Create a new instrument from meter
