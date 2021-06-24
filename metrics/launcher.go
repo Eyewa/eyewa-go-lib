@@ -3,15 +3,22 @@ package metrics
 import (
 	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
+	"github.com/ory/viper"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/metric/global"
 	"net/http"
+	"strings"
 	"time"
 )
 
 // NewLauncher initializes MetricLauncher.
-func NewLauncher(option ExportOption) (*Launcher, error) {
+func NewLauncher() (*Launcher, error) {
+	option, err := initConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	exporter, err := newPrometheusExporter(option)
 	if err != nil {
 		return nil, err
@@ -22,6 +29,29 @@ func NewLauncher(option ExportOption) (*Launcher, error) {
 		false,
 		false,
 	}, nil
+}
+
+func initConfig() (ExportOption, error) {
+	var exportOption ExportOption
+
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.SetDefault("METRIC_COLLECT_PERIOD", "10s")
+
+	envVars := []string{
+		"METRIC_COLLECT_PERIOD",
+	}
+
+	for _, v := range envVars {
+		if err := viper.BindEnv(v); err != nil {
+			return exportOption, err
+		}
+	}
+	if err := viper.Unmarshal(&exportOption); err != nil {
+		return exportOption, err
+	}
+
+	return exportOption, nil
 }
 
 func (ml *Launcher) SetMeterProvider() *Launcher {

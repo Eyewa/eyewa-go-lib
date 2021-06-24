@@ -1,17 +1,15 @@
 package metrics
 
 import (
+	"github.com/ory/viper"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
 func TestNewLauncher(t *testing.T) {
-	option := ExportOption{
-		CollectPeriod: 10 * time.Second,
-	}
+	viper.Set("METRIC_COLLECT_PERIOD","5s")
 
-	ml, err := NewLauncher(option)
+	ml, err := NewLauncher()
 	assert.Nil(t, err)
 	assert.NotNil(t, ml)
 }

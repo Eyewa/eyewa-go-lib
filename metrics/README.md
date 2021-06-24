@@ -12,25 +12,23 @@ The Metrics package consists of the following:
 - A Metrics Instrumentation - any instrumentation of choice to create metrics.
 
 ## How to create a metric launcher
+The following variable should be injected in order to use this pkg
+```
+METRIC_COLLECT_PERIOD=10s #default is 10s
+```
 
 ```go
 package demo
 
 import (
-	"context"
 	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/eyewa/eyewa-go-lib/metrics"
 	"go.opentelemetry.io/otel/metric"
-	"time"
 )
 
 func main() {
-	option := metrics.ExportOption{
-		CollectPeriod: 10 * time.Second,
-	}
-
-	ml, err := metrics.NewLauncher(option)
+	ml, err := metrics.NewLauncher()
 	if err != nil {
 		log.Error(errors.FailedToStartMetricServerError.Error())
 	}

@@ -24,7 +24,7 @@ type Meter struct {
 // ExportOption is configuration for MetricLauncher.
 type ExportOption struct {
 	// CollectPeriod sets period interval of exporting process.
-	CollectPeriod time.Duration
+	CollectPeriod time.Duration `mapstructure:"METRIC_COLLECT_PERIOD"`
 }
 
 // Counter is counter instrument accumulates float64 values
