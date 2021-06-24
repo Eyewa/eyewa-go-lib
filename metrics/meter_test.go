@@ -29,7 +29,7 @@ func TestNewUpDownMeterCounter(t *testing.T) {
 	assert.NotNil(t, upDownCounter.ctx)
 }
 
-func TestMeter_NewValueRecorder(t *testing.T) {
+func TestNewValueMeterRecorder(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
 	valueRecorder := meter.NewValueRecorder("test.valueRecorder")
 
