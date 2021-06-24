@@ -21,7 +21,7 @@ func TestMeter_NewCounter(t *testing.T) {
 	assert.NotNil(t, counter.ctx)
 }
 
-func TestMeter_NewUpDownCounter(t *testing.T) {
+func TestNewUpDownMeterCounter(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
 	upDownCounter := meter.NewUpDownCounter("test.upDownCounter")
 
