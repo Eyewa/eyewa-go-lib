@@ -58,7 +58,7 @@ not to block main process.
 ```go
 ml.Launch()
 ```
-## How to create a instrument
+## How to create an instrument
 ```go
     //Start to create meters 
     httpMeter := metrics.NewMeter("http.meter", nil)
