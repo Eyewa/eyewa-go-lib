@@ -16,15 +16,17 @@ var _ = Describe("Given that metric launcher is launched", func() {
 		expectedInstrumentName      = "test_value_recorder"
 		expectedInstrumentVersion   = "1.0.0"
 		expectedInstrumentationType = "HISTOGRAM"
-		valueRecorder               metrics.ValueRecorder
+		valueRecorder               *metrics.ValueRecorder
 		once                        sync.Once
+		err                         error
 	)
 
 	BeforeEach(func() {
 		once.Do(func() {
-			valueRecorder = meter.NewValueRecorder(expectedInstrumentName,
+			valueRecorder, err = meter.NewValueRecorder(expectedInstrumentName,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)
+			Expect(err).Should(BeNil())
 		})
 	})
 

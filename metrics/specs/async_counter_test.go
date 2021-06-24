@@ -16,6 +16,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 		expectedInstrumentVersion   = "1.0.0"
 		expectedValue               = 45.0
 		expectedInstrumentationType = "COUNTER"
+		err                         error
 	)
 
 	Describe(fmt.Sprintf("When async counter is initialized and being increased with value %f", expectedValue), func() {
@@ -24,10 +25,12 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				result.Observe(expectedValue)
 			}
 
-			_ = meter.NewAsyncCounter(expectedInstrumentName,
+			_, err = meter.NewAsyncCounter(expectedInstrumentName,
 				callback,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)
+			Expect(err).Should(BeNil())
+
 
 			res, err := http.Get(URL)
 			Expect(err).Should(BeNil())

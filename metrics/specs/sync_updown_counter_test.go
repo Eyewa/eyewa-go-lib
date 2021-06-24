@@ -19,9 +19,11 @@ var _ = Describe("Given that metric launcher is launched", func() {
 
 	Describe(fmt.Sprintf("When updown counter is initialized and being increased with value %f", expectedValue), func() {
 		It("should return expected metric result", func() {
-			counter := meter.NewUpDownCounter(expectedInstrumentName,
+			counter,err := meter.NewUpDownCounter(expectedInstrumentName,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)
+			Expect(err).Should(BeNil())
+
 			counter.Add(expectedValue)
 
 			res, err := http.Get(URL)

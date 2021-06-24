@@ -16,6 +16,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 		expectedInstrumentVersion   = "1.0.0"
 		expectedValue               = 35.0
 		expectedInstrumentationType = "GAUGE"
+		err                         error
 	)
 
 	Describe(fmt.Sprintf("When async value recorder is initialized and being increased with value %f", expectedValue), func() {
@@ -24,10 +25,11 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				result.Observe(expectedValue)
 			}
 
-			_ = meter.NewAsyncValueRecorder(expectedInstrumentName,
+			_, err = meter.NewAsyncValueRecorder(expectedInstrumentName,
 				callback,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)
+			Expect(err).Should(BeNil())
 
 			res, err := http.Get(URL)
 			Expect(err).Should(BeNil())

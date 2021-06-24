@@ -19,52 +19,73 @@ func NewMeter(name string, ctx context.Context, opts ...metric.MeterOption) *Met
 }
 
 // NewCounter creates a new Counter instrumentation for Meter
-func (m *Meter) NewCounter(name string, iop ...metric.InstrumentOption) Counter {
-	counter := metric.Must(m.Meter).NewFloat64Counter(name, iop...)
+func (m *Meter) NewCounter(name string, iop ...metric.InstrumentOption) (*Counter, error) {
+	counter, err := m.Meter.NewFloat64Counter(name, iop...)
+	if err != nil {
+		return nil, err
+	}
 
-	return Counter{
+	return &Counter{
 		counter,
 		m.ctx,
-	}
+	}, nil
 }
 
 // NewUpDownCounter creates a new UpDownCounter instrumentation for Meter
-func (m *Meter) NewUpDownCounter(name string, iop ...metric.InstrumentOption) UpDownCounter {
-	upDownCounter := metric.Must(m.Meter).NewFloat64UpDownCounter(name, iop...)
+func (m *Meter) NewUpDownCounter(name string, iop ...metric.InstrumentOption) (*UpDownCounter, error) {
+	upDownCounter, err := m.Meter.NewFloat64UpDownCounter(name, iop...)
+	if err != nil {
+		return nil, err
+	}
 
-	return UpDownCounter{
+	return &UpDownCounter{
 		upDownCounter,
 		m.ctx,
-	}
+	}, nil
 }
 
 // NewValueRecorder creates a new ValueRecorder instrumentation for Meter
-func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) ValueRecorder {
-	valueRecorder := metric.Must(m.Meter).NewFloat64ValueRecorder(name, iop...)
+func (m *Meter) NewValueRecorder(name string, iop ...metric.InstrumentOption) (*ValueRecorder, error) {
+	valueRecorder, err := m.Meter.NewFloat64ValueRecorder(name, iop...)
+	if err != nil {
+		return nil, err
+	}
 
-	return ValueRecorder{
+	return &ValueRecorder{
 		valueRecorder,
 		m.ctx,
-	}
+	}, nil
 }
 
 // NewAsyncCounter creates a new AsyncCounter instrumentation for Meter
-func (m *Meter) NewAsyncCounter(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) AsyncCounter {
-	sumObserver := metric.Must(m.Meter).NewFloat64SumObserver(name, metric.Float64ObserverFunc(cb), iop...)
+func (m *Meter) NewAsyncCounter(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) (*AsyncCounter, error) {
+	sumObserver, err := m.Meter.NewFloat64SumObserver(name, metric.Float64ObserverFunc(cb), iop...)
+	if err != nil {
+		return nil, err
+	}
 
-	return AsyncCounter(sumObserver)
+	asyncCounter := AsyncCounter(sumObserver)
+	return &asyncCounter, nil
 }
 
 // NewAsyncUpDownCounter creates a new AsyncUpDownCounter for Meter
-func (m *Meter) NewAsyncUpDownCounter(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) AsyncUpDownCounter {
-	upDownSumObserver := metric.Must(m.Meter).NewFloat64UpDownSumObserver(name, metric.Float64ObserverFunc(cb), iop...)
+func (m *Meter) NewAsyncUpDownCounter(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) (*AsyncUpDownCounter, error) {
+	upDownSumObserver, err := m.Meter.NewFloat64UpDownSumObserver(name, metric.Float64ObserverFunc(cb), iop...)
+	if err != nil {
+		return nil, err
+	}
 
-	return AsyncUpDownCounter(upDownSumObserver)
+	asyncUpDownCounter := AsyncUpDownCounter(upDownSumObserver)
+	return &asyncUpDownCounter, nil
 }
 
 // NewAsyncValueRecorder creates a new AsyncValueRecorder for Meter
-func (m *Meter) NewAsyncValueRecorder(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) AsyncValueRecorder {
-	valueObserver := metric.Must(m.Meter).NewFloat64ValueObserver(name, metric.Float64ObserverFunc(cb), iop...)
+func (m *Meter) NewAsyncValueRecorder(name string, cb Float64ObserverCallback, iop ...metric.InstrumentOption) (*AsyncValueRecorder, error) {
+	valueObserver, err := m.Meter.NewFloat64ValueObserver(name, metric.Float64ObserverFunc(cb), iop...)
+	if err != nil {
+		return nil, err
+	}
 
-	return AsyncValueRecorder(valueObserver)
+	asyncValueRecorder := AsyncValueRecorder(valueObserver)
+	return &asyncValueRecorder, nil
 }
