@@ -17,10 +17,11 @@ The Metrics package consists of the following:
 package demo
 
 import (
+	"context"
+	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/eyewa/eyewa-go-lib/metrics"
-	"github.com/eyewa/eyewa-go-lib/metrics/prometheus"
-	"github.com/eyewa/eyewa-go-lib/errors"
+	"go.opentelemetry.io/otel/metric"
 	"time"
 )
 
@@ -38,6 +39,29 @@ func main() {
 		EnableHostInstrument().
 		EnableRuntimeInstrument().
 		Launch()
+
+	//Start to create instruments
+	httpMeter := metrics.NewMeter("http.meter", nil)
+
+	// Create a new instrument from meter
+	requestCounter, err := httpMeter.NewCounter("request.counter")
+	if err != nil {
+		log.Error(errors.FailedToCreateInstrumentError.Error())
+	}
+	
+	// increase measurement
+	requestCounter.Add(1)
+
+	// Create async counter with callback
+	cb := func(ctx context.Context, result metric.Float64ObserverResult) {
+		// increase measurement
+		result.Observe(1)
+	}
+
+	_, err = httpMeter.NewAsyncCounter("request.async.counter", cb)
+	if err != nil {
+		log.Error(errors.FailedToCreateInstrumentError.Error())
+	}
 }
 ```
 It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
@@ -59,8 +83,15 @@ ml.Launch()
 ```
 
 # Instrumentation
-Please see [Instrumentation](INSTRUMENTATION.md) from here
+There are two type instrument sync and async. Sync instruments are;
+- Counter
+- UpDownCounter
+- ValueRecorder
 
+asyncs are;
+- AsyncCounter
+- AsyncUpDownCounter
+- AsyncValueRecorder
 ---
 ### Programming Model under the hood
 Open Telemetry [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)

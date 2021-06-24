@@ -22,22 +22,6 @@ func TestMeterNewCounter(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestMeterNewCounterWithExistName(t *testing.T) {
-	meter := NewMeter("test.meter", nil)
-	counter, err := meter.NewCounter("counter")
-
-	assert.NotNil(t, counter.Float64Counter)
-	assert.NotNil(t, counter.ctx)
-	assert.Nil(t, err)
-
-	//create a new counter with the same name
-	otherCounter, err := meter.NewCounter("counter")
-
-	assert.NotNil(t, otherCounter.Float64Counter)
-	assert.NotNil(t, otherCounter.ctx)
-	assert.Nil(t, err)
-}
-
 func TestNewUpDownMeterCounter(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
 	upDownCounter, err := meter.NewUpDownCounter("test.upDownCounter")

@@ -15,4 +15,5 @@ var (
 	FailedToStartRuntimeMetricsError    = errors.New("Failed to start runtime metrics.")
 	FailedToStartHostMetricsError       = errors.New("Failed to start host metrics.")
 	FailedToStartMetricServerError      = errors.New("Failed to start metric server.")
+	FailedToCreateInstrumentError       = errors.New("Failed to create instrument.")
 )
