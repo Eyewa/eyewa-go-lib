@@ -8,7 +8,7 @@ This package provides an abstraction layer for `https://github.com/go-gorm/gorm`
 The following env variables can be injected in order to use this pkg:
 
 ```go
-"DB_DRIVER" // required - available options include mysql, postgres
+"DB_DRIVER" // required - available options include mysql, postgres, sqlite
 
 // required if driver is either mysql, postgres
 "DB_HOST"
