@@ -50,14 +50,14 @@ func TestOpenConnectionFail(t *testing.T) {
 	rmqMock.AssertNotCalled(t, "Connect")
 	_, err = OpenConnection()
 	assert.Error(t, err)
-	assert.EqualError(t, libErrs.ErrorBrokerClientNoRecognized, err.Error())
+	assert.EqualError(t, libErrs.ErrorBrokerClientNotRecognized, err.Error())
 
 	os.Setenv("MESSAGE_BROKER", "")
 	rmqMock = new(ClientMock)
 	rmqMock.AssertNotCalled(t, "Connect")
 	_, err = OpenConnection()
 	assert.Error(t, err)
-	assert.EqualError(t, libErrs.ErrorBrokerClientNoRecognized, err.Error())
+	assert.EqualError(t, libErrs.ErrorBrokerClientNotRecognized, err.Error())
 }
 
 func TestGetClient(t *testing.T) {
