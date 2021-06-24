@@ -12,19 +12,19 @@ import (
 
 var _ = Describe("Given that metric launcher is launched", func() {
 	var (
-		expectedInstrumentName      = "test_async_counter"
+		expectedInstrumentName      = "test_async_value_recorder"
 		expectedInstrumentVersion   = "1.0.0"
-		expectedValue               = 45.0
-		expectedInstrumentationType = "COUNTER"
+		expectedValue               = 35.0
+		expectedInstrumentationType = "GAUGE"
 	)
 
-	Describe(fmt.Sprintf("When async counter is initialized and being increased with value %f", expectedValue), func() {
+	Describe(fmt.Sprintf("When async value recorder is initialized and being increased with value %f", expectedValue), func() {
 		It("should return expected metric result", func() {
 			callback := func(ctx context.Context, result metric.Float64ObserverResult) {
 				result.Observe(expectedValue)
 			}
 
-			_ = meter.NewAsyncCounter(expectedInstrumentName,
+			_ = meter.NewAsyncValueRecorder(expectedInstrumentName,
 				callback,
 				metric.WithInstrumentationVersion(expectedInstrumentVersion),
 			)
@@ -41,7 +41,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				actualInstrumentationType := v.GetType().String()
 				Expect(actualInstrumentationType).Should(Equal(expectedInstrumentationType))
 
-				actualValue := v.GetMetric()[0].Counter.Value
+				actualValue := v.GetMetric()[0].Gauge.Value
 				Expect(*actualValue).Should(Equal(expectedValue))
 			} else {
 				Fail("Measurement couldn't find")

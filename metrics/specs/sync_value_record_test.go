@@ -1,7 +1,6 @@
 package specs
 
 import (
-	"fmt"
 	"github.com/eyewa/eyewa-go-lib/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,9 +36,9 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				firstRecordValue    = 35.0
 				secondRecordValue   = 55.0
 			)
-			// first record
+			// First metric, first record
 			valueRecorder.Record(firstRecordValue, attribute.Any("Name", "FirstMetric"))
-			// second record
+			// First metric, second record
 			valueRecorder.Record(secondRecordValue, attribute.Any("Name", "FirstMetric"))
 
 			res, err := http.Get(URL)
@@ -51,7 +50,6 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			Expect(err).Should(BeNil())
 
 			if v, ok := mf[expectedInstrumentName]; ok {
-				fmt.Println(v)
 				actualInstrumentationType := v.GetType().String()
 				Expect(actualInstrumentationType).Should(Equal(expectedInstrumentationType))
 
@@ -79,6 +77,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				firstRecordValue    = 40.0
 			)
 
+			//Second metric, first record
 			valueRecorder.Record(firstRecordValue, attribute.Any("Name", "SecondMetric"))
 
 			res, err := http.Get(URL)
@@ -90,7 +89,6 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			Expect(err).Should(BeNil())
 
 			if v, ok := mf[expectedInstrumentName]; ok {
-				fmt.Println(v)
 				actualInstrumentationType := v.GetType().String()
 				Expect(actualInstrumentationType).Should(Equal(expectedInstrumentationType))
 
