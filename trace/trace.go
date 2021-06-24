@@ -32,7 +32,7 @@ func initConfig() (EnvConfig, error) {
 	envVars := []string{
 		"SERVICE_NAME",
 		"HOST_NAME",
-		"TRACE_EXPORTER_ENDPOINT",
+		"TRACE_COLLECTOR_ENDPOINT",
 	}
 
 	for _, v := range envVars {
@@ -98,8 +98,7 @@ func registerTraceProvider(tp *sdktrace.TracerProvider) {
 	otel.SetTracerProvider(tp)
 }
 
-// instantiates a new collector exporter and defaults to stdout if no enpoint is provided
-// returns the connect function
+// instantiates a new collector exporter and defaults to stdout if no enpoint is provided.
 func configureExporter(ctx context.Context, endpoint string) (sdktrace.SpanExporter, error) {
 	if endpoint == "" {
 		r, err := stdout.NewExporter(stdout.WithPrettyPrint())
@@ -107,7 +106,6 @@ func configureExporter(ctx context.Context, endpoint string) (sdktrace.SpanExpor
 	}
 
 	driver := otlpgrpc.NewDriver(
-		// need to look at securing this connection later
 		otlpgrpc.WithInsecure(),
 		otlpgrpc.WithEndpoint(endpoint),
 		otlpgrpc.WithDialOption(grpc.WithBlock()), // useful for testing
@@ -118,14 +116,13 @@ func configureExporter(ctx context.Context, endpoint string) (sdktrace.SpanExpor
 	return exp, err
 }
 
-// newProvider creates a new trace provider for the given resource and exporter.
+// newProvider creates a new trace provider with default options for the given resource and exporter.
 func newProvider(exp trace.SpanExporter, res *resource.Resource) *sdktrace.TracerProvider {
 	bsp := sdktrace.NewBatchSpanProcessor(exp)
 	samp := sdktrace.AlwaysSample()
-	tracerProvider := sdktrace.NewTracerProvider(
+	return sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(samp),
 		sdktrace.WithResource(res),
 		sdktrace.WithSpanProcessor(bsp),
 	)
-	return tracerProvider
 }
