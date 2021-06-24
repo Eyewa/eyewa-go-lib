@@ -3,7 +3,7 @@ Shared Go Lib for Eyewa's microservices.
 
 # metrics
 This package is simply a wrapper for OpenTelemetry metric package. It uses Prometheus
-Exporter to export metrics. Metrics is exported from **2222** port
+Exporter to export metrics. Metrics are exported from **2222** port
 
 # How to use it
 The Metrics package consists of the following:
@@ -39,8 +39,28 @@ func main() {
 		EnableHostInstrument().
 		EnableRuntimeInstrument().
 		Launch()
-
-	//Start to create meters
+}
+```
+It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
+```go
+ml.SetMeterProvider()
+```
+Enable host instrumentation. See also [Host Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
+```go
+ml.EnableHostInstrumentation()
+```
+Enable runtime instrumentation. See also [Runtime Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0#pkg-overview)
+```go
+ml.EnableRuntimeInstrumentation()
+```
+Launch will start Metric Server on port 2222 on different goroutine 
+not to block main process.
+```go
+ml.Launch()
+```
+## How to create a instrument
+```go
+    //Start to create meters
 	httpMeter := metrics.NewMeter("http.meter", nil)
 
 	// Create a new instrument from meter
@@ -62,28 +82,9 @@ func main() {
 	if err != nil {
 		log.Error(errors.FailedToCreateInstrumentError.Error())
 	}
-}
 ```
-It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
-```go
-ml.SetMeterProvider()
-```
-Enable host instrumentation. See also [Host Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
-```go
-ml.EnableHostInstrumentation()
-```
-Enable runtime instrumentation. See also [Runtime Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0#pkg-overview)
-```go
-ml.EnableRuntimeInstrumentation()
-```
-Launch will start Metric Server on port 2222 on different goroutine 
-not to block main process.
-```go
-ml.Launch()
-```
-
-# Instrumentation
-There are two type instrument sync and async. Sync instruments are;
+# Instruments
+There are two type of instrument sync and async. Sync instruments are;
 - Counter
 - UpDownCounter
 - ValueRecorder
