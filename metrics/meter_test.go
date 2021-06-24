@@ -37,7 +37,7 @@ func TestNewValueMeterRecorder(t *testing.T) {
 	assert.NotNil(t, valueRecorder.ctx)
 }
 
-func TestMeter_NewAsyncCounter(t *testing.T) {
+func TestNewAsyncMeterCounter(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
 	sumObserver := meter.NewAsyncCounter("test.sumObserver", nil)
 
