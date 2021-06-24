@@ -44,7 +44,7 @@ func TestNewAsyncMeterCounter(t *testing.T) {
 	assert.NotNil(t, sumObserver)
 }
 
-func TestMeter_NewAsyncUpDownCounter(t *testing.T) {
+func TestNewAsyncUpDownMeterCounter(t *testing.T) {
 	meter := NewMeter("test.meter", nil)
 	upDownSumObserver := meter.NewAsyncUpDownCounter("test.upDownSumObserver", nil)
 
