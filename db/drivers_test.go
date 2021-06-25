@@ -167,10 +167,33 @@ func TestDBClientConfigurations(t *testing.T) {
 			Password: "mystic",
 		},
 	}
+	m := NewMySQLClientFromConfig(dbConfig)
+	assert.NotEqual(t, cfg.Database.Port, m.RDMS.Port)
+	assert.NotEqual(t, cfg.Database.Name, m.RDMS.Name)
+	assert.NotEqual(t, cfg.Database.User, m.RDMS.User)
+	assert.NotEqual(t, cfg.Database.Password, m.RDMS.Password)
 
-	dbclient := NewMySQLClientFromConfig(dbConfig)
-	assert.NotEqual(t, cfg.Database.Port, dbclient.RDMS.Port)
-	assert.NotEqual(t, cfg.Database.Name, dbclient.RDMS.Name)
-	assert.NotEqual(t, cfg.Database.User, dbclient.RDMS.User)
-	assert.NotEqual(t, cfg.Database.Password, dbclient.RDMS.Password)
+	dbConfig = Config{
+		Database: RDMS{
+			Name:     "catalogindexer",
+			Host:     "localhost",
+			User:     "blah",
+			Port:     "5432",
+			Password: "bleh",
+		},
+	}
+	p := NewPostgresClientFromConfig(dbConfig)
+	assert.NotEqual(t, cfg.Database.Name, p.RDMS.Name)
+	assert.NotEqual(t, cfg.Database.User, p.RDMS.User)
+	assert.NotEqual(t, cfg.Database.Password, p.RDMS.Password)
+
+	//  sqlite =
+	dbConfig = Config{
+		SQLite: SQLiteClient{
+			nil,
+			":memory:",
+		},
+	}
+	_ = NewSQLiteClientFromConfig(dbConfig)
+	assert.NotEqual(t, cfg, dbConfig)
 }
