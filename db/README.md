@@ -62,7 +62,7 @@ The following env variables can be injected in order to use this pkg:
 	}
 
 	postgresClient := NewPostgresClientFromConfig(pCfg)
-	err := postgresClient.OpenConnection()
+	client, err := postgresClient.OpenConnection()
 	if err != nil {
 		log.Error("Failed to connect to DB", zap.Error(err))
 	}
@@ -79,7 +79,7 @@ The following env variables can be injected in order to use this pkg:
 	}
 
 	mysqlClient := NewMySQLClientFromConfig(mCfg)
-	err := mysqlClient.OpenConnection()
+	client, err := mysqlClient.OpenConnection()
 	if err != nil {
 		log.Error("Failed to connect to DB", zap.Error(err))
 	}
