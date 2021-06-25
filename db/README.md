@@ -2,7 +2,7 @@
 Shared Go Lib for Eyewa's microservices.
 
 # db
-This package provides an abstraction layer for `https://github.com/go-gorm/gorm` ORM pkg in having DB clients for several database drivers. Currently this package only supports MySQL, SQLite & Postgres. In the future more drivers can be added if need arises.
+This package provides an abstraction layer for a couple of database drivers by means of creating clients. Currently this package only supports MySQL, SQLite & Postgres. In the future more drivers can be added if need the arises.
 
 # How to use
 The following env variables can be injected in order to use this pkg:
