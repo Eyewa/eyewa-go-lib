@@ -27,7 +27,7 @@ The following env variables can be injected in order to use this pkg:
 ### Connecting to a Database
 
 ```go
-  // JUST FOR DEMO - these should be injected
+	// JUST FOR DEMO - these should be injected
 	vars = map[string]string{
 		"DB_DRIVER":   "postgres",
 		"DB_HOST":     "localhost",
@@ -47,5 +47,44 @@ The following env variables can be injected in order to use this pkg:
 	}
 ```
 
-### CRUD operations
+### Requiring multiple DB clients in one application/service.
+
+```go
+	// connect to postgres
+	pCfg := Config{
+		Database: RDMS{
+			Name:     "catalogindexer",
+			Host:     "localhost",
+			User:     "admin",
+			Port:     "5432",
+			Password: "secret",
+		},
+	}
+
+	postgresClient := NewPostgresClientFromConfig(pCfg)
+	err := postgresClient.OpenConnection()
+	if err != nil {
+		log.Error("Failed to connect to DB", zap.Error(err))
+	}
+
+	// connect to mysql - can be any other db client like mongo/redis etc.
+	mCfg := Config{
+		Database: RDMS{
+			Name:     "catalogconsumer",
+			Host:     "localhost",
+			User:     "admin007",
+			Port:     "3306",
+			Password: "mystic",
+		},
+	}
+
+	mysqlClient := NewMySQLClientFromConfig(mCfg)
+	err := mysqlClient.OpenConnection()
+	if err != nil {
+		log.Error("Failed to connect to DB", zap.Error(err))
+	}
+
+```
+
+### CRUD Operations
 TBD

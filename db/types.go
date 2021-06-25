@@ -16,8 +16,8 @@ type Config struct {
 
 // DatabaseDriver interface for all db clients
 type DatabaseDriver interface {
-	openConnection() (*DBClient, error)
-	closeConnection() error
+	OpenConnection() (*DBClient, error)
+	CloseConnection() error
 
 	// TODO: CRUD funcs
 	// TODO: DB Migration

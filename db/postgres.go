@@ -7,7 +7,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-// NewPostgresClient create a new postgres client
+// NewPostgresClient creates a new postgres client
 func NewPostgresClient() *PostgresClient {
 	return &PostgresClient{
 		nil,
@@ -22,7 +22,23 @@ func NewPostgresClient() *PostgresClient {
 	}
 }
 
-func (client *PostgresClient) openConnection() (*DBClient, error) {
+// NewPostgresClientFromConfig creates a new postgres client from a manual configuration
+func NewPostgresClientFromConfig(config Config) *PostgresClient {
+	return &PostgresClient{
+		nil,
+		RDMS{
+			Name:     config.Database.Name,
+			Host:     config.Database.Host,
+			Port:     config.Database.Port,
+			User:     config.Database.User,
+			Password: config.Database.Password,
+			SSLMode:  config.Database.SSLMode,
+		},
+	}
+}
+
+// OpenConnection opens connection to postgres
+func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 	connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s  dbname=%s",
 		client.User,
 		client.Password,
@@ -50,7 +66,8 @@ func (client *PostgresClient) openConnection() (*DBClient, error) {
 
 }
 
-func (client *PostgresClient) closeConnection() error {
+// CloseConnection closes a postgres connection
+func (client *PostgresClient) CloseConnection() error {
 	err := client.gorm.Close()
 	if err != nil {
 		return err

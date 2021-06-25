@@ -88,10 +88,10 @@ func TestInitConfigWithSQLite(t *testing.T) {
 	assert.Equal(t, ":memory:", config.SQLite.Path)
 
 	client := NewSQLiteClient()
-	_, err := client.openConnection()
+	_, err := client.OpenConnection()
 	assert.Nil(t, err)
 
-	err = client.closeConnection()
+	err = client.CloseConnection()
 	assert.Nil(t, err)
 }
 
@@ -137,4 +137,40 @@ func TestConnectionFail(t *testing.T) {
 
 	err = CloseConnection()
 	assert.EqualError(t, libErrs.ErrorNoDBClientFound, err.Error())
+}
+
+func TestDBClientConfigurations(t *testing.T) {
+	os.Clearenv()
+	config = *new(Config)
+
+	vars = map[string]string{
+		"DB_DRIVER":   "postgres",
+		"DB_HOST":     "localhost",
+		"DB_USER":     "admin",
+		"DB_PORT":     "5432",
+		"DB_PASSWORD": "secret",
+		"DB_DATABASE": "catalogconsumer",
+		"DB_SSL_MODE": "disabled",
+	}
+	for e, v := range vars {
+		os.Setenv(e, v)
+	}
+
+	cfg, _ := initConfig()
+
+	dbConfig := Config{
+		Database: RDMS{
+			Name:     "catalogindexer",
+			Host:     "localhost",
+			User:     "admin007",
+			Port:     "3306",
+			Password: "mystic",
+		},
+	}
+
+	dbclient := NewMySQLClientFromConfig(dbConfig)
+	assert.NotEqual(t, cfg.Database.Port, dbclient.RDMS.Port)
+	assert.NotEqual(t, cfg.Database.Name, dbclient.RDMS.Name)
+	assert.NotEqual(t, cfg.Database.User, dbclient.RDMS.User)
+	assert.NotEqual(t, cfg.Database.Password, dbclient.RDMS.Password)
 }

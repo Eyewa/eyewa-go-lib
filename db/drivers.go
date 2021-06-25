@@ -70,7 +70,7 @@ func OpenConnection() (*DBClient, error) {
 	}
 
 	if client != nil {
-		return client.openConnection()
+		return client.OpenConnection()
 	}
 
 	return nil, libErrs.ErrorUnsupportedDBDriverSpecified
@@ -79,7 +79,7 @@ func OpenConnection() (*DBClient, error) {
 // CloseConnection close connection on db client
 func CloseConnection() error {
 	if client != nil {
-		return client.closeConnection()
+		return client.CloseConnection()
 	}
 
 	return libErrs.ErrorNoDBClientFound

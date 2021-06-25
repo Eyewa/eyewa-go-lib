@@ -21,7 +21,22 @@ func NewMySQLClient() *MySQLClient {
 	}
 }
 
-func (client *MySQLClient) openConnection() (*DBClient, error) {
+// NewMySQLClientFromConfig create a new mysql client from manual configuration
+func NewMySQLClientFromConfig(config Config) *MySQLClient {
+	return &MySQLClient{
+		nil,
+		RDMS{
+			Name:     config.Database.Name,
+			Host:     config.Database.Host,
+			Port:     config.Database.Port,
+			User:     config.Database.User,
+			Password: config.Database.Password,
+		},
+	}
+}
+
+// OpenConnection opens connection to mysql
+func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True&loc=Local",
 		client.User,
 		client.Password,
@@ -44,7 +59,8 @@ func (client *MySQLClient) openConnection() (*DBClient, error) {
 
 }
 
-func (client *MySQLClient) closeConnection() error {
+// CloseConnection closes a mysql connection
+func (client *MySQLClient) CloseConnection() error {
 	err := client.gorm.Close()
 	if err != nil {
 		return err

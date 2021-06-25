@@ -5,14 +5,22 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-// NewSQLiteClient create a new sqlite client
+// NewSQLiteClient creates a new sqlite client
 func NewSQLiteClient() *SQLiteClient {
 	return &SQLiteClient{
 		Path: config.SQLite.Path,
 	}
 }
 
-func (client *SQLiteClient) openConnection() (*DBClient, error) {
+// NewSQLiteClientFromConfig creates a new sqlite client from manual configuration
+func NewSQLiteClientFromConfig(config Config) *SQLiteClient {
+	return &SQLiteClient{
+		Path: config.SQLite.Path,
+	}
+}
+
+// OpenConnection opens a sqlite connection
+func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 	db, err := gorm.Open("sqlite3", client.Path)
 	if err != nil {
 		return nil, err
@@ -26,7 +34,8 @@ func (client *SQLiteClient) openConnection() (*DBClient, error) {
 
 }
 
-func (client *SQLiteClient) closeConnection() error {
+// CloseConnection closes a sqlite connection
+func (client *SQLiteClient) CloseConnection() error {
 	err := client.gorm.Close()
 	if err != nil {
 		return err
