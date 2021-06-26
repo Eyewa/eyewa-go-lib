@@ -34,8 +34,8 @@ func main() {
 	}
 
 	ml.SetMeterProvider().
-		EnableHostInstrument().
-		EnableRuntimeInstrument().
+		EnableHostInstrumentation().
+		EnableRuntimeInstrumentation().
 		Launch()
 }
 ```
@@ -52,7 +52,6 @@ Enable runtime instrumentation. See also [Runtime Instrumentation Metrics](https
 ml.EnableRuntimeInstrumentation()
 ```
 `Launch` will start the Metrics Server as a goroutine on port `2222` in order to avoid blocking the main process.
-not to block main process.
 ```go
 ml.Launch()
 ```
@@ -91,6 +90,9 @@ asyncs are:
 - AsyncUpDownCounter
 - AsyncValueRecorder
 
+---
+# Metrics WIKI
+ 
 ---
 ### Programming Model under the hood
 Open Telemetry [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)

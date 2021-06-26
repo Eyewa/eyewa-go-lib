@@ -59,14 +59,14 @@ func (ml *Launcher) SetMeterProvider() *Launcher {
 	return ml
 }
 
-// EnableHostInstrument enables host instrumentation
-func (ml *Launcher) EnableHostInstrument() *Launcher {
+// EnableHostInstrumentation enables host instrumentation
+func (ml *Launcher) EnableHostInstrumentation() *Launcher {
 	ml.enableHostInstrument = true
 	return ml
 }
 
-// EnableRuntimeInstrument enables runtime instrumentation
-func (ml *Launcher) EnableRuntimeInstrument() *Launcher {
+// EnableRuntimeInstrumentation enables runtime instrumentation
+func (ml *Launcher) EnableRuntimeInstrumentation() *Launcher {
 	ml.enableRuntimeInstrument = true
 	return ml
 }
