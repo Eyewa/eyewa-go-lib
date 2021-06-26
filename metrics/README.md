@@ -91,8 +91,10 @@ asyncs are:
 - AsyncValueRecorder
 
 ---
-# Metrics WIKI
- 
+## Metrics WIKI
+
+For detailed information please see [confluence page](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/edit-v2/1869545495)
+
 ---
 ### Programming Model under the hood
 Open Telemetry [Programming Model](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/README.md#programming-model)
