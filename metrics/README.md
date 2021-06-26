@@ -86,7 +86,7 @@ There are two types of instrument sync and async. Sync instruments are:
 - UpDownCounter
 - ValueRecorder
 
-asyncs are;
+asyncs are:
 - AsyncCounter
 - AsyncUpDownCounter
 - AsyncValueRecorder
