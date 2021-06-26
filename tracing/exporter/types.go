@@ -3,7 +3,7 @@ package exporter
 import (
 	"context"
 
-	// "go.opentelemetry.io/otel/exporters/otlp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -12,9 +12,9 @@ type stdOutExporter struct {
 	exporter *stdouttrace.Exporter
 }
 
-// type otelCollectorExporter struct {
-// 	exporter *otlp.Exporter
-// }
+type otelCollectorExporter struct {
+	exporter *otlptrace.Exporter
+}
 
 // Exporter is a backwards compatible interface for an otlptrace.Exporter.
 type Exporter interface {
