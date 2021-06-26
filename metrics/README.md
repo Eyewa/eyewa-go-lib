@@ -12,7 +12,7 @@ The Metrics package consists of the following:
 - A Metrics Instrumentation - any instrumentation of choice to create metrics.
 
 ## How to create a metric launcher
-The following variable should be injected in order to use this pkg
+The following variable can be injected in order to use this pkg
 ```
 METRICS_COLLECTOR_INTERVAL=20s  // optional - default is 10s if var is not provided
 ```
