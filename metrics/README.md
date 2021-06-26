@@ -93,7 +93,7 @@ asyncs are:
 ---
 ## Metrics WIKI
 
-For detailed information please see [confluence page](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/edit-v2/1869545495)
+For detailed information please see [confluence page](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1869545495/Metrics+Package)
 
 ---
 ### Programming Model under the hood
