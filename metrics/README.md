@@ -51,7 +51,7 @@ Enable runtime instrumentation. See also [Runtime Instrumentation Metrics](https
 ```go
 ml.EnableRuntimeInstrumentation()
 ```
-Launch will start Metric Server on port 2222 on different goroutine 
+`Launch` will start the Metrics Server as a goroutine on port `2222` in order to avoid blocking the main process.
 not to block main process.
 ```go
 ml.Launch()
