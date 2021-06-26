@@ -14,7 +14,7 @@ The Metrics package consists of the following:
 ## How to create a metric launcher
 The following variable should be injected in order to use this pkg
 ```
-METRIC_COLLECT_PERIOD=10s #default is 10s
+METRICS_COLLECTOR_INTERVAL=20s  // optional - default is 10s if var is not provided
 ```
 
 ```go
