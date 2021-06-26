@@ -6,6 +6,10 @@ Shared Go Lib for Eyewa's microservices.
 
 This package configures open telemetry as the global trace provider. It configures the location of where all traces end up using the `TRACE_COLLECTOR_ENDPOINT`. A user of this package is able to view traces on Grafana Tempo.
 
+### Note
+
+Due to the Open Telemetry trace API and SDK currently on v1.0.0-rc.1, there will be breaking changes which would require refactoring of the trace pkg internals.
+
 </br>
 
 ## How To Use

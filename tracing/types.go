@@ -3,8 +3,8 @@ package tracing
 import (
 	"context"
 
+	exporter "github.com/eyewa/eyewa-go-lib/tracing/exporter"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 )
 
@@ -20,18 +20,6 @@ type Config struct {
 	logger                   *zap.Logger
 }
 
-// Exporter exports spans to a span destination.
-type Exporter interface {
-	// Start starts the exporter
-	Start(ctx context.Context) error
-
-	// ExportSpans exports spans to a span destination.
-	ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) error
-
-	// Shutdown shuts down the connection to a span destination.
-	Shutdown(ctx context.Context) error
-}
-
 // Option is a configuration option in a tracing environment.
 type Option func(*Config)
 
@@ -43,5 +31,5 @@ type ShutdownFunc func() error
 // tracing environment.
 type Launcher struct {
 	ctx      context.Context
-	exporter Exporter
+	exporter exporter.Exporter
 }

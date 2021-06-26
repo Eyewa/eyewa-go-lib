@@ -1,11 +1,12 @@
+// +build !mock
+
 package tracing
 
 import (
 	"context"
 
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
-	"go.opentelemetry.io/otel/exporters/otlp"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpgrpc"
+	exporter "github.com/eyewa/eyewa-go-lib/tracing/exporter"
 )
 
 // func initConfig() (Config, error) {
@@ -170,16 +171,16 @@ import (
 // 	)
 // }
 
-func newExporter(endpoint string, opts ...otlpgrpc.Option) *otlp.Exporter {
-	opts = append(opts,
-		otlpgrpc.WithEndpoint(endpoint),
-	)
-	return otlp.NewUnstartedExporter(otlpgrpc.NewDriver(opts...))
-}
+// func newExporter(endpoint string, opts ...otlpgrpc.Option) *otlptrace.Exporter {
+// 	opts = append(opts,
+// 		otlpgrpc.WithEndpoint(endpoint),
+// 	)
+// 	return otlptrace.NewUnstarted(otlpgrpc.NewDriver(opts...))
+// }
 
 // New launcher constructs a new launcher that sets
 // up a environment for tracing.
-func NewLauncher(e Exporter) *Launcher {
+func NewLauncher(e exporter.Exporter) *Launcher {
 	return &Launcher{exporter: e, ctx: context.Background()}
 }
 
@@ -199,4 +200,20 @@ func (l *Launcher) Shutdown() error {
 	}
 
 	return nil
+}
+
+// Launches a tracing environment by constructing a new
+// stdout exporter when no exporter selected. Setting up the host
+// resource and setting the global trace provider.
+func Launch() (ShutdownFunc, error) {
+	exp, err := exporter.NewStdOut()
+	if err != nil {
+		return nil, err
+	}
+	launcher := NewLauncher(exp)
+	if err := launcher.Launch(); err != nil {
+		return nil, err
+	}
+
+	return launcher.Shutdown, nil
 }

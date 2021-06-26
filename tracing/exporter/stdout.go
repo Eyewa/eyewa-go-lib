@@ -1,17 +1,15 @@
-package exporters
+package exporter
 
 import (
 	"context"
 
 	liberrs "github.com/eyewa/eyewa-go-lib/errors"
-	"github.com/eyewa/eyewa-go-lib/tracing"
-	stdout "go.opentelemetry.io/otel/exporters/stdout"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 )
 
-func NewStdOut() (tracing.Exporter, error) {
-
-	stdexp, err := stdout.NewExporter(stdout.WithPrettyPrint())
+func NewStdOut() (Exporter, error) {
+	stdexp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 	if err != nil {
 		return nil, liberrs.ErrExporterStartupFailure
 	}
@@ -19,17 +17,17 @@ func NewStdOut() (tracing.Exporter, error) {
 	return exp, nil
 }
 
-// MethodNotImplemented
 func (exp *stdOutExporter) Start(ctx context.Context) error {
+	// stdout has no start
 	return nil
 }
 
-// MethodNotImplemented
 func (exp *stdOutExporter) Shutdown(ctx context.Context) error {
-	return nil
+	err := exp.exporter.Shutdown(ctx)
+	return liberrs.Wrap(err, liberrs.ErrExporterShutdownFailure)
 }
 
-// MethodNotImplemented
 func (exp *stdOutExporter) ExportSpans(ctx context.Context, spans []tracesdk.ReadOnlySpan) error {
-	return nil
+	err := exp.exporter.ExportSpans(ctx, spans)
+	return liberrs.Wrap(err, liberrs.ErrExporterShutdownFailure)
 }
