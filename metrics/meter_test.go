@@ -6,9 +6,7 @@ import (
 )
 
 func TestNewMeter(t *testing.T) {
-	var meter *Meter
-
-	meter = NewMeter("test.meter", nil)
+	meter := NewMeter("test.meter", nil)
 	assert.NotNil(t, meter.Meter)
 	assert.NotNil(t, meter.ctx)
 }

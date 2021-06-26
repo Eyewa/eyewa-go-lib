@@ -11,6 +11,7 @@ var (
 	ErrorFailedToPublishToDeadletter = errors.New("Failed to publish event error to deadletter queue.")
 	ErrorFailedToPublishEvent        = errors.New("Failed to publish event to queue.")
 
+	// Metrics errors
 	FailedToInitPrometheusExporterError = errors.New("Failed to initialize prometheus exporter.")
 	FailedToStartRuntimeMetricsError    = errors.New("Failed to start runtime metrics.")
 	FailedToStartHostMetricsError       = errors.New("Failed to start host metrics.")

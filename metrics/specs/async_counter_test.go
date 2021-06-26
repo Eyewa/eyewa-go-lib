@@ -31,7 +31,6 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			)
 			Expect(err).Should(BeNil())
 
-
 			res, err := http.Get(URL)
 			Expect(err).Should(BeNil())
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
