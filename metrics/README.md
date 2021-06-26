@@ -81,7 +81,7 @@ ml.Launch()
     }
 ```
 # Instruments
-There are two type of instrument sync and async. Sync instruments are;
+There are two types of instrument sync and async. Sync instruments are:
 - Counter
 - UpDownCounter
 - ValueRecorder
