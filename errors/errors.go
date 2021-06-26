@@ -12,9 +12,9 @@ var (
 	ErrorFailedToPublishEvent        = errors.New("Failed to publish event to queue.")
 
 	// Metrics errors
-	FailedToInitPrometheusExporterError = errors.New("Failed to initialize prometheus exporter.")
-	FailedToStartRuntimeMetricsError    = errors.New("Failed to start runtime metrics.")
-	FailedToStartHostMetricsError       = errors.New("Failed to start host metrics.")
-	FailedToStartMetricServerError      = errors.New("Failed to start metric server.")
-	FailedToCreateInstrumentError       = errors.New("Failed to create instrument.")
+	ErrorFailedToInitPrometheusExporter = errors.New("Failed to initialize prometheus exporter.")
+	ErrorFailedToStartRuntimeMetrics    = errors.New("Failed to start runtime metrics.")
+	ErrorFailedToStartHostMetrics       = errors.New("Failed to start host metrics.")
+	ErrorFailedToStartMetricServer      = errors.New("Failed to start metric server.")
+	ErrorFailedToCreateInstrument       = errors.New("Failed to create instrument.")
 )

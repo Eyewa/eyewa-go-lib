@@ -30,7 +30,7 @@ import (
 func main() {
 	ml, err := metrics.NewLauncher()
 	if err != nil {
-		log.Error(errors.FailedToStartMetricServerError.Error())
+		log.Error(errors.ErrorFailedToStartMetricServer.Error())
 	}
 
 	ml.SetMeterProvider().
@@ -63,7 +63,7 @@ ml.Launch()
     // Create a new instrument from meter
     requestCounter, err := httpMeter.NewCounter("request.counter")
     if err != nil {
-        log.Error(errors.FailedToCreateInstrumentError.Error())
+        log.Error(errors.ErrorFailedToCreateInstrument.Error())
     }
     
     // increase measurement
@@ -76,7 +76,7 @@ ml.Launch()
     }
     _, err = httpMeter.NewAsyncCounter("request.async.counter", cb)
     if err != nil {
-        log.Error(errors.FailedToCreateInstrumentError.Error())
+        log.Error(errors.ErrorFailedToCreateInstrument.Error())
     }
 ```
 # Instruments

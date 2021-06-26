@@ -79,7 +79,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 				firstRecordValue    = 40.0
 			)
 
-			//Second metric, first record
+			// Second metric, first record
 			valueRecorder.Record(firstRecordValue, attribute.Any("Name", "SecondMetric"))
 
 			res, err := http.Get(URL)

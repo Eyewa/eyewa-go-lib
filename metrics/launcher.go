@@ -76,14 +76,14 @@ func (ml *Launcher) Launch() {
 	if ml.enableHostInstrument {
 		err := host.Start()
 		if err != nil {
-			log.Error(errors.FailedToStartRuntimeMetricsError.Error())
+			log.Error(errors.ErrorFailedToStartRuntimeMetrics.Error())
 		}
 	}
 
 	if ml.enableRuntimeInstrument {
 		err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
 		if err != nil {
-			log.Error(errors.FailedToStartHostMetricsError.Error())
+			log.Error(errors.ErrorFailedToStartHostMetrics.Error())
 		}
 	}
 
@@ -92,7 +92,7 @@ func (ml *Launcher) Launch() {
 	go func() {
 		err := http.ListenAndServe(":2222", nil)
 		if err != nil {
-			log.Error(errors.FailedToStartMetricServerError.Error())
+			log.Error(errors.ErrorFailedToStartMetricServer.Error())
 		}
 	}()
 }
