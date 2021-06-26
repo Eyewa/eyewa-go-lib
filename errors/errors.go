@@ -1,6 +1,10 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+
+	pkgErrs "github.com/pkg/errors"
+)
 
 var (
 	ErrorNoQueuesSpecified           = errors.New("No queues specified! Cannot consume/publish to any queue.")
@@ -10,4 +14,12 @@ var (
 	ErrorBrokerClientNotRecognized   = errors.New("Broker client not recognized.")
 	ErrorFailedToPublishToDeadletter = errors.New("Failed to publish event error to deadletter queue.")
 	ErrorFailedToPublishEvent        = errors.New("Failed to publish event to queue.")
+
+	// tracing errors
+	ErrExporterStartupFailure = errors.New("Failed to start exporter")
 )
+
+// Wrap wraps a child error with a parent.
+func Wrap(child, parent error) error {
+	return pkgErrs.Wrap(child, parent.Error())
+}
