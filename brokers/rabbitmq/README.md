@@ -14,27 +14,27 @@ The following variables should be injected in order to use this pkg
 
 ```go
 // optional - used to identify what service is connected in RMQ's Admin UI.
-"SERVICE_NAME", 
+"SERVICE_NAME"
 
 // required - RMQ credentials
-"RABBITMQ_SERVER",
-"RABBITMQ_AMQP_PORT",
-"RABBITMQ_USERNAME",
-"RABBITMQ_PASSWORD",
+"RABBITMQ_SERVER"
+"RABBITMQ_AMQP_PORT"
+"RABBITMQ_USERNAME"
+"RABBITMQ_PASSWORD"
 
 // the queues a service will be connecting to. At least one should be specified
 // i.e either a service consumes or publishes or does both. if none is specified
 // and pkg is included, it will yield an error.
-"PUBLISHER_QUEUE_NAME", // queue service will be publishing to (optional)
-"CONSUMER_QUEUE_NAME", // queue service will be consuming from (optional)
+"PUBLISHER_QUEUE_NAME" // queue service will be publishing to (optional)
+"CONSUMER_QUEUE_NAME" // queue service will be consuming from (optional)
 
 // optional - how many messages a consumer can consume at a go from RMQ.
 // defaults to 5 if none is provided.
-"QUEUE_PREFETCH_COUNT", 
+"QUEUE_PREFETCH_COUNT" 
 
 // type of exchanges to use for a queue - fanout|direct|headers|topic
-"RABBITMQ_PUBLISHER_EXCHANGE_TYPE", // required if PUBLISHER_QUEUE_NAME is provided
-"RABBITMQ_CONSUMER_EXCHANGE_TYPE", // required if CONSUMER_QUEUE_NAME is provided
+"RABBITMQ_PUBLISHER_EXCHANGE_TYPE" // required if PUBLISHER_QUEUE_NAME is provided
+"RABBITMQ_CONSUMER_EXCHANGE_TYPE" // required if CONSUMER_QUEUE_NAME is provided
 ```
 
 ## Consuming from a Queue
