@@ -8,10 +8,11 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 )
 
-func NewStdOut() (Exporter, error) {
-	stdexp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+func NewStdOut(opts ...stdouttrace.Option) (Exporter, error) {
+	opts = append(opts, stdouttrace.WithPrettyPrint())
+	stdexp, err := stdouttrace.New(opts...)
 	if err != nil {
-		return nil, liberrs.ErrExporterStartupFailure
+		return nil, liberrs.ErrorExporterStartupFailure
 	}
 	exp := &stdOutExporter{exporter: stdexp}
 	return exp, nil
@@ -24,10 +25,10 @@ func (exp *stdOutExporter) Start(ctx context.Context) error {
 
 func (exp *stdOutExporter) Shutdown(ctx context.Context) error {
 	err := exp.exporter.Shutdown(ctx)
-	return liberrs.Wrap(err, liberrs.ErrExporterShutdownFailure)
+	return liberrs.Wrap(err, liberrs.ErrorExporterShutdownFailure)
 }
 
 func (exp *stdOutExporter) ExportSpans(ctx context.Context, spans []tracesdk.ReadOnlySpan) error {
 	err := exp.exporter.ExportSpans(ctx, spans)
-	return liberrs.Wrap(err, liberrs.ErrExporterShutdownFailure)
+	return liberrs.Wrap(err, liberrs.ErrorExporterShutdownFailure)
 }

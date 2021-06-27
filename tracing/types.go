@@ -10,14 +10,14 @@ import (
 
 // Config represents the configuration used to configure a tracing environment.
 type Config struct {
-	ExporterEndpoint         string `mapstructure:"exporter_endpoint"`
-	ExporterEndpointInsecure bool   `mapstructure:"exporter_endpoint_insecure"`
-	ExporterBlocking         bool   `mapstructure:"exporter_blocking"`
-	ServiceName              string `mapstructure:"service_name"`
-	ServiceVersion           string `mapstructure:"service_version"`
-	resourceAttributes       map[string]string
-	Resource                 *resource.Resource
-	logger                   *zap.Logger
+	ExporterEndpoint       string `mapstructure:"exporter_endpoint"`
+	SecureExporterEndpoint bool   `mapstructure:"secure_exporter_endpoint"`
+	ExporterBlocking       bool   `mapstructure:"exporter_blocking"`
+	ServiceName            string `mapstructure:"service_name"`
+	ServiceVersion         string `mapstructure:"service_version"`
+	resourceAttributes     map[string]string
+	Resource               *resource.Resource
+	logger                 *zap.Logger
 }
 
 // Option is a configuration option in a tracing environment.

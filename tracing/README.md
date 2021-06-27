@@ -4,11 +4,13 @@ Shared Go Lib for Eyewa's microservices.
 
 ## tracing
 
-This package configures open telemetry as the global trace provider. It configures the location of where all traces end up using the `TRACE_COLLECTOR_ENDPOINT`. A user of this package is able to view traces on Grafana Tempo.
+This package configures Open Telemetry as the global tracing provider. It configures an endpoint to where all traces end up using the `TRACE_COLLECTOR_ENDPOINT` env variable. A user of this package is able to view traces on Grafana Tempo.
+
+</br>
 
 ### Note
 
-Due to the Open Telemetry trace API and SDK currently on v1.0.0-rc.1, there will be breaking changes which would require refactoring of the trace pkg internals.
+Due to the Open Telemetry trace API and SDK currently at v1.0.0-rc.1, there will be future breaking changes which would require refactoring of trace pkg internals.
 
 </br>
 
@@ -33,14 +35,12 @@ Upon initialising a tracing configuration, the order in which the configuration 
 
 </br>
 
-```go
-// the name of the microservice.
-"SERVICE_NAME",
-// the kubernetes pod/host.
-"HOST_NAME",
-// the endpoint of the collector traces get exported to.
-"TRACE_COLLECTOR_ENDPOINT",
-```
+|Config Option     |Env Variable      |Required|
+|------------------|------------------|--------|
+|WithServiceName            |SERVICE_NAME                       |y       |Name of the service/application.
+|WithServiceVersion         |SERVICE_VERSION                    |n       |Version of the service/application.
+|WithHostName               |HOST_NAME                          |n       |The name of the pod/instance/service.
+|WithCollectorEndpoint      |TRACE_COLLECTOR_ENDPOINT           |n       |The endpoint all spans get exported to.
 
   </br>
 

@@ -138,28 +138,6 @@ import (
 // 	otel.SetTracerProvider(tp)
 // }
 
-// // constructs a new trace exporter with default secure and non blocking options.
-// func newExporter(endpoint string, insecure, blocking bool, opts ...otlpgrpc.Option) (*otlp.Exporter, error) {
-// 	secureOption := otlpgrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
-// 	if insecure {
-// 		secureOption = otlpgrpc.WithInsecure()
-// 	}
-
-// 	blockingOption := otlpgrpc.WithDialOption()
-// 	if blocking {
-// 		blockingOption = otlpgrpc.WithDialOption(grpc.WithBlock())
-// 	}
-
-// 	opts = append(opts,
-// 		secureOption,
-// 		blockingOption,
-// 		otlpgrpc.WithEndpoint(endpoint),
-// 	)
-
-// 	exp, err := otlp.NewExporter(context.Background(), otlpgrpc.NewDriver(opts...))
-// 	return exp, err
-// }
-
 // // newProvider creates a new trace provider with default options for the given resource and exporter.
 // func newProvider(exp trace.SpanExporter, res *resource.Resource) *sdktrace.TracerProvider {
 // 	bsp := sdktrace.NewBatchSpanProcessor(exp)
@@ -169,13 +147,6 @@ import (
 // 		sdktrace.WithResource(res),
 // 		sdktrace.WithSpanProcessor(bsp),
 // 	)
-// }
-
-// func newExporter(endpoint string, opts ...otlpgrpc.Option) *otlptrace.Exporter {
-// 	opts = append(opts,
-// 		otlpgrpc.WithEndpoint(endpoint),
-// 	)
-// 	return otlptrace.NewUnstarted(otlpgrpc.NewDriver(opts...))
 // }
 
 // New launcher constructs a new launcher that sets
