@@ -9,7 +9,6 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/ory/viper v1.7.5
-	github.com/pkg/errors v0.9.1
 	github.com/prometheus/common v0.29.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
