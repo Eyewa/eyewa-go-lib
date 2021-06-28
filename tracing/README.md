@@ -8,12 +8,6 @@ This package configures Open Telemetry as the global tracing provider. It config
 
 </br>
 
-### Note
-
-Due to the Open Telemetry trace API and SDK currently at v1.0.0-rc.1, there will be future breaking changes which would require refactoring of trace pkg internals.
-
-</br>
-
 ## How To Use
 
 - Set the `SERVICE_NAME` environmental variable.
