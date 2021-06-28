@@ -98,12 +98,12 @@ metrics are used for the service.
 
 For example; define custom instruments under a struct
 ```go
+// create a metrics.go
 type CatalogConsumerMetrics struct{
 	ProductCreatedEventCounter *metrics.Counter
 }
-```
-Initialize it on top of service.
-```go
+
+// Initialize it on top of service.
 func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
     meter := NewMeter("catalog.consumer",nil)
     
@@ -116,15 +116,15 @@ func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
         ProductCreatedEventCounter: productCreatedEventCounter,
     }, nil
 }
-
-metrics, err := NewCatalogConsumerMetrics()
-if err != nil { 
-	log.Error(erros.ErrorFailedToCreateInstrument.Error())
-}
 ```
-Then inject it where necessary
 ```go
-NewMiddleware(metrics)
+// in main.go
+func main(){
+    metrics, err := NewCatalogConsumerMetrics()
+    if err != nil { 
+	    log.Error(erros.ErrorFailedToCreateInstrument.Error())
+    }
+}
 ```
 
 ---
