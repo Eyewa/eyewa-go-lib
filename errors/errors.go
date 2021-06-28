@@ -2,8 +2,6 @@ package errors
 
 import (
 	"errors"
-
-	pkgErrs "github.com/pkg/errors"
 )
 
 var (
@@ -32,11 +30,3 @@ var (
 	ErrorUnsupportedDBDriverSpecified = errors.New("Unsupported DB driver specified.")
 	ErrorNoDBClientFound              = errors.New("Failed to close connection. No db client found")
 )
-
-// Wrap wraps a child error with a parent.
-func Wrap(child, parent error) error {
-	if child == nil {
-		return nil
-	}
-	return pkgErrs.Wrap(child, parent.Error())
-}
