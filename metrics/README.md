@@ -117,7 +117,7 @@ func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
 }
 
 metrics, err := NewCatalogConsumerMetrics()
-if err !=nil {
+if err != nil { 
 	log.Error(erros.ErrorFailedToCreateInstrument.Error())
 }
 ```
