@@ -21,7 +21,7 @@ func TestInitConfigWithPostgres(t *testing.T) {
 		"DB_PORT":     "5432",
 		"DB_PASSWORD": "secret",
 		"DB_DATABASE": "catalogconsumer",
-		"DB_SSL_MODE": "disabled",
+		"DB_SSL_MODE": "disable",
 	}
 	for e, v := range vars {
 		os.Setenv(e, v)
@@ -150,7 +150,7 @@ func TestDBClientConfigurations(t *testing.T) {
 		"DB_PORT":     "5432",
 		"DB_PASSWORD": "secret",
 		"DB_DATABASE": "catalogconsumer",
-		"DB_SSL_MODE": "disabled",
+		"DB_SSL_MODE": "disable",
 	}
 	for e, v := range vars {
 		os.Setenv(e, v)

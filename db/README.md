@@ -20,7 +20,7 @@ The following env variables can be injected in order to use this pkg:
 // https://www.sqlite.org/inmemorydb.html
 "DB_PATH" // options are ":memory:" or file path.
 
-// optional and only for postgres. option is  "disabled" or left blank
+// optional and only for postgres. option is  "disable" or left blank
 // if blank ssl mode will be in used.
 "DB_SSL_MODE"
 ```
@@ -35,7 +35,7 @@ The following env variables can be injected in order to use this pkg:
 		"DB_PORT":     "5432",
 		"DB_PASSWORD": "secret",
 		"DB_DATABASE": "catalogconsumer",
-		"DB_SSL_MODE": "disabled",
+		"DB_SSL_MODE": "disable",
 	}
 	for e, v := range vars {
 		os.Setenv(e, v)
