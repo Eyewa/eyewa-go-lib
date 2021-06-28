@@ -92,9 +92,10 @@ asyncs are:
 
 ---
 # Best practice on adding metrics instrumentation within a microservice
-Instruments should be defined under a custom struct. The custom struct should be \
-initialized on top of the service. It is better for readibility and tracking which \
-metrics are used for the service. \
+Instruments should be defined under a custom struct. The custom struct should be 
+initialized on top of the service. It is better for readibility and tracking which 
+metrics are used for the service. 
+
 For example; define custom instruments under a struct
 ```go
 type CatalogConsumerMetrics struct{
