@@ -48,12 +48,11 @@ Env Variable      |Required|
 ### Tracing A GRPC Server
 
 ```go
-launcher := tracing.NewLauncher()
-err := launcher.Launch()
+shutdown, err := tracing.Launch()
 if err != nil {
-    log.Fatal("failed to launch")
+    log.Fatal("failed to launch tracing")
 }
-defer launcher.Shutdown()
+defer shutdown()
 
 s := grpc.NewServer(
     // trace all unary requests
@@ -68,12 +67,11 @@ s := grpc.NewServer(
 ### Tracing a GRPC client
 
 ```go
-launcher := tracing.NewLauncher()
-err := launcher.Launch()
+shutdown, err := tracing.Launch()
 if err != nil {
-    log.Fatal("failed to launch")
+    log.Fatal("failed to launch tracing")
 }
-defer launcher.Shutdown()
+defer shutdown()
 
 port := os.Getenv("GRPC_DIAL_PORT")
 conn, err := grpc.Dial(port,

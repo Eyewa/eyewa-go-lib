@@ -3,8 +3,9 @@ module github.com/eyewa/eyewa-go-lib
 go 1.16
 
 require (
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.1.2
+	github.com/jinzhu/gorm v1.9.16
+	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/ory/viper v1.7.5
