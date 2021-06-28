@@ -126,7 +126,24 @@ func main(){
     }
 }
 ```
+Examples of event handler by injecting metrics
+```go
+func handleProductCreated(metrics CatalogConsumerMetrics) error {
+    go metrics.ProductCreatedEventCounter.Add(1)
+    // ... rest of code
+}
+```
+or
+```go
+type ProductCreatedEventHandler struct {
+    metrics CatalogConsumerMetrics
+}
 
+func (h *ProductCreatedEventHandler) Handle() {
+    go h.metrics.ProductCreatedEventCounter.Add(1)
+    // ... rest of code
+}`
+```
 ---
 ## Metrics WIKI
 
