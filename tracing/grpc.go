@@ -5,6 +5,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+// UnaryClientTraceInterceptor intercepts requests from a client to a grpc server
+// and starts a span
+func UnaryClientTraceInterceptor() grpc.DialOption {
+	return grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor())
+}
+
+// StreamClientTraceInterceptor intercepts a stream from client to a grpc server
+// and starts a span
+func StreamClientTraceInterceptor() grpc.DialOption {
+	return grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor())
+}
+
 // UnaryServerTraceInterceptor intercepts unary requests on a grpc server
 // and starts a new span.
 func UnaryServerTraceInterceptor() grpc.ServerOption {
