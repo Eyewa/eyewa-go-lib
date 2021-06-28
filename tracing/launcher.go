@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	_ "github.com/eyewa/eyewa-go-lib/log"
 
@@ -26,10 +27,9 @@ func initConfig() (config, error) {
 	viper.SetDefault("TRACING_SECURE_EXPORTER", "false")
 
 	envVars := []string{
-		"TRACING_BLOCKING_EXPORTER",
+		"TRACING_BLOCK_EXPORTER",
 		"TRACING_SECURE_EXPORTER",
 		"TRACING_EXPORTER_ENDPOINT",
-		"SERVICE_VERSION",
 		"SERVICE_NAME",
 	}
 
@@ -41,6 +41,15 @@ func initConfig() (config, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return config, err
 	}
+
+	if config.TracingExporterEndpoint == "" {
+		return config, errors.ErrorNoExporterEndpointSpecified
+	}
+
+	if config.ServiceName == "" {
+		return config, errors.ErrorNoServiceNameSpecified
+	}
+
 	cfg = config
 	return config, nil
 }
@@ -105,7 +114,9 @@ func Launch() (ShutdownFunc, error) {
 
 // launch initiates the connection to the exporter.
 func (tl *launcher) launch(ctx context.Context) error {
+	log.Debug("Launching tracing launcher.")
 	if err := tl.exporter.Start(ctx); err != nil {
+		log.Error(fmt.Sprintf("Failed to start tracing exporter: %v", err))
 		return err
 	}
 	return nil

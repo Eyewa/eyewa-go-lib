@@ -4,8 +4,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/eyewa/eyewa-go-lib/errors"
-
 	"github.com/eyewa/eyewa-go-lib/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -16,9 +14,6 @@ import (
 func newResource() (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
-	if cfg.ServiceName == "" {
-		return nil, errors.ErrorNoServiceNameSpecified
-	}
 	attributes = append(attributes, semconv.ServiceNameKey.String(cfg.ServiceName))
 
 	// check if we can pickup the hostname from the os.

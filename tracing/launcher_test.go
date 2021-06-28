@@ -4,120 +4,145 @@ import (
 	"os"
 	"testing"
 
-	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/eyewa/eyewa-go-lib/tracing"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLaunchWithServiceName(t *testing.T) {
+func reset() {
 	os.Clearenv()
 	os.Setenv("LOG_LEVEL", "debug")
 	log.SetLogLevel()
-	os.Setenv("SERVICE_NAME", "test-service")
-	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
-
-	shutdown, err := tracing.Launch()
-
-	assert.Nil(t, err)
-	assert.NoError(t, err)
-
-	err = shutdown()
-	assert.Nil(t, err)
-	assert.NoError(t, err)
 }
 
 func TestLaunchWithoutServiceName(t *testing.T) {
-	os.Clearenv()
-	os.Setenv("LOG_LEVEL", "debug")
-	log.SetLogLevel()
-	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
+	reset()
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
+
 	shutdown, err := tracing.Launch()
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
+
 	assert.NotNil(t, err)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrorNoServiceNameSpecified)
+	assert.NotZero(t, err)
 
-	err = shutdown()
-	assert.Nil(t, err)
-	assert.NoError(t, err)
-}
-
-func TestLaunchShutdown(t *testing.T) {
-	os.Clearenv()
-	os.Setenv("LOG_LEVEL", "debug")
-	log.SetLogLevel()
-	os.Setenv("SERVICE_NAME", "test-service")
-	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
-	shutdown, err := tracing.Launch()
-	assert.Nil(t, err)
-	assert.NoError(t, err)
-
-	err = shutdown()
-	assert.Nil(t, err)
-	assert.NoError(t, err)
 }
 
 func TestLaunchWithoutEndpoint(t *testing.T) {
-	os.Clearenv()
-	os.Setenv("LOG_LEVEL", "debug")
-	log.SetLogLevel()
+	reset()
 	os.Setenv("SERVICE_NAME", "test-service")
 
 	shutdown, err := tracing.Launch()
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
+
 	assert.NotNil(t, err)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrorNoExporterEndpointSpecified)
-
-	err = shutdown()
-	assert.Nil(t, err)
-	assert.NoError(t, err)
+	assert.NotZero(t, err)
 }
-func TestShutdownRelaunch(t *testing.T) {
-	os.Clearenv()
-	os.Setenv("LOG_LEVEL", "debug")
-	log.SetLogLevel()
+
+func TestLaunchShutdown(t *testing.T) {
+	reset()
 	os.Setenv("SERVICE_NAME", "test-service")
-	os.Setenv("TRACING_EXPORTER_ENDPOINT", "123")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
 
 	shutdown, err := tracing.Launch()
-	assert.Nil(t, err)
-	assert.NoError(t, err)
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
 
-	err = shutdown()
 	assert.Nil(t, err)
 	assert.NoError(t, err)
+	assert.Zero(t, err)
+}
+
+func TestShutdownRelaunch(t *testing.T) {
+	reset()
+	os.Setenv("SERVICE_NAME", "test-service")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
+
+	shutdown, err := tracing.Launch()
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
+
+	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.Zero(t, err)
 
 	// relaunch
 	shutdown, err = tracing.Launch()
-	assert.Nil(t, err)
-	assert.NoError(t, err)
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
 
-	err = shutdown()
 	assert.Nil(t, err)
 	assert.NoError(t, err)
+	assert.Zero(t, err)
 }
 
 func TestInvalidEnvConfig(t *testing.T) {
-	os.Clearenv()
-	os.Setenv("LOG_LEVEL", "debug")
-	log.SetLogLevel()
+	reset()
 	os.Setenv("SERVICE_NAME", "testing")
-	os.Setenv("TRACING_SECURE_EXPORTER", "none")
-	_, err := tracing.Launch()
+	os.Setenv("TRACING_SECURE_EXPORTER", "fake-endpoint.test")
+
+	shutdown, err := tracing.Launch()
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
 
 	assert.NotNil(t, err)
 	assert.Error(t, err)
 	assert.NotZero(t, err)
 }
 
-func TestBlockingExporterFail(t *testing.T) {
+func TestBlockingExporter(t *testing.T) {
+	reset()
 	os.Setenv("SERVICE_NAME", "testing")
-	os.Setenv("TRACING_BLOCKING_EXPORTER", "true")
-	os.Setenv("LOG_LEVEL", "debug")
 	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
-	_, err := tracing.Launch()
+	os.Setenv("TRACING_BLOCK_EXPORTER", "true")
 
-	assert.NotNil(t, err)
-	assert.Error(t, err)
-	assert.NotZero(t, err)
+	shutdown, err := tracing.Launch()
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
+
+	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.Zero(t, err)
+}
+
+func TestSecureExporter(t *testing.T) {
+	reset()
+	os.Setenv("SERVICE_NAME", "testing")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
+	os.Setenv("TRACING_SECURE_EXPORTER", "true")
+
+	shutdown, err := tracing.Launch()
+	defer func() {
+		err = shutdown()
+		assert.Nil(t, err)
+		assert.NoError(t, err)
+	}()
+
+	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.Zero(t, err)
 }

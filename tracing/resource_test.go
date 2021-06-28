@@ -17,13 +17,3 @@ func TestNewResource(t *testing.T) {
 	assert.NotNil(t, res.Attributes())
 	assert.Greater(t, res.Len(), 0)
 }
-
-func TestResourceServiceNameRequired(t *testing.T) {
-	os.Clearenv()
-	initConfig()
-	res, err := newResource()
-
-	assert.NotNil(t, err)
-	assert.Error(t, err)
-	assert.Zero(t, res)
-}

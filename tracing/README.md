@@ -21,7 +21,6 @@ This package configures Open Telemetry as the global tracing provider. It config
 
 ```go
 SERVICE_NAME // Name of the service/application. #Required
-SERVICE_VERSION // Version of the service/application. #Optional
 TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required 
 TRACING_BLOCK_EXPORTER // Exporter initiates a blocking request to an endpoint | #Optional | bool
 TRACING_SECURE_EXPORTER // Exporter connects with TLS secure connection. | #Optional | bool
