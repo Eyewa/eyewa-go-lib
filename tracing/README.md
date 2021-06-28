@@ -22,9 +22,9 @@ This package configures Open Telemetry as the global tracing provider. It config
 ```go
 SERVICE_NAME // Name of the service/application. #Required
 SERVICE_VERSION // Version of the service/application. #Optional
-TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required
-TRACING_BLOCKING_EXPORTER // Exporter initiates a blocking request to an endpoint. #Optional
-TRACING_SECURE_EXPORTER // Exporter connects with TLS secure connection. #Optional
+TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required 
+TRACING_BLOCK_EXPORTER // Exporter initiates a blocking request to an endpoint | #Optional | bool
+TRACING_SECURE_EXPORTER // Exporter connects with TLS secure connection. | #Optional | bool
 ```
 
 </br>
@@ -54,21 +54,26 @@ func main() {
  err := config.Init()
  if err != nil {
   log.Error(err.Error())
+  return
  }
 
  // launch tracing to open a connection to
  // a tracing backend.
  shutdown, err := tracing.Launch()
+ defer shutdown()
  if err != nil {
   log.Error(err.Error())
+  return
  }
- defer shutdown()
+ 
 
  // listen on the grpc server port.
  port := os.Getenv("GRPC_SERVER_PORT")
  lis, err := net.Listen("tcp", port)
+ defer lis.Close()
  if err != nil {
-  log.Fatal(err.Error())
+  log.Error(err.Error())
+  return
  }
 
  // inject tracing interceptors.
@@ -80,7 +85,8 @@ func main() {
  // register the server and start serving grpc requests.
  api.RegisterHelloServiceServer(s, &server{})
  if err := s.Serve(lis); err != nil {
-  log.Fatal(err.Error())
+  log.Error(err.Error())
+  return
  }
 
 }

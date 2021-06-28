@@ -13,17 +13,13 @@ import (
 )
 
 // constructs a new Resource with attributes.
-func newResource(svcName, svcVersion string) (*resource.Resource, error) {
+func newResource() (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
-	if len(svcName) == 0 {
+	if cfg.ServiceName == "" {
 		return nil, errors.ErrorNoServiceNameSpecified
 	}
-	attributes = append(attributes, semconv.ServiceNameKey.String(svcName))
-
-	if len(svcVersion) > 0 {
-		attributes = append(attributes, semconv.ServiceVersionKey.String(svcVersion))
-	}
+	attributes = append(attributes, semconv.ServiceNameKey.String(cfg.ServiceName))
 
 	// check if we can pickup the hostname from the os.
 	hostname, err := os.Hostname()

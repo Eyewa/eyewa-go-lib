@@ -1,14 +1,17 @@
 package tracing
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewResource(t *testing.T) {
-	svcname, svcver := "test-service", "1.0.0"
-	res, _ := newResource(svcname, svcver)
+	os.Clearenv()
+	os.Setenv("SERVICE_NAME", "test-service")
+	initConfig()
+	res, _ := newResource()
 
 	assert.NotNil(t, res)
 	assert.NotNil(t, res.Attributes())
@@ -16,8 +19,9 @@ func TestNewResource(t *testing.T) {
 }
 
 func TestResourceServiceNameRequired(t *testing.T) {
-	svcname, svcver := "", "1.0.0"
-	res, err := newResource(svcname, svcver)
+	os.Clearenv()
+	initConfig()
+	res, err := newResource()
 
 	assert.NotNil(t, err)
 	assert.Error(t, err)

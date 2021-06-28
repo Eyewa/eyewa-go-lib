@@ -5,12 +5,15 @@ import (
 	"testing"
 
 	"github.com/eyewa/eyewa-go-lib/errors"
+	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/eyewa/eyewa-go-lib/tracing"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLaunchWithServiceName(t *testing.T) {
 	os.Clearenv()
+	os.Setenv("LOG_LEVEL", "debug")
+	log.SetLogLevel()
 	os.Setenv("SERVICE_NAME", "test-service")
 	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
 
@@ -26,6 +29,8 @@ func TestLaunchWithServiceName(t *testing.T) {
 
 func TestLaunchWithoutServiceName(t *testing.T) {
 	os.Clearenv()
+	os.Setenv("LOG_LEVEL", "debug")
+	log.SetLogLevel()
 	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
 	shutdown, err := tracing.Launch()
 	assert.NotNil(t, err)
@@ -39,6 +44,8 @@ func TestLaunchWithoutServiceName(t *testing.T) {
 
 func TestLaunchShutdown(t *testing.T) {
 	os.Clearenv()
+	os.Setenv("LOG_LEVEL", "debug")
+	log.SetLogLevel()
 	os.Setenv("SERVICE_NAME", "test-service")
 	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
 	shutdown, err := tracing.Launch()
@@ -52,6 +59,8 @@ func TestLaunchShutdown(t *testing.T) {
 
 func TestLaunchWithoutEndpoint(t *testing.T) {
 	os.Clearenv()
+	os.Setenv("LOG_LEVEL", "debug")
+	log.SetLogLevel()
 	os.Setenv("SERVICE_NAME", "test-service")
 
 	shutdown, err := tracing.Launch()
@@ -65,6 +74,8 @@ func TestLaunchWithoutEndpoint(t *testing.T) {
 }
 func TestShutdownRelaunch(t *testing.T) {
 	os.Clearenv()
+	os.Setenv("LOG_LEVEL", "debug")
+	log.SetLogLevel()
 	os.Setenv("SERVICE_NAME", "test-service")
 	os.Setenv("TRACING_EXPORTER_ENDPOINT", "123")
 
@@ -87,6 +98,9 @@ func TestShutdownRelaunch(t *testing.T) {
 }
 
 func TestInvalidEnvConfig(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("LOG_LEVEL", "debug")
+	log.SetLogLevel()
 	os.Setenv("SERVICE_NAME", "testing")
 	os.Setenv("TRACING_SECURE_EXPORTER", "none")
 	_, err := tracing.Launch()

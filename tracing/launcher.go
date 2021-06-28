@@ -13,12 +13,16 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 )
 
+var (
+	cfg config
+)
+
 func initConfig() (config, error) {
 	var config config
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.SetDefault("TRACING_BLOCKING_EXPORTER", "false")
+	viper.SetDefault("TRACING_BLOCK_EXPORTER", "false")
 	viper.SetDefault("TRACING_SECURE_EXPORTER", "false")
 
 	envVars := []string{
@@ -37,37 +41,29 @@ func initConfig() (config, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return config, err
 	}
-
+	cfg = config
 	return config, nil
 }
 
 // Launch launches a tracing environment and returns a
 // function to shutdown.
 func Launch() (ShutdownFunc, error) {
-	log.SetLogLevel()
 	ctx := context.Background()
 	shutdownfunc := func() error {
 		return nil
 	}
-
-	config, err := initConfig()
+	var err error
+	_, err = initConfig()
 	if err != nil {
 		return shutdownfunc, fmt.Errorf("Failed to init config: %v", err)
 	}
 
-	exp, err := newOtelCollectorExporter(
-		config.ExporterEndpoint,
-		config.ExporterSecure,
-		config.ExporterBlocking,
-	)
+	exp, err := newOtelCollectorExporter()
 	if err != nil {
 		return shutdownfunc, err
 	}
 
-	res, err := newResource(
-		config.ServiceName,
-		config.ServiceVersion,
-	)
+	res, err := newResource()
 	if err != nil {
 		return shutdownfunc, err
 	}
@@ -86,7 +82,6 @@ func Launch() (ShutdownFunc, error) {
 	otel.SetTracerProvider(tp)
 
 	l := &launcher{
-		config:    config,
 		exporter:  exp,
 		resource:  res,
 		spanprocs: processors,
