@@ -66,7 +66,7 @@ func main() {
  }
  
 
- // listen on the grpc server port.
+ // setup the service grpc server as normal.
  port := os.Getenv("GRPC_SERVER_PORT")
  lis, err := net.Listen("tcp", port)
  defer lis.Close()
