@@ -118,7 +118,7 @@ func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
 
 var metrics = NewCatalogConsumerMetrics()
 ```
-Then inject it where necesseray
+Then inject it where necessary
 ```go
 NewMiddleware(metrics)
 ```
