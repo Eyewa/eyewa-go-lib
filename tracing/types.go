@@ -1,8 +1,6 @@
 package tracing
 
 import (
-	"context"
-
 	"go.opentelemetry.io/otel/exporters/otlp"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -18,7 +16,7 @@ type config struct {
 }
 
 // ShutdownFunc shuts down a tracing env.
-type ShutdownFunc func(ctx context.Context) error
+type ShutdownFunc func() error
 
 // launcher launches a tracing env.
 type launcher struct {

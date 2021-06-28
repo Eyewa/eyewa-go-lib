@@ -37,39 +37,59 @@ EXPORTER_SECURE // Exporter connects with TLS secure connection.
 ### Tracing A GRPC Server
 
 ```go
-shutdown, err := tracing.Launch()
-if err != nil {
-    log.Fatal("failed to launch tracing")
-}
-defer shutdown()
+package exampleservice
 
-s := grpc.NewServer(
-    // trace all unary requests
-    trace.UnaryServerTraceInterceptor(),
-    // trace all bidirectional streams 
-    trace.StreamServerTraceInterceptor(),
+import (
+ "net"
+ "os"
+
+ "github.com/eyewa/eyewa-go-lib/log"
+ "github.com/eyewa/eyewa-go-lib/tracing"
+ "github.com/eyewa/exampleservice/api"
+ "github.com/eyewa/exampleservice/config"
+ "google.golang.org/grpc"
 )
-```
 
-</br>
+func main() {
+ // this should be injected and not hardcoded.
+ os.Setenv("SERVICE_NAME", "exampleservice")
+ os.Setenv("EXPORTER_ENDPOINT", "open-telemetry.collector.endpoint")
+ os.Setenv("GRPC_SERVER_PORT", "7777")
 
-### Tracing a GRPC client
+ err := config.Init()
+ if err != nil {
+  log.Error(err.Error())
+ }
 
-```go
-shutdown, err := tracing.Launch()
-if err != nil {
-    log.Fatal("failed to launch tracing")
+ // launch tracing to open a connection to
+ // a tracing backend.
+ shutdown, err := tracing.Launch()
+ if err != nil {
+  log.Error(err.Error())
+ }
+ defer shutdown()
+
+ // listen on the grpc server port.
+ port := os.Getenv("GRPC_SERVER_PORT")
+ lis, err := net.Listen("tcp", port)
+ if err != nil {
+  log.Fatal(err.Error())
+ }
+
+ // inject tracing interceptors.
+ s := grpc.NewServer(
+  tracing.UnaryServerTraceInterceptor(),
+  tracing.StreamServerTraceInterceptor(),
+ )
+
+ // register the server and start serving grpc requests.
+ api.RegisterHelloServiceServer(s, &server{})
+ if err := s.Serve(lis); err != nil {
+  log.Fatal(err.Error())
+ }
+
 }
-defer shutdown()
 
-port := os.Getenv("GRPC_DIAL_PORT")
-conn, err := grpc.Dial(port,
-    // trace all unary requests
-    grpc.WithInsecure(),
-    trace.UnaryClientTraceInterceptor(),
-    // trace all bidirectional streams 
-    trace.StreamClientTraceInterceptor(),
-)
 ```
 
 </br>

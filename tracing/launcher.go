@@ -91,7 +91,7 @@ func Launch() (ShutdownFunc, error) {
 		return nil, err
 	}
 
-	shutdownfunc := func(ctx context.Context) error {
+	shutdownfunc := func() error {
 		if err := l.shutdown(ctx); err != nil {
 			return err
 		}
