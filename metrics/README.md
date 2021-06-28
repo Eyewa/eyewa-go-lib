@@ -116,7 +116,10 @@ func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
     }, nil
 }
 
-var metrics = NewCatalogConsumerMetrics()
+metrics, err := NewCatalogConsumerMetrics()
+if err !=nil {
+	log.Error(erros.ErrorFailedToCreateInstrument.Error())
+}
 ```
 Then inject it where necessary
 ```go
