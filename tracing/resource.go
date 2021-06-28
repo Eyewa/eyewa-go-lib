@@ -22,6 +22,7 @@ func newResource(svcName, svcVersion string) *resource.Resource {
 		attributes = append(attributes, semconv.ServiceVersionKey.String(svcVersion))
 	}
 
+	// check if we can pickup the hostname from the os.
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Debug("Failed to retrieve the hostname from the kernel.")

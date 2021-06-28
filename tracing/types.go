@@ -20,9 +20,13 @@ type ShutdownFunc func() error
 
 // launcher launches a tracing env.
 type launcher struct {
-	config    config
-	exporter  *otlp.Exporter
-	resource  *resource.Resource
+	config config
+	// Exporter is the endpoint to which traces are exported.
+	exporter *otlp.Exporter
+	// Resource describes an application/service
+	resource *resource.Resource
+	// SpanProcessors process spans before getting exported. (pipeline pattern)
 	spanprocs []trace.SpanProcessor
-	provider  *trace.TracerProvider
+	// TracerProvider provides a tracer to intiate the starting of a span.
+	provider *trace.TracerProvider
 }
