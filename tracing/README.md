@@ -16,6 +16,7 @@ Due to the Open Telemetry trace API and SDK currently at v1.0.0-rc.1, there will
 
 ## How To Use
 
+- Set the `SERVICE_NAME` environmental variable.
 - Set the `EXPORTER_ENDPOINT` environmental variable.
 - launch to connect to the open telemetry collector.
 - Add a GRPC interceptor to the GRPC server/client.
@@ -26,10 +27,10 @@ Due to the Open Telemetry trace API and SDK currently at v1.0.0-rc.1, there will
 
 ```go
 SERVICE_NAME // Name of the service/application. #Required
-SERVICE_VERSION // Version of the service/application.
-EXPORTER_ENDPOINT // The endpoint that spans get exported to.
-EXPORTER_BLOCKING // Exporter initiates a blocking request to an endpoint.
-EXPORTER_SECURE // Exporter connects with TLS secure connection.
+SERVICE_VERSION // Version of the service/application. #Optional
+EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required
+EXPORTER_BLOCKING // Exporter initiates a blocking request to an endpoint. #Optional
+EXPORTER_SECURE // Exporter connects with TLS secure connection. #Optional
 ```
 
 </br>
