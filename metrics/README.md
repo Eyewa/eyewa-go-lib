@@ -91,6 +91,39 @@ asyncs are:
 - AsyncValueRecorder
 
 ---
+# Best Practice on services
+Instruments should be defined under a custom struct. The custom struct should be \
+initialized on top of the service. It is better for readibility and tracking which \
+metrics are used for the service. \
+For example; define custom instruments under a struct
+```go
+type CatalogConsumerMetrics struct{
+	ProductCreatedEventCounter *metrics.Counter
+}
+```
+Initialize it on top of service.
+```go
+func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
+    meter := NewMeter("catalog.consumer",nil)
+    
+    productCreatedEventCounter, err := meter.NewCounter("product.created.event.counter")
+    if err != nil{
+    	return nil, err
+    }
+    
+    return &CatalogConsumerMetrics{
+        ProductCreatedEventCounter: productCreatedEventCounter,
+    }, nil
+}
+
+var metrics = NewCatalogConsumerMetrics()
+```
+Then inject it where necesseray
+```go
+NewMiddleware(metrics)
+```
+
+---
 ## Metrics WIKI
 
 For detailed information please see [confluence page](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1869545495/Metrics+Package)
