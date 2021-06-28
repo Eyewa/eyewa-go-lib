@@ -20,7 +20,8 @@ type ShutdownFunc func() error
 
 // launcher launches a tracing env.
 type launcher struct {
-	config config
+	started bool
+	config  config
 	// Exporter is the endpoint to which traces are exported.
 	exporter *otlp.Exporter
 	// Resource describes an application/service

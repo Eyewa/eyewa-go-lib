@@ -2,8 +2,9 @@ package tracing
 
 import (
 	"context"
-	"errors"
 	"os"
+
+	"github.com/eyewa/eyewa-go-lib/errors"
 
 	"github.com/eyewa/eyewa-go-lib/log"
 	"go.opentelemetry.io/otel/attribute"
@@ -16,7 +17,7 @@ func newResource(svcName, svcVersion string) (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
 	if len(svcName) == 0 {
-		return nil, errors.New("The SERVICE_NAME env var is required.")
+		return nil, errors.ErrorNoServiceNameSpecified
 	}
 	attributes = append(attributes, semconv.ServiceNameKey.String(svcName))
 

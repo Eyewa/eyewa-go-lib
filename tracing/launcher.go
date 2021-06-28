@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/eyewa/eyewa-go-lib/log"
+	_ "github.com/eyewa/eyewa-go-lib/log"
+
 	"github.com/ory/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
-)
-
-var (
-	l *launcher
 )
 
 func initConfig() (config, error) {
@@ -20,7 +19,7 @@ func initConfig() (config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.SetDefault("EXPORTER_BLOCKING", "false")
-	viper.SetDefault("EXPORTER_SECURE", "true")
+	viper.SetDefault("EXPORTER_SECURE", "false")
 
 	envVars := []string{
 		"EXPORTER_BLOCKING",
@@ -45,18 +44,24 @@ func initConfig() (config, error) {
 // Launch launches a tracing environment and returns a
 // function to shutdown.
 func Launch() (ShutdownFunc, error) {
-	config, err := initConfig()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to init config: %v", err)
+	log.SetLogLevel()
+	ctx := context.Background()
+	shutdownfunc := func() error {
+		return nil
 	}
 
-	exp := newOtelCollectorExporter(
+	config, err := initConfig()
+	if err != nil {
+		return shutdownfunc, fmt.Errorf("Failed to init config: %v", err)
+	}
+
+	exp, err := newOtelCollectorExporter(
 		config.ExporterEndpoint,
 		config.ExporterSecure,
 		config.ExporterBlocking,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create span exporter: %v", err)
+		return shutdownfunc, err
 	}
 
 	res, err := newResource(
@@ -64,7 +69,7 @@ func Launch() (ShutdownFunc, error) {
 		config.ServiceVersion,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create a resource: %v", err)
+		return shutdownfunc, err
 	}
 
 	var processors []trace.SpanProcessor
@@ -78,10 +83,9 @@ func Launch() (ShutdownFunc, error) {
 	)
 
 	registerPropagators()
-
 	otel.SetTracerProvider(tp)
 
-	l = &launcher{
+	l := &launcher{
 		config:    config,
 		exporter:  exp,
 		resource:  res,
@@ -89,12 +93,12 @@ func Launch() (ShutdownFunc, error) {
 		provider:  tp,
 	}
 
-	ctx := context.Background()
 	if err = l.launch(ctx); err != nil {
-		return nil, err
+		l.shutdown(ctx)
+		return shutdownfunc, err
 	}
 
-	shutdownfunc := func() error {
+	shutdownfunc = func() error {
 		if err := l.shutdown(ctx); err != nil {
 			return err
 		}
@@ -105,19 +109,42 @@ func Launch() (ShutdownFunc, error) {
 }
 
 // launch initiates the connection to the exporter.
-func (l *launcher) launch(ctx context.Context) error {
-	if err := l.exporter.Start(ctx); err != nil {
+func (tl *launcher) launch(ctx context.Context) error {
+	if err := tl.exporter.Start(ctx); err != nil {
 		return err
 	}
 	return nil
 }
 
 // shutdown shuts down underlying connections.
-func (l *launcher) shutdown(ctx context.Context) error {
+func (tl *launcher) shutdown(ctx context.Context) error {
 	var err error
-	err = l.exporter.Shutdown(ctx)
-	for _, proc := range l.spanprocs {
-		err = proc.Shutdown(ctx)
+
+	// shutdown the exporter.
+	if tl.exporter != nil {
+		log.Debug("Shutting down tracing exporter.")
+		if err = tl.exporter.Shutdown(ctx); err != nil {
+			log.Error(fmt.Sprintf("Failed to shutdown tracing exporter: %v", err))
+		}
 	}
+
+	// shutdown span processors.
+	if len(tl.spanprocs) > 0 {
+		for _, proc := range tl.spanprocs {
+			log.Debug("Shutting down tracing processors.")
+			if err = proc.Shutdown(ctx); err != nil {
+				log.Error(fmt.Sprintf("Failed to shutdown tracing span processor: %v", err))
+			}
+		}
+	}
+
+	// shutdown the tracer provider.
+	if tl.provider != nil {
+		log.Debug("Shutting down tracing provider")
+		if err = tl.provider.Shutdown(ctx); err != nil {
+			log.Error(fmt.Sprintf("Failed to shutdown tracing provider: %v", err))
+		}
+	}
+
 	return err
 }

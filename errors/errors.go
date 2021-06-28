@@ -17,8 +17,8 @@ var (
 	ErrorFailedToPublishEvent        = errors.New("Failed to publish event to queue.")
 
 	// Tracing errors
-	ErrorExporterStartupFailure  = errors.New("Failed to start tracing exporter.")
-	ErrorExporterShutdownFailure = errors.New("Failed to shutdown tracing exporter.")
+	ErrorNoExporterEndpointSpecified = errors.New("No exporter endpoint specified.")
+	ErrorNoServiceNameSpecified      = errors.New("No service name specified.")
 
 	// Metrics errors
 	ErrorFailedToInitPrometheusExporter = errors.New("Failed to initialize prometheus exporter.")
