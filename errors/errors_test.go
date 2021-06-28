@@ -10,7 +10,7 @@ import (
 func TestErrorWrap(t *testing.T) {
 	child1 := errors.New(
 		"failed to connect to endpoint: unknown.com")
-	parent1 := ErrExporterStartupFailure
+	parent1 := ErrorExporterStartupFailure
 	wrapped1 := Wrap(child1, parent1)
 
 	expected1 := "Failed to start exporter: failed to connect to endpoint: unknown.com"
@@ -18,7 +18,7 @@ func TestErrorWrap(t *testing.T) {
 	assert.EqualError(t, wrapped1, expected1)
 
 	var child2 error = nil
-	parent2 := ErrExporterStartupFailure
+	parent2 := ErrorExporterStartupFailure
 	wrapped2 := Wrap(child2, parent2)
 
 	var expected2 error = nil

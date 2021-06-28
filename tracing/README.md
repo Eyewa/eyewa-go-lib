@@ -35,12 +35,13 @@ Upon initialising a tracing configuration, the order in which the configuration 
 
 </br>
 
-|Config Option     |Env Variable      |Required|
+Env Variable      |Required|
 |------------------|------------------|--------|
-|WithServiceName            |SERVICE_NAME                       |y       |Name of the service/application.
-|WithServiceVersion         |SERVICE_VERSION                    |n       |Version of the service/application.
-|WithHostName               |HOST_NAME                          |n       |The name of the pod/instance/service.
-|WithCollectorEndpoint      |TRACE_COLLECTOR_ENDPOINT           |n       |The endpoint all spans get exported to.
+|SERVICE_NAME                       |y       |Name of the service/application.
+|SERVICE_VERSION                    |n       |Version of the service/application.
+|EXPORTER_ENDPOINT                  |n       |The endpoint tracing spans are exported to.
+|EXPORTER_BLOCKING                  |n       |Exporter initiates a blocking request to an endpoint.
+|EXPORTER_SECURE                    |n       |Exporter connects with TLS secure connection.
 
   </br>
 

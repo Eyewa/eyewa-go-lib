@@ -3,33 +3,28 @@ package tracing
 import (
 	"context"
 
-	exporter "github.com/eyewa/eyewa-go-lib/tracing/exporter"
+	"go.opentelemetry.io/otel/exporters/otlp"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.uber.org/zap"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
-// Config represents the configuration used to configure a tracing environment.
-type Config struct {
-	ExporterEndpoint       string `mapstructure:"exporter_endpoint"`
-	SecureExporterEndpoint bool   `mapstructure:"secure_exporter_endpoint"`
-	ExporterBlocking       bool   `mapstructure:"exporter_blocking"`
-	ServiceName            string `mapstructure:"service_name"`
-	ServiceVersion         string `mapstructure:"service_version"`
-	resourceAttributes     map[string]string
-	Resource               *resource.Resource
-	logger                 *zap.Logger
+// config is the tracing environment configuration.
+type config struct {
+	ServiceName      string `mapstructure:"service_name"`
+	ServiceVersion   string `mapstructure:"service_version"`
+	ExporterEndpoint string `mapstructure:"exporter_endpoint"`
+	ExporterSecure   bool   `mapstructure:"exporter_secure"`
+	ExporterBlocking bool   `mapstructure:"exporter_blocking"`
 }
 
-// Option is a configuration option in a tracing environment.
-type Option func(*Config)
+// ShutdownFunc shuts down a tracing env.
+type ShutdownFunc func(ctx context.Context) error
 
-// ShutdownFunc is the showdown function that
-// shuts down a tracing environment.
-type ShutdownFunc func() error
-
-// Launcher is responsible for launching a
-// tracing environment.
-type Launcher struct {
-	ctx      context.Context
-	exporter exporter.Exporter
+// launcher launches a tracing env.
+type launcher struct {
+	config    config
+	exporter  *otlp.Exporter
+	resource  *resource.Resource
+	spanprocs []trace.SpanProcessor
+	provider  *trace.TracerProvider
 }

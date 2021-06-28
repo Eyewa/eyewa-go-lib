@@ -15,9 +15,16 @@ var (
 	ErrorFailedToPublishToDeadletter = errors.New("Failed to publish event error to deadletter queue.")
 	ErrorFailedToPublishEvent        = errors.New("Failed to publish event to queue.")
 
-	// tracing errors
-	ErrorExporterStartupFailure  = errors.New("Failed to start tracing exporter")
-	ErrorExporterShutdownFailure = errors.New("Failed to shutdown tracing exporter")
+	// Tracing errors
+	ErrorExporterStartupFailure  = errors.New("Failed to start tracing exporter.")
+	ErrorExporterShutdownFailure = errors.New("Failed to shutdown tracing exporter.")
+
+	// Metrics errors
+	ErrorFailedToInitPrometheusExporter = errors.New("Failed to initialize prometheus exporter.")
+	ErrorFailedToStartRuntimeMetrics    = errors.New("Failed to start runtime metrics.")
+	ErrorFailedToStartHostMetrics       = errors.New("Failed to start host metrics.")
+	ErrorFailedToStartMetricServer      = errors.New("Failed to start metric server.")
+	ErrorFailedToCreateInstrument       = errors.New("Failed to create instrument.")
 )
 
 // Wrap wraps a child error with a parent.
