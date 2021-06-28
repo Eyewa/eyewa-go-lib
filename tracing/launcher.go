@@ -59,10 +59,13 @@ func Launch() (ShutdownFunc, error) {
 		return nil, fmt.Errorf("Failed to create span exporter: %v", err)
 	}
 
-	res := newResource(
+	res, err := newResource(
 		config.ServiceName,
 		config.ServiceVersion,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create a resource: %v", err)
+	}
 
 	var processors []trace.SpanProcessor
 	bsp := trace.NewBatchSpanProcessor(exp)

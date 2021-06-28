@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -11,12 +12,13 @@ import (
 )
 
 // constructs a new Resource with attributes.
-func newResource(svcName, svcVersion string) *resource.Resource {
+func newResource(svcName, svcVersion string) (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
-	if len(svcName) > 0 {
-		attributes = append(attributes, semconv.ServiceNameKey.String(svcName))
+	if len(svcName) == 0 {
+		return nil, errors.New("The SERVICE_NAME env var is required.")
 	}
+	attributes = append(attributes, semconv.ServiceNameKey.String(svcName))
 
 	if len(svcVersion) > 0 {
 		attributes = append(attributes, semconv.ServiceVersionKey.String(svcVersion))
@@ -31,10 +33,10 @@ func newResource(svcName, svcVersion string) *resource.Resource {
 	}
 
 	// These detectors can't actually fail, ignoring the error.
-	r, _ := resource.New(
+	r, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(attributes...),
 	)
 
-	return r
+	return r, err
 }
