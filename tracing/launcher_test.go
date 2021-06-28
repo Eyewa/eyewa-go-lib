@@ -12,7 +12,7 @@ import (
 func TestLaunchWithServiceName(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("SERVICE_NAME", "test-service")
-	os.Setenv("EXPORTER_ENDPOINT", "test-endpoint")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
 
 	shutdown, err := tracing.Launch()
 
@@ -26,7 +26,7 @@ func TestLaunchWithServiceName(t *testing.T) {
 
 func TestLaunchWithoutServiceName(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("EXPORTER_ENDPOINT", "test-endpoint")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
 	shutdown, err := tracing.Launch()
 	assert.NotNil(t, err)
 	assert.Error(t, err)
@@ -40,7 +40,7 @@ func TestLaunchWithoutServiceName(t *testing.T) {
 func TestLaunchShutdown(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("SERVICE_NAME", "test-service")
-	os.Setenv("EXPORTER_ENDPOINT", "test-endpoint")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "test-endpoint")
 	shutdown, err := tracing.Launch()
 	assert.Nil(t, err)
 	assert.NoError(t, err)
@@ -66,7 +66,7 @@ func TestLaunchWithoutEndpoint(t *testing.T) {
 func TestShutdownRelaunch(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("SERVICE_NAME", "test-service")
-	os.Setenv("EXPORTER_ENDPOINT", "123")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "123")
 
 	shutdown, err := tracing.Launch()
 	assert.Nil(t, err)
@@ -88,7 +88,7 @@ func TestShutdownRelaunch(t *testing.T) {
 
 func TestInvalidEnvConfig(t *testing.T) {
 	os.Setenv("SERVICE_NAME", "testing")
-	os.Setenv("EXPORTER_SECURE", "none")
+	os.Setenv("TRACING_SECURE_EXPORTER", "none")
 	_, err := tracing.Launch()
 
 	assert.NotNil(t, err)
@@ -98,9 +98,9 @@ func TestInvalidEnvConfig(t *testing.T) {
 
 func TestBlockingExporterFail(t *testing.T) {
 	os.Setenv("SERVICE_NAME", "testing")
-	os.Setenv("EXPORTER_BLOCKING", "true")
+	os.Setenv("TRACING_BLOCKING_EXPORTER", "true")
 	os.Setenv("LOG_LEVEL", "debug")
-	os.Setenv("EXPORTER_ENDPOINT", "fake-endpoint.test")
+	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
 	_, err := tracing.Launch()
 
 	assert.NotNil(t, err)

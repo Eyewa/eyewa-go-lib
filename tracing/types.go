@@ -10,9 +10,9 @@ import (
 type config struct {
 	ServiceName      string `mapstructure:"service_name"`
 	ServiceVersion   string `mapstructure:"service_version"`
-	ExporterEndpoint string `mapstructure:"exporter_endpoint"`
-	ExporterSecure   bool   `mapstructure:"exporter_secure"`
-	ExporterBlocking bool   `mapstructure:"exporter_blocking"`
+	ExporterEndpoint string `mapstructure:"tracing_exporter_endpoint"`
+	ExporterSecure   bool   `mapstructure:"tracing_secure_exporter"`
+	ExporterBlocking bool   `mapstructure:"tracing_blocking_exporter"`
 }
 
 // ShutdownFunc shuts down a tracing env.

@@ -18,13 +18,13 @@ func initConfig() (config, error) {
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.SetDefault("EXPORTER_BLOCKING", "false")
-	viper.SetDefault("EXPORTER_SECURE", "false")
+	viper.SetDefault("TRACING_BLOCKING_EXPORTER", "false")
+	viper.SetDefault("TRACING_SECURE_EXPORTER", "false")
 
 	envVars := []string{
-		"EXPORTER_BLOCKING",
-		"EXPORTER_SECURE",
-		"EXPORTER_ENDPOINT",
+		"TRACING_BLOCKING_EXPORTER",
+		"TRACING_SECURE_EXPORTER",
+		"TRACING_EXPORTER_ENDPOINT",
 		"SERVICE_VERSION",
 		"SERVICE_NAME",
 	}

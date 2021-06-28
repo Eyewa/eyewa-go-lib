@@ -4,14 +4,14 @@ Shared Go Lib for Eyewa's microservices.
 
 ## tracing
 
-This package configures Open Telemetry as the global tracing provider. It configures an endpoint to where all traces end up using the `EXPORTER_ENDPOINT` env variable. A user of this package is able to view traces on Grafana Tempo once a trace has been exported.
+This package configures Open Telemetry as the global tracing provider. It configures an endpoint to where all traces end up using the `TRACING_EXPORTER_ENDPOINT` env variable. A user of this package is able to view traces on Grafana Tempo once a trace has been exported.
 
 </br>
 
 ## How To Use
 
 - Set the `SERVICE_NAME` environmental variable.
-- Set the `EXPORTER_ENDPOINT` environmental variable.
+- Set the `TRACING_EXPORTER_ENDPOINT` environmental variable.
 - launch to connect to the open telemetry collector.
 - Add a GRPC interceptor to the GRPC server/client.
 
@@ -22,9 +22,9 @@ This package configures Open Telemetry as the global tracing provider. It config
 ```go
 SERVICE_NAME // Name of the service/application. #Required
 SERVICE_VERSION // Version of the service/application. #Optional
-EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required
-EXPORTER_BLOCKING // Exporter initiates a blocking request to an endpoint. #Optional
-EXPORTER_SECURE // Exporter connects with TLS secure connection. #Optional
+TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required
+TRACING_BLOCKING_EXPORTER // Exporter initiates a blocking request to an endpoint. #Optional
+TRACING_SECURE_EXPORTER // Exporter connects with TLS secure connection. #Optional
 ```
 
 </br>
@@ -48,7 +48,7 @@ import (
 func main() {
  // this should be injected and not hardcoded.
  os.Setenv("SERVICE_NAME", "exampleservice")
- os.Setenv("EXPORTER_ENDPOINT", "open-telemetry.collector.endpoint")
+ os.Setenv("TRACING_EXPORTER_ENDPOINT", "open-telemetry.collector.endpoint")
  os.Setenv("GRPC_SERVER_PORT", "7777")
 
  err := config.Init()
