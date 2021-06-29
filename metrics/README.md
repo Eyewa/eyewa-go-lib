@@ -91,6 +91,60 @@ asyncs are:
 - AsyncValueRecorder
 
 ---
+# Best practice on adding metrics instrumentation within a microservice
+Instruments should be defined under a custom struct. The custom struct should be initialized
+at the start of a service in the `main` goroutine - this will provide clarity and readability, 
+as well as track which metrics are used for the service.
+
+## Defining custom instruments under a struct
+```go
+// create a metrics.go
+type CatalogConsumerMetrics struct{
+	ProductCreatedEventCounter *metrics.Counter
+}
+
+// Initialize the metrics struct
+func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
+    meter := NewMeter("catalog.consumer",nil)
+    
+    productCreatedEventCounter, err := meter.NewCounter("product.created.event.counter")
+    if err != nil{
+    	return nil, err
+    }
+    
+    return &CatalogConsumerMetrics{
+        ProductCreatedEventCounter: productCreatedEventCounter,
+    }, nil
+}
+```
+```go
+// in main.go
+func main(){
+    metrics, err := NewCatalogConsumerMetrics()
+    if err != nil { 
+	    log.Error(erros.ErrorFailedToCreateInstrument.Error())
+    }
+}
+```
+## Examples of event handler by injecting metrics
+```go
+func handleProductCreated(metrics CatalogConsumerMetrics) error {
+    go metrics.ProductCreatedEventCounter.Add(1)
+    // ... rest of code
+}
+```
+or
+```go
+type ProductCreatedEventHandler struct {
+    metrics CatalogConsumerMetrics
+}
+
+func (h *ProductCreatedEventHandler) Handle() {
+    go h.metrics.ProductCreatedEventCounter.Add(1)
+    // ... rest of code
+}
+```
+---
 ## Metrics WIKI
 
 For detailed information please see [confluence page](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1869545495/Metrics+Package)
