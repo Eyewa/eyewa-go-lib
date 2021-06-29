@@ -92,9 +92,9 @@ asyncs are:
 
 ---
 # Best practice on adding metrics instrumentation within a microservice
-Instruments should be defined under a custom struct. The custom struct should be initialized at the start of a service in the `main` goroutine - this will provide clarity and readability, as well as track which metrics are used for the service. 
-initialized on top of the service. It is better for readibility and tracking which 
-metrics are used for the service. 
+Instruments should be defined under a custom struct. The custom struct should be initialized
+at the start of a service in the `main` goroutine - this will provide clarity and readability, 
+as well as track which metrics are used for the service.
 
 ## Defining custom instruments under a struct
 ```go
@@ -126,7 +126,7 @@ func main(){
     }
 }
 ```
-Examples of event handler by injecting metrics
+## Examples of event handler by injecting metrics
 ```go
 func handleProductCreated(metrics CatalogConsumerMetrics) error {
     go metrics.ProductCreatedEventCounter.Add(1)
