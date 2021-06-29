@@ -14,7 +14,7 @@ import (
 func newResource() (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
-	attributes = append(attributes, semconv.ServiceNameKey.String(cfg.ServiceName))
+	attributes = append(attributes, semconv.ServiceNameKey.String(config.ServiceName))
 
 	// check if we can pickup the hostname from the os.
 	hostname, err := os.Hostname()
