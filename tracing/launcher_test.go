@@ -14,7 +14,7 @@ func setup() func() {
 	os.Setenv("LOG_LEVEL", "info")
 	log.SetLogLevel()
 	config = Config{}
-	exporterTimeout = 200 * time.Millisecond
+	exporterTimeout = 100 * time.Millisecond
 	return func() {
 		os.Clearenv()
 	}

@@ -24,6 +24,8 @@ SERVICE_NAME // Name of the service/application. #Required
 TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required 
 TRACING_BLOCK_EXPORTER // Exporter initiates a blocking request to an endpoint | #Optional | bool
 TRACING_SECURE_EXPORTER // Exporter connects with TLS secure connection. | #Optional | bool
+HOSTNAME // The hostname of the deployment instance. | #Optional
+
 ```
 
 </br>
