@@ -96,7 +96,7 @@ Instruments should be defined under a custom struct. The custom struct should be
 initialized on top of the service. It is better for readibility and tracking which 
 metrics are used for the service. 
 
-For example; define custom instruments under a struct
+## Defining custom instruments under a struct
 ```go
 // create a metrics.go
 type CatalogConsumerMetrics struct{
