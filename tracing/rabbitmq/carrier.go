@@ -60,19 +60,17 @@ func NewPublishingCarrier(p *amqp.Publishing) PublishingCarrier {
 
 // Get gets a header from the publishing.
 func (c *PublishingCarrier) Get(key string) string {
-	for k, h := range c.publishing.Headers {
-		if h != "" && k == key {
-			return fmt.Sprintf("%v", h)
-		}
+	val := c.publishing.Headers[key]
+	if val != nil {
+		// convert to string
+		return fmt.Sprintf("%v", val)
 	}
 	return ""
 }
 
 // Set sets a header on the publishing.
 func (c *PublishingCarrier) Set(key, val string) {
-	for k := range c.publishing.Headers {
-		c.publishing.Headers[k] = val
-	}
+	c.publishing.Headers[key] = val
 }
 
 // Keys returns all the header keys of the publishing.
