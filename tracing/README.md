@@ -4,7 +4,7 @@ Shared Go Lib for Eyewa's microservices.
 
 ## tracing
 
-This package configures Open Telemetry as the global tracing provider. It configures an endpoint to where all traces end up using the `TRACING_EXPORTER_ENDPOINT` env variable. A user of this package is able to view traces on Grafana Tempo once a trace has been exported.
+This package enables Open Telemetry as the global tracing provider. It provides an endpoint where all services using the 'EXPORTER_ENDPOINT' env variable can send their trace payloads to. A user of this package is able to view traces on Grafana Tempo once a trace has been exported.
 
 </br>
 
@@ -24,6 +24,8 @@ SERVICE_NAME // Name of the service/application. #Required
 TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required
 TRACING_BLOCK_EXPORTER // Exporter initiates a blocking request to an endpoint | #Optional | bool
 TRACING_SECURE_EXPORTER // Exporter connects with TLS secure connection. | #Optional | bool
+HOSTNAME // The hostname of the deployment instance. | #Optional
+
 ```
 
 </br>

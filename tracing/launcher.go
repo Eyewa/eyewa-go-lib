@@ -3,7 +3,9 @@ package tracing
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -15,22 +17,29 @@ import (
 )
 
 var (
-	cfg config
+	config          Config
+	exporterTimeout = 2 * time.Second
 )
 
-func initConfig() (config, error) {
-	var config config
-
+// intitialises and verifies the validity of a configuration.
+func initConfig() (Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	// setup default configuration
 	viper.SetDefault("TRACING_BLOCK_EXPORTER", "false")
 	viper.SetDefault("TRACING_SECURE_EXPORTER", "false")
+	hostname, err := os.Hostname()
+	if err == nil && hostname != "" {
+		viper.SetDefault("HOSTNAME", hostname)
+	}
 
 	envVars := []string{
+		"SERVICE_NAME",
 		"TRACING_BLOCK_EXPORTER",
 		"TRACING_SECURE_EXPORTER",
 		"TRACING_EXPORTER_ENDPOINT",
-		"SERVICE_NAME",
+		"HOSTNAME",
 	}
 
 	for _, v := range envVars {
@@ -38,19 +47,20 @@ func initConfig() (config, error) {
 			return config, err
 		}
 	}
+
 	if err := viper.Unmarshal(&config); err != nil {
 		return config, err
-	}
-
-	if config.TracingExporterEndpoint == "" {
-		return config, errors.ErrorNoExporterEndpointSpecified
 	}
 
 	if config.ServiceName == "" {
 		return config, errors.ErrorNoServiceNameSpecified
 	}
 
-	cfg = config
+	if config.TracingExporterEndpoint == "" {
+		return config, errors.ErrorNoExporterEndpointSpecified
+	}
+
+	log.Debug(fmt.Sprintf("Tracing config initialised: %v", config))
 	return config, nil
 }
 
@@ -64,10 +74,10 @@ func Launch() (ShutdownFunc, error) {
 	var err error
 	_, err = initConfig()
 	if err != nil {
-		return shutdownfunc, fmt.Errorf("Failed to init config: %v", err)
+		return shutdownfunc, fmt.Errorf("Failed to init tracing config: %v", err)
 	}
 
-	exp, err := newOtelCollectorExporter()
+	exp, err := newOtelExporter()
 	if err != nil {
 		return shutdownfunc, err
 	}
@@ -98,12 +108,14 @@ func Launch() (ShutdownFunc, error) {
 	}
 
 	if err = l.launch(ctx); err != nil {
+		log.Error(fmt.Sprintf("Failed to launch tracing launcher: %v", err))
 		l.shutdown(ctx)
 		return shutdownfunc, err
 	}
 
 	shutdownfunc = func() error {
 		if err := l.shutdown(ctx); err != nil {
+			log.Error(fmt.Sprintf("Failed to shutdown tracing launcher: %v", err))
 			return err
 		}
 		return nil

@@ -2,9 +2,7 @@ package tracing
 
 import (
 	"context"
-	"os"
 
-	"github.com/eyewa/eyewa-go-lib/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/semconv"
@@ -14,15 +12,10 @@ import (
 func newResource() (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
-	attributes = append(attributes, semconv.ServiceNameKey.String(cfg.ServiceName))
-
-	// check if we can pickup the hostname from the os.
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Debug("Failed to retrieve the hostname from the kernel.")
-	} else {
-		attributes = append(attributes, semconv.HostNameKey.String(hostname))
-	}
+	attributes = append(attributes,
+		semconv.ServiceNameKey.String(config.ServiceName),
+		semconv.HostNameKey.String(config.HostName),
+	)
 
 	// These detectors can't actually fail, ignoring the error.
 	r, err := resource.New(

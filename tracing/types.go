@@ -6,12 +6,16 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 )
 
-// config is the tracing environment configuration.
-type config struct {
+// Config is the tracing environment configuration.
+type Config struct {
+	// Required
 	ServiceName             string `mapstructure:"service_name"`
 	TracingExporterEndpoint string `mapstructure:"tracing_exporter_endpoint"`
-	TracingSecureExporter   bool   `mapstructure:"tracing_secure_exporter"`
-	TracingBlockExporter    bool   `mapstructure:"tracing_block_exporter"`
+
+	// Optional
+	TracingSecureExporter bool   `mapstructure:"tracing_secure_exporter"`
+	TracingBlockExporter  bool   `mapstructure:"tracing_block_exporter"`
+	HostName              string `mapstructure:"hostname"`
 }
 
 // ShutdownFunc shuts down a tracing env.
@@ -19,8 +23,6 @@ type ShutdownFunc func() error
 
 // launcher launches a tracing env.
 type launcher struct {
-	started bool
-	config  config
 	// Exporter is the endpoint to which traces are exported.
 	exporter *otlp.Exporter
 	// Resource describes an application/service

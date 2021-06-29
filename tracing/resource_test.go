@@ -4,13 +4,18 @@ import (
 	"os"
 	"testing"
 
+	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewResource(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("SERVICE_NAME", "test-service")
-	initConfig()
+	os.Setenv("LOG_LEVEL", "debug")
+	log.SetLogLevel()
+	_, err := initConfig()
+	assert.Nil(t, err)
+
 	res, _ := newResource()
 
 	assert.NotNil(t, res)
