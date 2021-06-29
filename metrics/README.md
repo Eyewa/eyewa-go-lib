@@ -142,7 +142,7 @@ type ProductCreatedEventHandler struct {
 func (h *ProductCreatedEventHandler) Handle() {
     go h.metrics.ProductCreatedEventCounter.Add(1)
     // ... rest of code
-}`
+}
 ```
 ---
 ## Metrics WIKI
