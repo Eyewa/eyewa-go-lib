@@ -3,7 +3,6 @@ package tracing
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -29,10 +28,6 @@ func initConfig() (Config, error) {
 	// setup default configuration
 	viper.SetDefault("TRACING_BLOCK_EXPORTER", "false")
 	viper.SetDefault("TRACING_SECURE_EXPORTER", "false")
-	hostname, err := os.Hostname()
-	if err == nil && hostname != "" {
-		viper.SetDefault("HOSTNAME", hostname)
-	}
 
 	envVars := []string{
 		"SERVICE_NAME",
