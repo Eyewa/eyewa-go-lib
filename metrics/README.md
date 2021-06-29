@@ -103,7 +103,7 @@ type CatalogConsumerMetrics struct{
 	ProductCreatedEventCounter *metrics.Counter
 }
 
-// Initialize it on top of service.
+// Initialize the metrics struct
 func NewCatalogConsumerMetrics() (*CatalogConsumerMetrics, error){
     meter := NewMeter("catalog.consumer",nil)
     
