@@ -23,28 +23,31 @@ func NewDeliveryCarrier(d *amqp.Delivery) DeliveryCarrier {
 
 // Get gets a header from the delivery.
 func (c *DeliveryCarrier) Get(key string) string {
-	for k, h := range c.delivery.Headers {
-		if h != "" && k == key {
-			return fmt.Sprintf("%v", h)
-		}
+	val := c.delivery.Headers[key]
+	if val != nil {
+		// convert to string
+		return fmt.Sprintf("%v", val)
 	}
 	return ""
 }
 
 // Set sets a header on the delivery.
 func (c *DeliveryCarrier) Set(key, val string) {
-	for k, _ := range c.delivery.Headers {
-		c.delivery.Headers[k] = val
-	}
+	c.delivery.Headers[key] = val
 }
 
 // Keys returns all the header keys of the delivery.
 func (c *DeliveryCarrier) Keys() []string {
-	keys := make([]string, len(c.delivery.Headers))
-	for k, _ := range c.delivery.Headers {
+	var keys []string
+	for k := range c.delivery.Headers {
 		keys = append(keys, k)
 	}
-	return keys
+
+	if len(keys) > 0 {
+		return keys
+	}
+
+	return []string{}
 }
 
 // PublishingCarrier injects and extracts
@@ -75,9 +78,14 @@ func (c *PublishingCarrier) Set(key, val string) {
 
 // Keys returns all the header keys of the publishing.
 func (c *PublishingCarrier) Keys() []string {
-	keys := make([]string, len(c.publishing.Headers))
+	var keys []string
 	for k := range c.publishing.Headers {
 		keys = append(keys, k)
 	}
-	return keys
+
+	if len(keys) > 0 {
+		return keys
+	}
+
+	return []string{}
 }
