@@ -28,6 +28,7 @@ func (c *DeliveryCarrier) Get(key string) string {
 		// convert to string
 		return fmt.Sprintf("%v", val)
 	}
+
 	return ""
 }
 
@@ -68,6 +69,7 @@ func (c *PublishingCarrier) Get(key string) string {
 		// convert to string
 		return fmt.Sprintf("%v", val)
 	}
+
 	return ""
 }
 
