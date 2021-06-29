@@ -7,26 +7,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewPublishingCarrier(t *testing.T) {
+func TestNewPublishingHeaderCarrier(t *testing.T) {
 	headers := amqp.Table{"foo": "bar"}
 	pub := &amqp.Publishing{Headers: headers}
-	c := NewPublishingCarrier(pub)
+	c := NewPublishingHeaderCarrier(pub)
 
 	assert.NotNil(t, c)
 	assert.NotZero(t, c)
 	assert.Equal(t, len(headers), len(c.Keys()))
 }
 
-func TestPublishingCarrierGet(t *testing.T) {
+func TestPublishingHeaderCarrierGet(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  PublishingCarrier
+		carrier  PublishingHeaderCarrier
 		key      string
 		expected string
 	}{
 		{
 			name: "header exists",
-			carrier: PublishingCarrier{publishing: &amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingHeaderCarrier{publishing: &amqp.Publishing{Headers: amqp.Table{
 				"foo": "bar",
 			}}},
 			key:      "foo",
@@ -34,7 +34,7 @@ func TestPublishingCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  PublishingCarrier{publishing: &amqp.Publishing{Headers: amqp.Table{}}},
+			carrier:  PublishingHeaderCarrier{publishing: &amqp.Publishing{Headers: amqp.Table{}}},
 			key:      "foo",
 			expected: "",
 		},
@@ -48,17 +48,17 @@ func TestPublishingCarrierGet(t *testing.T) {
 	}
 }
 
-func TestPublishingCarrierSet(t *testing.T) {
+func TestPublishingHeaderCarrierSet(t *testing.T) {
 	pub := amqp.Publishing{Headers: amqp.Table{
 		"foo": "bar",
 	}}
-	carrier := PublishingCarrier{publishing: &pub}
+	carrier := PublishingHeaderCarrier{publishing: &pub}
 
 	carrier.Set("foo", "bar1")
 	carrier.Set("abc", "test")
 	carrier.Set("hello", "world")
 
-	expected := PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{
+	expected := PublishingHeaderCarrier{&amqp.Publishing{Headers: amqp.Table{
 		"foo":   "bar1",
 		"abc":   "test",
 		"hello": "world",
@@ -66,28 +66,28 @@ func TestPublishingCarrierSet(t *testing.T) {
 	assert.Equal(t, carrier, expected)
 }
 
-func TestPublishingCarrierKeys(t *testing.T) {
+func TestPublishingHeaderCarrierKeys(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  PublishingCarrier
+		carrier  PublishingHeaderCarrier
 		expected []string
 	}{
 		{
 			name: "one header",
-			carrier: PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingHeaderCarrier{&amqp.Publishing{Headers: amqp.Table{
 				"foo": "bar1",
 			}}},
 			expected: []string{"foo"},
 		},
 		{
 			name: "no headers",
-			carrier: PublishingCarrier{publishing: &amqp.Publishing{
+			carrier: PublishingHeaderCarrier{publishing: &amqp.Publishing{
 				Headers: amqp.Table{}}},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingHeaderCarrier{&amqp.Publishing{Headers: amqp.Table{
 				"foo":   "bar1",
 				"abc":   "test",
 				"hello": "world",
@@ -104,26 +104,26 @@ func TestPublishingCarrierKeys(t *testing.T) {
 	}
 }
 
-func TestNewDeliveryCarrier(t *testing.T) {
+func TestNewDeliveryHeaderCarrier(t *testing.T) {
 	headers := amqp.Table{"foo": "bar"}
 	pub := &amqp.Delivery{Headers: headers}
-	c := NewDeliveryCarrier(pub)
+	c := NewDeliveryHeaderCarrier(pub)
 
 	assert.NotNil(t, c)
 	assert.NotZero(t, c)
 	assert.Equal(t, len(headers), len(c.Keys()))
 }
 
-func TestDeliveryCarrierGet(t *testing.T) {
+func TestDeliveryHeaderCarrierGet(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  DeliveryCarrier
+		carrier  DeliveryHeaderCarrier
 		key      string
 		expected string
 	}{
 		{
 			name: "header exists",
-			carrier: DeliveryCarrier{delivery: &amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryHeaderCarrier{delivery: &amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar",
 			}}},
 			key:      "foo",
@@ -131,7 +131,7 @@ func TestDeliveryCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  DeliveryCarrier{delivery: &amqp.Delivery{Headers: amqp.Table{}}},
+			carrier:  DeliveryHeaderCarrier{delivery: &amqp.Delivery{Headers: amqp.Table{}}},
 			key:      "foo",
 			expected: "",
 		},
@@ -145,17 +145,17 @@ func TestDeliveryCarrierGet(t *testing.T) {
 	}
 }
 
-func TestDeliveryCarrierSet(t *testing.T) {
+func TestDeliveryHeaderCarrierSet(t *testing.T) {
 	d := amqp.Delivery{Headers: amqp.Table{
 		"foo": "bar",
 	}}
-	carrier := DeliveryCarrier{delivery: &d}
+	carrier := DeliveryHeaderCarrier{delivery: &d}
 
 	carrier.Set("foo", "bar1")
 	carrier.Set("abc", "test")
 	carrier.Set("hello", "world")
 
-	expected := DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{
+	expected := DeliveryHeaderCarrier{&amqp.Delivery{Headers: amqp.Table{
 		"foo":   "bar1",
 		"abc":   "test",
 		"hello": "world",
@@ -163,28 +163,28 @@ func TestDeliveryCarrierSet(t *testing.T) {
 	assert.Equal(t, carrier, expected)
 }
 
-func TestDeliveryCarrierKeys(t *testing.T) {
+func TestDeliveryHeaderCarrierKeys(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  DeliveryCarrier
+		carrier  DeliveryHeaderCarrier
 		expected []string
 	}{
 		{
 			name: "one header",
-			carrier: DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryHeaderCarrier{&amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar1",
 			}}},
 			expected: []string{"foo"},
 		},
 		{
 			name: "no headers",
-			carrier: DeliveryCarrier{&amqp.Delivery{
+			carrier: DeliveryHeaderCarrier{&amqp.Delivery{
 				Headers: amqp.Table{}}},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryHeaderCarrier{&amqp.Delivery{Headers: amqp.Table{
 				"foo":   "bar1",
 				"abc":   "test",
 				"hello": "world",

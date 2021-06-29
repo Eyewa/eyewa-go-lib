@@ -7,22 +7,22 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 )
 
-var _ propagation.TextMapCarrier = (*PublishingCarrier)(nil)
-var _ propagation.TextMapCarrier = (*DeliveryCarrier)(nil)
+var _ propagation.TextMapCarrier = (*PublishingHeaderCarrier)(nil)
+var _ propagation.TextMapCarrier = (*DeliveryHeaderCarrier)(nil)
 
-// DeliveryCarrier injects and extracts
+// DeliveryHeaderCarrier injects and extracts
 // traces from the headers of a amqp.Delivery.
-type DeliveryCarrier struct {
+type DeliveryHeaderCarrier struct {
 	delivery *amqp.Delivery
 }
 
-// NewDeliveryCarrier constructs a new DeliveryCarrier.
-func NewDeliveryCarrier(d *amqp.Delivery) DeliveryCarrier {
-	return DeliveryCarrier{delivery: d}
+// NewDeliveryHeaderCarrier constructs a new DeliveryHeaderCarrier.
+func NewDeliveryHeaderCarrier(d *amqp.Delivery) DeliveryHeaderCarrier {
+	return DeliveryHeaderCarrier{delivery: d}
 }
 
 // Get gets a header from the delivery.
-func (c *DeliveryCarrier) Get(key string) string {
+func (c *DeliveryHeaderCarrier) Get(key string) string {
 	val := c.delivery.Headers[key]
 	if val != nil {
 		// convert to string
@@ -33,12 +33,12 @@ func (c *DeliveryCarrier) Get(key string) string {
 }
 
 // Set sets a header on the delivery.
-func (c *DeliveryCarrier) Set(key, val string) {
+func (c *DeliveryHeaderCarrier) Set(key, val string) {
 	c.delivery.Headers[key] = val
 }
 
 // Keys returns all the header keys of the delivery.
-func (c *DeliveryCarrier) Keys() []string {
+func (c *DeliveryHeaderCarrier) Keys() []string {
 	var keys []string
 	for k := range c.delivery.Headers {
 		keys = append(keys, k)
@@ -51,19 +51,19 @@ func (c *DeliveryCarrier) Keys() []string {
 	return []string{}
 }
 
-// PublishingCarrier injects and extracts
+// PublishingHeaderCarrier injects and extracts
 // traces from the headers of a amqp.Publishing.
-type PublishingCarrier struct {
+type PublishingHeaderCarrier struct {
 	publishing *amqp.Publishing
 }
 
-// NewPublishingCarrier constructs a new PublishingCarrier.
-func NewPublishingCarrier(p *amqp.Publishing) PublishingCarrier {
-	return PublishingCarrier{publishing: p}
+// NewPublishingHeaderCarrier constructs a new PublishingHeaderCarrier.
+func NewPublishingHeaderCarrier(p *amqp.Publishing) PublishingHeaderCarrier {
+	return PublishingHeaderCarrier{publishing: p}
 }
 
 // Get gets a header from the publishing.
-func (c *PublishingCarrier) Get(key string) string {
+func (c *PublishingHeaderCarrier) Get(key string) string {
 	val := c.publishing.Headers[key]
 	if val != nil {
 		// convert to string
@@ -74,12 +74,12 @@ func (c *PublishingCarrier) Get(key string) string {
 }
 
 // Set sets a header on the publishing.
-func (c *PublishingCarrier) Set(key, val string) {
+func (c *PublishingHeaderCarrier) Set(key, val string) {
 	c.publishing.Headers[key] = val
 }
 
 // Keys returns all the header keys of the publishing.
-func (c *PublishingCarrier) Keys() []string {
+func (c *PublishingHeaderCarrier) Keys() []string {
 	var keys []string
 	for k := range c.publishing.Headers {
 		keys = append(keys, k)
