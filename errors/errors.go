@@ -1,6 +1,8 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// MessageBrokerClient errors
@@ -11,6 +13,10 @@ var (
 	ErrorBrokerClientNotRecognized   = errors.New("Broker client not recognized.")
 	ErrorFailedToPublishToDeadletter = errors.New("Failed to publish event error to deadletter queue.")
 	ErrorFailedToPublishEvent        = errors.New("Failed to publish event to queue.")
+
+	// Tracing errors
+	ErrorNoExporterEndpointSpecified = errors.New("No exporter endpoint specified.")
+	ErrorNoServiceNameSpecified      = errors.New("No service name specified.")
 
 	// Metrics errors
 	ErrorFailedToInitPrometheusExporter = errors.New("Failed to initialize prometheus exporter.")
