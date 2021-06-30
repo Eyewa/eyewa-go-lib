@@ -22,6 +22,7 @@ require (
 	go.opentelemetry.io/otel/sdk v0.20.0
 	go.opentelemetry.io/otel/sdk/export/metric v0.20.0
 	go.opentelemetry.io/otel/sdk/metric v0.20.0
+	go.opentelemetry.io/otel/trace v0.20.0 // indirect
 	go.uber.org/zap v1.13.0
 	google.golang.org/grpc v1.38.0
 )

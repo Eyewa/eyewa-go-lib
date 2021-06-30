@@ -1,4 +1,4 @@
-package rabbitmq
+package amqp
 
 import (
 	"fmt"
@@ -13,16 +13,16 @@ var _ propagation.TextMapCarrier = (*DeliveryHeaderCarrier)(nil)
 // DeliveryHeaderCarrier injects and extracts
 // traces from the headers of a amqp.Delivery.
 type DeliveryHeaderCarrier struct {
-	delivery *amqp.Delivery
+	delivery amqp.Delivery
 }
 
 // NewDeliveryHeaderCarrier constructs a new DeliveryHeaderCarrier.
-func NewDeliveryHeaderCarrier(d *amqp.Delivery) DeliveryHeaderCarrier {
+func NewDeliveryHeaderCarrier(d amqp.Delivery) DeliveryHeaderCarrier {
 	return DeliveryHeaderCarrier{delivery: d}
 }
 
 // Get gets a header from the delivery.
-func (c *DeliveryHeaderCarrier) Get(key string) string {
+func (c DeliveryHeaderCarrier) Get(key string) string {
 	val := c.delivery.Headers[key]
 	if val != nil {
 		// convert to string
@@ -33,12 +33,12 @@ func (c *DeliveryHeaderCarrier) Get(key string) string {
 }
 
 // Set sets a header on the delivery.
-func (c *DeliveryHeaderCarrier) Set(key, val string) {
+func (c DeliveryHeaderCarrier) Set(key, val string) {
 	c.delivery.Headers[key] = val
 }
 
 // Keys returns all the header keys of the delivery.
-func (c *DeliveryHeaderCarrier) Keys() []string {
+func (c DeliveryHeaderCarrier) Keys() []string {
 	var keys []string
 	for k := range c.delivery.Headers {
 		keys = append(keys, k)
@@ -63,7 +63,7 @@ func NewPublishingHeaderCarrier(p *amqp.Publishing) PublishingHeaderCarrier {
 }
 
 // Get gets a header from the publishing.
-func (c *PublishingHeaderCarrier) Get(key string) string {
+func (c PublishingHeaderCarrier) Get(key string) string {
 	val := c.publishing.Headers[key]
 	if val != nil {
 		// convert to string
@@ -74,12 +74,12 @@ func (c *PublishingHeaderCarrier) Get(key string) string {
 }
 
 // Set sets a header on the publishing.
-func (c *PublishingHeaderCarrier) Set(key, val string) {
+func (c PublishingHeaderCarrier) Set(key, val string) {
 	c.publishing.Headers[key] = val
 }
 
 // Keys returns all the header keys of the publishing.
-func (c *PublishingHeaderCarrier) Keys() []string {
+func (c PublishingHeaderCarrier) Keys() []string {
 	var keys []string
 	for k := range c.publishing.Headers {
 		keys = append(keys, k)

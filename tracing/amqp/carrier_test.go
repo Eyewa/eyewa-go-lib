@@ -1,4 +1,4 @@
-package rabbitmq
+package amqp
 
 import (
 	"testing"
@@ -106,7 +106,7 @@ func TestPublishingHeaderCarrierKeys(t *testing.T) {
 
 func TestNewDeliveryHeaderCarrier(t *testing.T) {
 	headers := amqp.Table{"foo": "bar"}
-	pub := &amqp.Delivery{Headers: headers}
+	pub := amqp.Delivery{Headers: headers}
 	c := NewDeliveryHeaderCarrier(pub)
 
 	assert.NotNil(t, c)
@@ -123,7 +123,7 @@ func TestDeliveryHeaderCarrierGet(t *testing.T) {
 	}{
 		{
 			name: "header exists",
-			carrier: DeliveryHeaderCarrier{delivery: &amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryHeaderCarrier{delivery: amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar",
 			}}},
 			key:      "foo",
@@ -131,7 +131,7 @@ func TestDeliveryHeaderCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  DeliveryHeaderCarrier{delivery: &amqp.Delivery{Headers: amqp.Table{}}},
+			carrier:  DeliveryHeaderCarrier{delivery: amqp.Delivery{Headers: amqp.Table{}}},
 			key:      "foo",
 			expected: "",
 		},
@@ -149,13 +149,13 @@ func TestDeliveryHeaderCarrierSet(t *testing.T) {
 	d := amqp.Delivery{Headers: amqp.Table{
 		"foo": "bar",
 	}}
-	carrier := DeliveryHeaderCarrier{delivery: &d}
+	carrier := DeliveryHeaderCarrier{delivery: d}
 
 	carrier.Set("foo", "bar1")
 	carrier.Set("abc", "test")
 	carrier.Set("hello", "world")
 
-	expected := DeliveryHeaderCarrier{&amqp.Delivery{Headers: amqp.Table{
+	expected := DeliveryHeaderCarrier{amqp.Delivery{Headers: amqp.Table{
 		"foo":   "bar1",
 		"abc":   "test",
 		"hello": "world",
@@ -171,20 +171,20 @@ func TestDeliveryHeaderCarrierKeys(t *testing.T) {
 	}{
 		{
 			name: "one header",
-			carrier: DeliveryHeaderCarrier{&amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryHeaderCarrier{amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar1",
 			}}},
 			expected: []string{"foo"},
 		},
 		{
 			name: "no headers",
-			carrier: DeliveryHeaderCarrier{&amqp.Delivery{
+			carrier: DeliveryHeaderCarrier{amqp.Delivery{
 				Headers: amqp.Table{}}},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: DeliveryHeaderCarrier{&amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryHeaderCarrier{amqp.Delivery{Headers: amqp.Table{
 				"foo":   "bar1",
 				"abc":   "test",
 				"hello": "world",
