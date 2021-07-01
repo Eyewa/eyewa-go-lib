@@ -52,7 +52,7 @@ func (dispatcher deliveryDispatcher) dispatch(delivery amqp.Delivery) {
 }
 
 // start starts tracing deliveries that come through the input channel
-// and dispatching to the output.
+// and starts dispatching to the output.
 func (dispatcher deliveryDispatcher) start() {
 	for delivery := range dispatcher.in {
 		endSpan := startTracing(delivery)
@@ -78,6 +78,7 @@ func startTracing(delivery amqp.Delivery) func(...trace.SpanOption) {
 		semconv.MessagingMessageIDKey.String(delivery.MessageId),
 		semconv.MessagingRabbitMQRoutingKeyKey.String(delivery.RoutingKey),
 	}
+
 	opts := []trace.SpanOption{
 		trace.WithAttributes(attrs...),
 		trace.WithSpanKind(trace.SpanKindConsumer),

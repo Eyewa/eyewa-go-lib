@@ -4,14 +4,14 @@ Shared Go Lib for Eyewa's microservices.
 
 # amqp
 
-This pkg provides `tracing` decorators for the `github.com/streadway/amqp` pkg. It decorates the `Consume` and `Publish` methods on a `amqp.Channel`. Every `amqp.Publishing` and `amqp.Delivery` message has it's headers modified to enable the propagation of a trace.
+This pkg provides `tracing` decorators for the `github.com/streadway/amqp` pkg. It decorates the `Consume` and `Publish` methods of an `amqp.Channel`. Every `amqp.Publishing` and `amqp.Delivery` message has it's headers extracted/injected to enable the propagation of trace context across services.
 
-This pkg is mostly used internally within `rabbitmq` implementation in the `brokers` pkg.
+This pkg is mostly used internally within the `rabbitmq` implementation of the `brokers` pkg.
 
 
 # How to use
 
-### Trace All Deliveries
+### Wrapping The Channel Consume Function
 
 ```go
 package main
@@ -26,11 +26,16 @@ var (
 func main(){
     //... initialise exchange, queue etc...
 
-    // attempt to consume events from broker.
+    // wrap the channel consume function with a tracing decorator
     consumeChannel := rmqtrace.WrapConsume(channel.Consume)
+    
+
+    // attempt to consume events from broker.
     msgs, err := consumeChannel(queue, getNameForChannel(queue), false, false, false, false, nil)
 
     for d := range msgs {
+        // extract the context from delivery
+        ctx = otel.GetTextMapPropagator().Extract(ctx, amqptracing.NewDeliveryHeaderCarrier(msg))
         // processMessage using the context
         processMessage(ctx, d)
     }
