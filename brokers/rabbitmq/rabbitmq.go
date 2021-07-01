@@ -16,6 +16,7 @@ import (
 	amqptracing "github.com/eyewa/eyewa-go-lib/tracing/amqp"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -156,6 +157,9 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 		var event *base.EyewaEvent
 		for msg := range msgs {
+			// extract the latest context from the delivery
+			ctx = otel.GetTextMapPropagator().Extract(ctx, amqptracing.NewDeliveryHeaderCarrier(msg))
+
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
