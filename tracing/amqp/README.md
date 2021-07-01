@@ -26,16 +26,12 @@ var (
 func main(){
     //... initialise exchange, queue etc...
 
-    // wrap the channel consume function with a tracing decorator
-    consumeChannel := rmqtrace.WrapConsume(channel.Consume)
-    
-
     // attempt to consume events from broker.
-    msgs, err := consumeChannel(queue, getNameForChannel(queue), false, false, false, false, nil)
+    msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 
     for d := range msgs {
         // extract the context from delivery
-        ctx = otel.GetTextMapPropagator().Extract(ctx, amqptracing.NewDeliveryHeaderCarrier(msg))
+        ctx = amqptracing.StartDeliverySpan(ctx, d)
         // processMessage using the context
         processMessage(ctx, d)
     }
