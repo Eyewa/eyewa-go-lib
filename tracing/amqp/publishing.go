@@ -1,38 +1,43 @@
 package amqp
 
-// StartDeliverySpan starts tracing a span and returns the end function.
-// func StartPublishingSpan(ctx context.Context, publishing amqp.Publishing) (context.Context, func()) {
-// 	ctx, endSpan := startTracing(ctx, publishing)
-// 	return ctx, func() { endSpan() }
-// }
+import (
+	"context"
 
-// // startTracing starts tracing a publishing
-// // and returns a function that ends the span.
-// func startTracing(ctx context.Context, publishing amqp.Publishing) (context.Context, func(...trace.SpanOption)) {
-// 	// Extract a span context from delivery.
-// 	carrier := NewPublishingHeaderCarrier(&publishing)
-// 	propagator := otel.GetTextMapPropagator()
-// 	parentSpanContext := propagator.Extract(ctx, carrier)
+	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/semconv"
+	"go.opentelemetry.io/otel/trace"
+)
 
-// 	// Create a span.
-// 	attrs := []attribute.KeyValue{
-// 		semconv.MessagingSystemKey.String(messagingSystem),
-// 		semconv.MessagingDestinationKindKeyQueue,
-// 		semconv.MessagingOperationReceive,
-// 		semconv.MessagingMessageIDKey.String(delivery.MessageId),
-// 		semconv.MessagingRabbitMQRoutingKeyKey.String(delivery.RoutingKey),
-// 	}
+func startProducerSpan(ctx context.Context, cfg config, publishing amqp.Publishing) trace.Span {
+	// If there's a span context in the message, use that as the parent context.
+	carrier := NewPublishingHeaderCarrier(&publishing)
+	ctx = cfg.Propagators.Extract(ctx, carrier)
 
-// 	opts := []trace.SpanOption{
-// 		trace.WithAttributes(attrs...),
-// 		trace.WithSpanKind(trace.SpanKindConsumer),
-// 	}
+	// Create a span.
+	attrs := []attribute.KeyValue{
+		semconv.MessagingSystemKey.String("rabbitmq"),
+		semconv.MessagingDestinationKindKeyQueue,
+	}
+	opts := []trace.SpanOption{
+		trace.WithAttributes(attrs...),
+		trace.WithSpanKind(trace.SpanKindProducer),
+	}
+	ctx, span := cfg.Tracer.Start(ctx, "rabbitmq.publish", opts...)
 
-// 	tracer := otel.GetTracerProvider().Tracer(instrumentationName)
-// 	newCtx, span := tracer.Start(parentSpanContext, consumeSpanName, opts...)
+	// Inject current span context, so consumers can use it to propagate span.
+	cfg.Propagators.Inject(ctx, carrier)
 
-// 	// Inject current span context, so consumers can use it to propagate span.
-// 	propagator.Inject(newCtx, carrier)
+	return span
+}
 
-// 	return newCtx, span.End
-// }
+func finishPublishingSpan(span trace.Span) {
+	// span.SetAttributes(
+	// 	semconv.MessagingMessageIDKey.String(strconv.FormatInt(offset, 10)),
+	// 	kafkaPartitionKey.Int64(int64(partition)),
+	// )
+	// if err != nil {
+	// 	span.SetStatus(codes.Error, err.Error())
+	// }
+	span.End()
+}

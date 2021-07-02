@@ -31,9 +31,11 @@ func main(){
 
     for d := range msgs {
         // extract the context from delivery
-        ctx = amqptracing.StartDeliverySpan(ctx, d)
+        ctx, endSpan = amqptracing.StartDeliverySpan(ctx, d)
+        defer endSpan()
         // processMessage using the context
         processMessage(ctx, d)
+
     }
 }
 

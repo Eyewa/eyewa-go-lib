@@ -145,11 +145,8 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	if exists && channel != nil {
 		log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
 
-		// wrap the consume function with tracing
-		consumeChannel := amqptracing.WrapConsume(channel.Consume)
-
 		// attempt to consume events from broker
-		msgs, err := consumeChannel(queue, getNameForChannel(queue), false, false, false, false, nil)
+		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 		if err != nil {
 			callback(ctx, nil, fmt.Errorf("Failed to consume from queue(%s). %s", queue, err))
 			return

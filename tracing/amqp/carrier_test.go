@@ -104,26 +104,26 @@ func TestPublishingHeaderCarrierKeys(t *testing.T) {
 	}
 }
 
-func TestNewDeliveryHeaderCarrier(t *testing.T) {
+func TestNewDeliveryCarrier(t *testing.T) {
 	headers := amqp.Table{"foo": "bar"}
 	pub := amqp.Delivery{Headers: headers}
-	c := NewDeliveryHeaderCarrier(pub)
+	c := NewDeliveryCarrier(pub)
 
 	assert.NotNil(t, c)
 	assert.NotZero(t, c)
 	assert.Equal(t, len(headers), len(c.Keys()))
 }
 
-func TestDeliveryHeaderCarrierGet(t *testing.T) {
+func TestDeliveryCarrierGet(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  DeliveryHeaderCarrier
+		carrier  DeliveryCarrier
 		key      string
 		expected string
 	}{
 		{
 			name: "header exists",
-			carrier: DeliveryHeaderCarrier{delivery: amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryCarrier{delivery: amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar",
 			}}},
 			key:      "foo",
@@ -131,7 +131,7 @@ func TestDeliveryHeaderCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  DeliveryHeaderCarrier{delivery: amqp.Delivery{Headers: amqp.Table{}}},
+			carrier:  DeliveryCarrier{delivery: amqp.Delivery{Headers: amqp.Table{}}},
 			key:      "foo",
 			expected: "",
 		},
@@ -149,13 +149,13 @@ func TestDeliveryHeaderCarrierSet(t *testing.T) {
 	d := amqp.Delivery{Headers: amqp.Table{
 		"foo": "bar",
 	}}
-	carrier := DeliveryHeaderCarrier{delivery: d}
+	carrier := DeliveryCarrier{delivery: d}
 
 	carrier.Set("foo", "bar1")
 	carrier.Set("abc", "test")
 	carrier.Set("hello", "world")
 
-	expected := DeliveryHeaderCarrier{amqp.Delivery{Headers: amqp.Table{
+	expected := DeliveryCarrier{amqp.Delivery{Headers: amqp.Table{
 		"foo":   "bar1",
 		"abc":   "test",
 		"hello": "world",
@@ -166,25 +166,25 @@ func TestDeliveryHeaderCarrierSet(t *testing.T) {
 func TestDeliveryHeaderCarrierKeys(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  DeliveryHeaderCarrier
+		carrier  DeliveryCarrier
 		expected []string
 	}{
 		{
 			name: "one header",
-			carrier: DeliveryHeaderCarrier{amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryCarrier{amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar1",
 			}}},
 			expected: []string{"foo"},
 		},
 		{
 			name: "no headers",
-			carrier: DeliveryHeaderCarrier{amqp.Delivery{
+			carrier: DeliveryCarrier{amqp.Delivery{
 				Headers: amqp.Table{}}},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: DeliveryHeaderCarrier{amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryCarrier{amqp.Delivery{Headers: amqp.Table{
 				"foo":   "bar1",
 				"abc":   "test",
 				"hello": "world",

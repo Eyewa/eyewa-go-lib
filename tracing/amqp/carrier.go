@@ -8,21 +8,21 @@ import (
 )
 
 var _ propagation.TextMapCarrier = (*PublishingHeaderCarrier)(nil)
-var _ propagation.TextMapCarrier = (*DeliveryHeaderCarrier)(nil)
+var _ propagation.TextMapCarrier = (*DeliveryCarrier)(nil)
 
-// DeliveryHeaderCarrier injects and extracts
+// DeliveryCarrier injects and extracts
 // traces from the headers of a amqp.Delivery.
-type DeliveryHeaderCarrier struct {
+type DeliveryCarrier struct {
 	delivery amqp.Delivery
 }
 
-// NewDeliveryHeaderCarrier constructs a new DeliveryHeaderCarrier.
-func NewDeliveryHeaderCarrier(d amqp.Delivery) DeliveryHeaderCarrier {
-	return DeliveryHeaderCarrier{delivery: d}
+// DeliveryCarrier constructs a new DeliveryCarrier.
+func NewDeliveryCarrier(d amqp.Delivery) DeliveryCarrier {
+	return DeliveryCarrier{delivery: d}
 }
 
 // Get gets a header from the delivery.
-func (c DeliveryHeaderCarrier) Get(key string) string {
+func (c DeliveryCarrier) Get(key string) string {
 	val := c.delivery.Headers[key]
 	if val != nil {
 		// convert to string
@@ -33,12 +33,12 @@ func (c DeliveryHeaderCarrier) Get(key string) string {
 }
 
 // Set sets a header on the delivery.
-func (c DeliveryHeaderCarrier) Set(key, val string) {
+func (c DeliveryCarrier) Set(key, val string) {
 	c.delivery.Headers[key] = val
 }
 
 // Keys returns all the header keys of the delivery.
-func (c DeliveryHeaderCarrier) Keys() []string {
+func (c DeliveryCarrier) Keys() []string {
 	var keys []string
 	for k := range c.delivery.Headers {
 		keys = append(keys, k)
