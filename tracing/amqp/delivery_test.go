@@ -18,7 +18,7 @@ type expectedList struct {
 	attributeList []attribute.KeyValue
 	parentSpanID  trace.SpanID
 	kind          trace.SpanKind
-	msgKey        []byte
+	spanName      string
 }
 
 func injectTraceInfo(parentCtx context.Context, d amqp.Delivery) {
@@ -52,6 +52,7 @@ func TestStartDeliverySpan(t *testing.T) {
 					semconv.MessagingOperationReceive,
 				},
 				parentSpanID: trace.SpanContextFromContext(parentCtx).SpanID(),
+				spanName:     "rabbitmq.consume",
 				kind:         trace.SpanKindConsumer,
 			},
 		},
@@ -96,7 +97,7 @@ func TestStartDeliverySpan(t *testing.T) {
 			}
 			assert.Equal(t, sc, span.SpanContext())
 
-			assert.Equal(t, "rabbitmq.consume", span.Name())
+			assert.Equal(t, test.expected.spanName, span.Name())
 			assert.Equal(t, test.expected.kind, span.SpanKind())
 			for _, k := range test.expected.attributeList {
 				assert.Equal(t, k.Value, span.Attributes()[k.Key], k.Key)

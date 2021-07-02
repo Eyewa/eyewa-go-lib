@@ -4,14 +4,14 @@ Shared Go Lib for Eyewa's microservices.
 
 # amqp
 
-This pkg provides `tracing` decorators for the `github.com/streadway/amqp` pkg. It decorates the `Consume` and `Publish` methods of an `amqp.Channel`. Every `amqp.Publishing` and `amqp.Delivery` message has it's headers extracted/injected to enable the propagation of trace context across services.
+This pkg provides `tracing` decorators for the `github.com/streadway/amqp` pkg. It decorates a `amqp.Publishing` and `amqp.Delivery` message by starting a trace whereby it's headers are extracted/injected to enable the propagation of trace context across services.
 
 This pkg is mostly used internally within the `rabbitmq` implementation of the `brokers` pkg.
 
 
 # How to use
 
-### Wrapping The Channel Consume Function
+### Starting A Delivery Trace
 
 ```go
 package main
@@ -30,9 +30,11 @@ func main(){
     msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 
     for d := range msgs {
-        // extract the context from delivery
+
+        // start a span and extract the context
         ctx, endSpan = amqptracing.StartDeliverySpan(ctx, d)
         defer endSpan()
+
         // processMessage using the context
         processMessage(ctx, d)
 
