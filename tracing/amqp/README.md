@@ -4,29 +4,21 @@ Shared Go Lib for Eyewa's microservices.
 
 ## amqp
 
-This pkg provides `tracing` support for the `github.com/streadway/amqp` pkg. This pkg is mostly used internally within the `rabbitmq` implementation of the `brokers` pkg.
+The `amqp` pkg provides `tracing` support for the `github.com/streadway/amqp` pkg. This pkg is mostly used internally within the `rabbitmq` implementation of the `brokers` pkg.
 
-### Publishing trace process
+### Publishing And Delivery Tracing Process
 
-1. Check if there is an existing trace context in the `amqp.Publishing` to use as a parent trace context by extracting its headers from the carrier.
+1. Check if there is an existing trace context in the message to use as a parent trace context by extracting its headers from the carrier.
 
-2. Start a new span with attributes relating to `amqp` and an `amqp.Publishing`.
+2. Start a new span with attributes relating to `amqp` and the message.
 
-3. Inject the new context received from the new span into the `amqp.Publishing`
+3. Inject the new context received from the new span into the message.
 
-### Publishing trace process
-
-1. Check if there is an existing trace context in the `amqp.Publishing` to use as a parent trace context by extracting its headers from the carrier.
-
-2. Start a new span with attributes relating to `amqp` and an `amqp.Publishing`.
-
-3. Inject the new context received from the new span into the `amqp.Publishing`
-
-
-
-## How to use
+## How To Use
 
 ### Starting A Delivery Trace
+
+Wrap an `amqp.Delivery` with a `StartDeliverySpan()` to start a trace.
 
 ```go
 package main
@@ -59,6 +51,8 @@ func main(){
 ```
 
 ### Starting A Publishing Trace
+
+Wrap an `amqp.Publishing` with a `StartPublishingSpan()` to start a trace.
 
 ```go
 package main
