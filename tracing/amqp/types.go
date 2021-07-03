@@ -31,3 +31,15 @@ type config struct {
 
 // Option is an amqp optional config
 type Option func(*config)
+
+// DeliveryCarrier injects and extracts
+// traces from the headers of a amqp.Delivery.
+type DeliveryCarrier struct {
+	delivery amqp.Delivery
+}
+
+// PublishingCarrier injects and extracts
+// traces from the headers of a amqp.Publishing.
+type PublishingCarrier struct {
+	publishing amqp.Publishing
+}

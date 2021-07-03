@@ -10,12 +10,6 @@ import (
 var _ propagation.TextMapCarrier = (*PublishingCarrier)(nil)
 var _ propagation.TextMapCarrier = (*DeliveryCarrier)(nil)
 
-// DeliveryCarrier injects and extracts
-// traces from the headers of a amqp.Delivery.
-type DeliveryCarrier struct {
-	delivery amqp.Delivery
-}
-
 // DeliveryCarrier constructs a new DeliveryCarrier.
 func NewDeliveryCarrier(d amqp.Delivery) DeliveryCarrier {
 	return DeliveryCarrier{delivery: d}
@@ -49,12 +43,6 @@ func (c DeliveryCarrier) Keys() []string {
 	}
 
 	return []string{}
-}
-
-// PublishingCarrier injects and extracts
-// traces from the headers of a amqp.Publishing.
-type PublishingCarrier struct {
-	publishing amqp.Publishing
 }
 
 // NewPublishingCarrier constructs a new PublishingCarrier.
