@@ -2,14 +2,29 @@
 
 Shared Go Lib for Eyewa's microservices.
 
-# amqp
+## amqp
 
-This pkg provides `tracing` decorators for the `github.com/streadway/amqp` pkg. It decorates a `amqp.Publishing` and `amqp.Delivery` message by starting a trace whereby it's headers are extracted/injected to enable the propagation of trace context across services.
+This pkg provides `tracing` support for the `github.com/streadway/amqp` pkg. This pkg is mostly used internally within the `rabbitmq` implementation of the `brokers` pkg.
 
-This pkg is mostly used internally within the `rabbitmq` implementation of the `brokers` pkg.
+### Publishing trace process
+
+1. Check if there is an existing trace context in the `amqp.Publishing` to use as a parent trace context by extracting its headers from the carrier.
+
+2. Start a new span with attributes relating to `amqp` and an `amqp.Publishing`.
+
+3. Inject the new context received from the new span into the `amqp.Publishing`
+
+### Publishing trace process
+
+1. Check if there is an existing trace context in the `amqp.Publishing` to use as a parent trace context by extracting its headers from the carrier.
+
+2. Start a new span with attributes relating to `amqp` and an `amqp.Publishing`.
+
+3. Inject the new context received from the new span into the `amqp.Publishing`
 
 
-# How to use
+
+## How to use
 
 ### Starting A Delivery Trace
 
@@ -17,12 +32,13 @@ This pkg is mostly used internally within the `rabbitmq` implementation of the `
 package main
 
 import (
-    rmqtrace "github.com/eyewa/eyewa-go-lib/tracing/amqp"
+    amqptracing "github.com/eyewa/eyewa-go-lib/tracing/amqp"
 )
 
 var (
     queue = "mycool.queue"
 )
+
 func main(){
     //... initialise exchange, queue etc...
 
@@ -40,8 +56,6 @@ func main(){
 
     }
 }
-
-
 ```
 
 ### Starting A Publishing Trace
@@ -50,12 +64,13 @@ func main(){
 package main
 
 import (
-    rmqtrace "github.com/eyewa/eyewa-go-lib/tracing/amqp"
+    amqptracing "github.com/eyewa/eyewa-go-lib/tracing/amqp"
 )
 
 var (
     queue = "mycool.queue"
 )
+
 func main(){
     //... initialise exchange, queue etc...
 
@@ -72,6 +87,4 @@ func main(){
     // attempt to publish event
     err = channel.Publish("", queue, false, false, msg)
 }
-
-
 ```

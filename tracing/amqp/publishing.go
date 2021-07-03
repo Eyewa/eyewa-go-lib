@@ -52,10 +52,3 @@ func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace
 
 	return ctx, span
 }
-
-// func finishPublishingSpan(span trace.Span) {
-// 	if err != nil {
-// 		span.SetStatus(codes.Error, err.Error())
-// 	}
-// 	span.End()
-// }
