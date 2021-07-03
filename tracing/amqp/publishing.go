@@ -9,12 +9,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type publishingSpan struct {
-	publishing amqp.Publishing
-	span       trace.Span
-	cfg        config
-}
-
 func StartPublishingSpan(ctx context.Context, publishing amqp.Publishing, opts ...Option) (context.Context, func()) {
 	cfg := newConfig(opts...)
 	pubspan := publishingSpan{
@@ -27,6 +21,9 @@ func StartPublishingSpan(ctx context.Context, publishing amqp.Publishing, opts .
 		span.End()
 	}
 }
+
+// start starts a span
+// returns the new context and a function that ends the span.
 func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace.Span) {
 	// If there's a span context in the message, use that as the parent context.
 	carrier := NewPublishingCarrier(pubspan.publishing)
@@ -34,7 +31,7 @@ func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace
 
 	// Create a span.
 	attrs := []attribute.KeyValue{
-		semconv.MessagingSystemKey.String("rabbitmq"),
+		semconv.MessagingSystemKey.String(messagingSystem),
 		semconv.MessagingDestinationKindKeyQueue,
 	}
 
@@ -45,10 +42,10 @@ func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace
 	}
 
 	// start the span and and receive a new ctx.
-	ctx, span := pubspan.cfg.Tracer.Start(ctx, "rabbitmq.publish", opts...)
+	newCtx, span := pubspan.cfg.Tracer.Start(ctx, publishSpanName, opts...)
 
-	// Inject new span context, so consumers can use it to propagate span.
-	pubspan.cfg.Propagators.Inject(ctx, carrier)
+	// Inject current span context, so publishers can use it to propagate span.
+	pubspan.cfg.Propagators.Inject(newCtx, carrier)
 
 	return ctx, span
 }

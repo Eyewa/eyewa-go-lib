@@ -2,27 +2,12 @@ package amqp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
 	"go.opentelemetry.io/otel/trace"
 )
-
-var (
-	instrumentationName = "github.com/eyewa/eyewa-go-lib/tracing/amqp"
-	messagingSystem     = "rabbitmq"
-	consumeSpanName     = fmt.Sprintf("%s.consume", messagingSystem)
-	publishSpanName     = fmt.Sprintf("%s.publish", messagingSystem)
-)
-
-// deliverySpan is the span responsible for tracing an amqp.Delivery
-// and attaching amqp related attributes.
-type deliverySpan struct {
-	cfg      config
-	delivery amqp.Delivery
-}
 
 // StartDeliverySpan starts tracing a delivery and returns the new context and end span function.
 func StartDeliverySpan(ctx context.Context, d amqp.Delivery, opts ...Option) (context.Context, func()) {
@@ -38,10 +23,10 @@ func StartDeliverySpan(ctx context.Context, d amqp.Delivery, opts ...Option) (co
 	}
 }
 
-// start starts a span a delivery
-// and returns a function that ends the span.
+// start starts a span
+// returns the new context and a function that ends the span.
 func (dspan deliverySpan) start(ctx context.Context) (context.Context, trace.Span) {
-	// Extract a span context from delivery.
+	// If there's a span context in the message, use that as the parent context.
 	carrier := NewDeliveryCarrier(dspan.delivery)
 	parentSpanContext := dspan.cfg.Propagators.Extract(ctx, carrier)
 
@@ -59,8 +44,7 @@ func (dspan deliverySpan) start(ctx context.Context) (context.Context, trace.Spa
 		trace.WithSpanKind(trace.SpanKindConsumer),
 	}
 
-	tracer := dspan.cfg.TracerProvider.Tracer(instrumentationName)
-	newCtx, span := tracer.Start(parentSpanContext, consumeSpanName, opts...)
+	newCtx, span := dspan.cfg.Tracer.Start(parentSpanContext, consumeSpanName, opts...)
 
 	// Inject current span context, so consumers can use it to propagate span.
 	dspan.cfg.Propagators.Inject(newCtx, carrier)

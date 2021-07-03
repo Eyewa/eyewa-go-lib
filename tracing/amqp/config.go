@@ -1,6 +1,8 @@
 package amqp
 
 import (
+	"fmt"
+
 	"go.opentelemetry.io/contrib"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -8,18 +10,11 @@ import (
 )
 
 var (
-	defaultTracerName = "github.com/eyewa/eyewa-go-lib/tracing/amqp"
+	instrumentationName = "github.com/eyewa/eyewa-go-lib/tracing/amqp"
+	messagingSystem     = "rabbitmq"
+	consumeSpanName     = fmt.Sprintf("%s.consume", messagingSystem)
+	publishSpanName     = fmt.Sprintf("%s.publish", messagingSystem)
 )
-
-type config struct {
-	TracerProvider trace.TracerProvider
-	Propagators    propagation.TextMapPropagator
-
-	Tracer trace.Tracer
-}
-
-// Option is an amqp optional config
-type Option func(*config)
 
 // newConfig returns a config with all Options set.
 func newConfig(opts ...Option) config {
@@ -32,7 +27,7 @@ func newConfig(opts ...Option) config {
 	}
 
 	cfg.Tracer = cfg.TracerProvider.Tracer(
-		defaultTracerName,
+		instrumentationName,
 		trace.WithInstrumentationVersion(contrib.SemVersion()),
 	)
 
