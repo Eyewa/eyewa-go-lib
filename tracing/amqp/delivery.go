@@ -15,10 +15,10 @@ var (
 	messagingSystem     = "rabbitmq"
 	consumeSpanName     = fmt.Sprintf("%s.consume", messagingSystem)
 	publishSpanName     = fmt.Sprintf("%s.publish", messagingSystem)
-	cfg                 config
 )
 
-// deliverySpan traces a delivery
+// deliverySpan is the span responsible for tracing an amqp.Delivery
+// and attaching amqp related attributes.
 type deliverySpan struct {
 	cfg      config
 	delivery amqp.Delivery
@@ -26,24 +26,24 @@ type deliverySpan struct {
 
 // StartDeliverySpan starts tracing a delivery and returns the new context and end span function.
 func StartDeliverySpan(ctx context.Context, d amqp.Delivery, opts ...Option) (context.Context, func()) {
-	cfg = newConfig(opts...)
+	cfg := newConfig(opts...)
 	dspan := &deliverySpan{
 		cfg:      cfg,
 		delivery: d,
 	}
 
-	ctx, endSpan := dspan.start(ctx)
+	ctx, span := dspan.start(ctx)
 	return ctx, func() {
-		endSpan()
+		span.End()
 	}
 }
 
 // start starts a span a delivery
 // and returns a function that ends the span.
-func (dspan deliverySpan) start(ctx context.Context) (context.Context, func(...trace.SpanOption)) {
+func (dspan deliverySpan) start(ctx context.Context) (context.Context, trace.Span) {
 	// Extract a span context from delivery.
 	carrier := NewDeliveryCarrier(dspan.delivery)
-	parentSpanContext := cfg.Propagators.Extract(ctx, carrier)
+	parentSpanContext := dspan.cfg.Propagators.Extract(ctx, carrier)
 
 	// Create a span.
 	attrs := []attribute.KeyValue{
@@ -63,7 +63,7 @@ func (dspan deliverySpan) start(ctx context.Context) (context.Context, func(...t
 	newCtx, span := tracer.Start(parentSpanContext, consumeSpanName, opts...)
 
 	// Inject current span context, so consumers can use it to propagate span.
-	cfg.Propagators.Inject(newCtx, carrier)
+	dspan.cfg.Propagators.Inject(newCtx, carrier)
 
-	return newCtx, span.End
+	return newCtx, span
 }

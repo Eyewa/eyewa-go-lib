@@ -16,7 +16,6 @@ import (
 	amqptracing "github.com/eyewa/eyewa-go-lib/tracing/amqp"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
-	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -154,8 +153,9 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 		var event *base.EyewaEvent
 		for msg := range msgs {
-			// extract the latest context from the delivery
-			ctx = otel.GetTextMapPropagator().Extract(ctx, amqptracing.NewDeliveryHeaderCarrier(msg))
+			// start tracing
+			ctx, endSpan := amqptracing.StartDeliverySpan(ctx, msg)
+			defer endSpan()
 
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
@@ -225,13 +225,19 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 			return
 		}
 
+		msg := amqp.Publishing{
+			ContentType:  "application/json",
+			Body:         eventJSON,
+			DeliveryMode: amqp.Persistent,
+		}
+
+		// start tracing the publishing span
+		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, msg)
+		defer endSpan()
+
 		// attempt to publish event
-		err = channel.Publish("", config.PublisherQueueName, false, false,
-			amqp.Publishing{
-				ContentType:  "application/json",
-				Body:         eventJSON,
-				DeliveryMode: amqp.Persistent,
-			})
+		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
+
 		if err != nil {
 			callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
 		}

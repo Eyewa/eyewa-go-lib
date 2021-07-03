@@ -9,35 +9,53 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func startProducerSpan(ctx context.Context, cfg config, publishing amqp.Publishing) trace.Span {
+type publishingSpan struct {
+	publishing amqp.Publishing
+	span       trace.Span
+	cfg        config
+}
+
+func StartPublishingSpan(ctx context.Context, publishing amqp.Publishing, opts ...Option) (context.Context, func()) {
+	cfg := newConfig(opts...)
+	pubspan := publishingSpan{
+		publishing: publishing,
+		cfg:        cfg,
+	}
+
+	ctx, span := pubspan.start(ctx)
+	return ctx, func() {
+		span.End()
+	}
+}
+func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace.Span) {
 	// If there's a span context in the message, use that as the parent context.
-	carrier := NewPublishingHeaderCarrier(&publishing)
-	ctx = cfg.Propagators.Extract(ctx, carrier)
+	carrier := NewPublishingCarrier(pubspan.publishing)
+	ctx = pubspan.cfg.Propagators.Extract(ctx, carrier)
 
 	// Create a span.
 	attrs := []attribute.KeyValue{
 		semconv.MessagingSystemKey.String("rabbitmq"),
 		semconv.MessagingDestinationKindKeyQueue,
 	}
+
+	// setup span options.
 	opts := []trace.SpanOption{
 		trace.WithAttributes(attrs...),
 		trace.WithSpanKind(trace.SpanKindProducer),
 	}
-	ctx, span := cfg.Tracer.Start(ctx, "rabbitmq.publish", opts...)
 
-	// Inject current span context, so consumers can use it to propagate span.
-	cfg.Propagators.Inject(ctx, carrier)
+	// start the span and and receive a new ctx.
+	ctx, span := pubspan.cfg.Tracer.Start(ctx, "rabbitmq.publish", opts...)
 
-	return span
+	// Inject new span context, so consumers can use it to propagate span.
+	pubspan.cfg.Propagators.Inject(ctx, carrier)
+
+	return ctx, span
 }
 
-func finishPublishingSpan(span trace.Span) {
-	// span.SetAttributes(
-	// 	semconv.MessagingMessageIDKey.String(strconv.FormatInt(offset, 10)),
-	// 	kafkaPartitionKey.Int64(int64(partition)),
-	// )
-	// if err != nil {
-	// 	span.SetStatus(codes.Error, err.Error())
-	// }
-	span.End()
-}
+// func finishPublishingSpan(span trace.Span) {
+// 	if err != nil {
+// 		span.SetStatus(codes.Error, err.Error())
+// 	}
+// 	span.End()
+// }

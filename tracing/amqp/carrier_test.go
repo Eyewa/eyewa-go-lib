@@ -9,8 +9,8 @@ import (
 
 func TestNewPublishingHeaderCarrier(t *testing.T) {
 	headers := amqp.Table{"foo": "bar"}
-	pub := &amqp.Publishing{Headers: headers}
-	c := NewPublishingHeaderCarrier(pub)
+	pub := amqp.Publishing{Headers: headers}
+	c := NewPublishingCarrier(pub)
 
 	assert.NotNil(t, c)
 	assert.NotZero(t, c)
@@ -20,13 +20,13 @@ func TestNewPublishingHeaderCarrier(t *testing.T) {
 func TestPublishingHeaderCarrierGet(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  PublishingHeaderCarrier
+		carrier  PublishingCarrier
 		key      string
 		expected string
 	}{
 		{
 			name: "header exists",
-			carrier: PublishingHeaderCarrier{publishing: &amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingCarrier{publishing: amqp.Publishing{Headers: amqp.Table{
 				"foo": "bar",
 			}}},
 			key:      "foo",
@@ -34,7 +34,7 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  PublishingHeaderCarrier{publishing: &amqp.Publishing{Headers: amqp.Table{}}},
+			carrier:  PublishingCarrier{publishing: amqp.Publishing{Headers: amqp.Table{}}},
 			key:      "foo",
 			expected: "",
 		},
@@ -48,17 +48,17 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 	}
 }
 
-func TestPublishingHeaderCarrierSet(t *testing.T) {
+func TestPublishingCarrierSet(t *testing.T) {
 	pub := amqp.Publishing{Headers: amqp.Table{
 		"foo": "bar",
 	}}
-	carrier := PublishingHeaderCarrier{publishing: &pub}
+	carrier := PublishingCarrier{publishing: pub}
 
 	carrier.Set("foo", "bar1")
 	carrier.Set("abc", "test")
 	carrier.Set("hello", "world")
 
-	expected := PublishingHeaderCarrier{&amqp.Publishing{Headers: amqp.Table{
+	expected := PublishingCarrier{amqp.Publishing{Headers: amqp.Table{
 		"foo":   "bar1",
 		"abc":   "test",
 		"hello": "world",
@@ -69,25 +69,25 @@ func TestPublishingHeaderCarrierSet(t *testing.T) {
 func TestPublishingHeaderCarrierKeys(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  PublishingHeaderCarrier
+		carrier  PublishingCarrier
 		expected []string
 	}{
 		{
 			name: "one header",
-			carrier: PublishingHeaderCarrier{&amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingCarrier{amqp.Publishing{Headers: amqp.Table{
 				"foo": "bar1",
 			}}},
 			expected: []string{"foo"},
 		},
 		{
 			name: "no headers",
-			carrier: PublishingHeaderCarrier{publishing: &amqp.Publishing{
+			carrier: PublishingCarrier{publishing: amqp.Publishing{
 				Headers: amqp.Table{}}},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: PublishingHeaderCarrier{&amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingCarrier{amqp.Publishing{Headers: amqp.Table{
 				"foo":   "bar1",
 				"abc":   "test",
 				"hello": "world",

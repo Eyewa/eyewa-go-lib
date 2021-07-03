@@ -43,3 +43,35 @@ func main(){
 
 
 ```
+
+### Starting A Publishing Trace
+
+```go
+package main
+
+import (
+    rmqtrace "github.com/eyewa/eyewa-go-lib/tracing/amqp"
+)
+
+var (
+    queue = "mycool.queue"
+)
+func main(){
+    //... initialise exchange, queue etc...
+
+   msg := amqp.Publishing{
+        ContentType:  "application/json",
+        Body:         eventJSON,
+        DeliveryMode: amqp.Persistent,
+    }
+
+    // start tracing the publishing span
+    ctx, endSpan := amqptracing.StartPublishingSpan(ctx, msg)
+    defer endSpan()
+
+    // attempt to publish event
+    err = channel.Publish("", queue, false, false, msg)
+}
+
+
+```

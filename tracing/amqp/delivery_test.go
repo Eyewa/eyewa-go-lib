@@ -31,9 +31,8 @@ func TestStartDeliverySpan(t *testing.T) {
 	sr := new(oteltest.SpanRecorder)
 	provider := oteltest.NewTracerProvider(oteltest.WithSpanRecorder(sr))
 
-	// setup an upstream span so that we have a context with a span and trace id.
-	parentCtx, _ := provider.Tracer(instrumentationName).Start(context.Background(), "")
-
+	// setup an upstream span so that we have a context with a span and trace id to start with.
+	parentCtx, _ := provider.Tracer(instrumentationName).Start(context.Background(), "test")
 	tests := []struct {
 		delivery amqp.Delivery
 		expected expectedList
