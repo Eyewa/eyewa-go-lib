@@ -44,6 +44,7 @@ func (dspan deliverySpan) start(ctx context.Context) (context.Context, trace.Spa
 		trace.WithSpanKind(trace.SpanKindConsumer),
 	}
 
+	// start the span and and receive a new ctx.
 	newCtx, span := dspan.cfg.Tracer.Start(parentSpanContext, consumeSpanName, opts...)
 
 	// Inject current span context, so consumers can use it to propagate span.
