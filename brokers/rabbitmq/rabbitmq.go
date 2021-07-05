@@ -185,7 +185,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 				// publish message to DL
 				err := rmq.sendToDeadletterQueue(msg, errMsg)
 				if err != nil {
-					callback(ctx, nil, err)
+					_ = callback(ctx, nil, err)
 				}
 			} else {
 				// ONLY ack message once there is no error from callback.
