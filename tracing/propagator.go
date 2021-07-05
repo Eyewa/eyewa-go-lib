@@ -8,7 +8,5 @@ import (
 // registersPropagators registers the trace propagation format.
 // https://opentelemetry.lightstep.com/core-concepts/context-propagation/
 func registerPropagators() {
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{}, propagation.Baggage{},
-	))
+	otel.SetTextMapPropagator(propagation.TraceContext{})
 }

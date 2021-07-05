@@ -255,7 +255,8 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 			Headers:      amqp.Table{},
 		}
 
-		// start tracing the publishing span
+		// start tracing the publishing span and inject
+		// trace context into headers on the msg
 		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, &msg)
 		defer endSpan()
 
