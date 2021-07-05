@@ -255,7 +255,7 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		}
 
 		// start tracing the publishing span
-		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, msg)
+		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, &msg)
 		defer endSpan()
 
 		// attempt to publish event
