@@ -13,6 +13,12 @@ import (
 // newPrometheusExporter creates a new PrometheusExporter with given ExportOption
 func newPrometheusExporter(option ExportOption) (*prometheus.Exporter, error) {
 	config := prometheus.Config{}
+
+	resource, err := newResource(option)
+	if err != nil {
+		return nil, err
+	}
+
 	c := controller.New(
 		processor.New(
 			selector.NewWithHistogramDistribution(
@@ -22,6 +28,7 @@ func newPrometheusExporter(option ExportOption) (*prometheus.Exporter, error) {
 			processor.WithMemory(true),
 		),
 		controller.WithCollectPeriod(option.CollectPeriod),
+		controller.WithResource(resource),
 	)
 
 	exporter, err := prometheus.New(config, c)
