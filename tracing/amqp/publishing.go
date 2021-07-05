@@ -3,6 +3,7 @@ package amqp
 import (
 	"context"
 
+	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
@@ -18,6 +19,8 @@ func StartPublishingSpan(ctx context.Context, publishing *amqp.Publishing, opts 
 	}
 
 	ctx, span := pubspan.start(ctx)
+	log.DebugWithTraceID(trace.SpanContextFromContext(ctx).TraceID().String(), "Tracing publishing")
+
 	return ctx, func() {
 		span.End()
 	}
