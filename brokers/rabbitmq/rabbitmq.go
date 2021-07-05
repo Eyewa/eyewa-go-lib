@@ -499,7 +499,7 @@ func (rmq *RMQClient) ConnectionListener() {
 	go func() {
 		notify := rmq.connection.NotifyClose(make(chan *amqp.Error))
 		for range notify {
-			log.Warn("RMQ connection is closed!")
+			log.Warn("RMQ connection has closed!")
 			return
 		}
 	}()
