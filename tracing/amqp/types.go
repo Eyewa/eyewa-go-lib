@@ -16,7 +16,7 @@ type deliverySpan struct {
 // deliverySpan is the span responsible for tracing an amqp.Publishing
 // and attaching amqp related attributes.
 type publishingSpan struct {
-	publishing amqp.Publishing
+	publishing *amqp.Publishing
 	cfg        config
 }
 

@@ -46,8 +46,8 @@ func (c DeliveryCarrier) Keys() []string {
 }
 
 // NewPublishingCarrier constructs a new PublishingCarrier.
-func NewPublishingCarrier(p amqp.Publishing) PublishingCarrier {
-	return PublishingCarrier{publishing: &p}
+func NewPublishingCarrier(p *amqp.Publishing) PublishingCarrier {
+	return PublishingCarrier{publishing: p}
 }
 
 // Get gets a header from the publishing.

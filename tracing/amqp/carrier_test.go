@@ -10,7 +10,7 @@ import (
 func TestNewPublishingHeaderCarrier(t *testing.T) {
 	headers := amqp.Table{"foo": "bar"}
 	pub := amqp.Publishing{Headers: headers}
-	c := NewPublishingCarrier(pub)
+	c := NewPublishingCarrier(&pub)
 
 	assert.NotNil(t, c)
 	assert.NotZero(t, c)

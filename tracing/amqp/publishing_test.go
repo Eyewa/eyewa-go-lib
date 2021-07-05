@@ -26,8 +26,8 @@ func TestStartPublishingSpan(t *testing.T) {
 
 	// Create the publishing and start tracing to send spans to span recorder.
 	msg := amqp.Publishing{Headers: amqp.Table{"test": "test"}}
-	propagators.Inject(parentCtx, NewPublishingCarrier(msg))
-	ctx, endSpan := StartPublishingSpan(parentCtx, msg,
+	propagators.Inject(parentCtx, NewPublishingCarrier(&msg))
+	ctx, endSpan := StartPublishingSpan(parentCtx, &msg,
 		WithTracerProvider(provider),
 		WithPropagators(propagators),
 	)
@@ -61,7 +61,10 @@ func TestStartPublishingSpan(t *testing.T) {
 		}
 
 		// Check tracing propagation
-		remoteSpanFromMessage := trace.SpanContextFromContext(propagators.Extract(context.Background(), NewPublishingCarrier(msg)))
+		remoteSpanFromMessage := trace.SpanContextFromContext(
+			propagators.Extract(context.Background(),
+				NewPublishingCarrier(&msg)),
+		)
 		assert.True(t, remoteSpanFromMessage.IsValid())
 	}
 
