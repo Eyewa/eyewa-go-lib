@@ -36,6 +36,7 @@ func initConfig() (Config, string, error) {
 
 	envVars := []string{
 		"SERVICE_NAME",
+		"HOSTNAME",
 		"RABBITMQ_SERVER",
 		"RABBITMQ_AMQP_PORT",
 		"RABBITMQ_USERNAME",
@@ -111,28 +112,37 @@ func (rmq *RMQClient) Connect() error {
 		}
 	}
 
+	// connection listener
+	rmq.ConnectionListener()
+
 	return nil
 }
 
 // Consume consumes messages from a queue
 func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
+	ctx := context.Background()
+
+	defer func() {
+		// reaching here means connection that is meant to long lived has died.
+		_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
+	}()
+
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
-	ctx := context.Background()
 	// check if channel exists for queue
 	// if not create it
 	if !exists && channel == nil {
 		channel, err := rmq.CreateNewChannel(config.ConsumerQueueName)
 		if err != nil {
-			callback(ctx, nil, err)
+			_ = callback(ctx, nil, err)
 			return
 		}
 
 		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
 		if errQ != nil {
-			callback(ctx, nil, errQ)
+			_ = callback(ctx, nil, errQ)
 			return
 		}
 	}
@@ -147,7 +157,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 		// attempt to consume events from broker
 		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 		if err != nil {
-			callback(ctx, nil, fmt.Errorf("Failed to consume from queue(%s). %s", queue, err))
+			_ = callback(ctx, nil, fmt.Errorf(libErrs.ErrorConsumeFailure.Error(), queue, err))
 			return
 		}
 
@@ -160,13 +170,13 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
-				errMsg := fmt.Errorf("Failed to unmarshal event from queue(%s). %s", queue, err)
-				callback(ctx, nil, errMsg)
+				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
+				_ = callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
-					callback(ctx, nil, err)
+					_ = callback(ctx, nil, err)
 				}
 
 				// publish message to DL
@@ -175,14 +185,24 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 					callback(ctx, nil, err)
 				}
 			} else {
+				// ONLY ack message once there is no error from callback.
+				if err := callback(ctx, event, nil); err == nil {
+					if err = msg.Ack(false); err != nil {
+						// nack message and push back to queue
+						err = msg.Nack(false, true)
+						if err != nil {
+							log.Error(libErrs.ErrorNackFailure.Error(),
+								zap.String("queue", queue),
+								zap.String("event", string(msg.Body)),
+								zap.Error(err))
+						}
 
-				// ack message and send event to callback fn
-				err = msg.Ack(false)
-				if err != nil {
-					callback(ctx, nil, fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue))
+						log.Error(libErrs.ErrorAckFailure.Error(),
+							zap.String("queue", queue),
+							zap.String("event", string(msg.Body)),
+							zap.Error(err))
+					}
 				}
-
-				callback(ctx, event, nil)
 			}
 		}
 	}
@@ -202,13 +222,13 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 	if !exists && channel == nil {
 		channel, err := rmq.CreateNewChannel(config.PublisherQueueName)
 		if err != nil {
-			callback(ctx, event, err)
+			_ = callback(ctx, event, err)
 			return
 		}
 
 		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType)
 		if errQ != nil {
-			callback(ctx, event, errQ)
+			_ = callback(ctx, event, errQ)
 			return
 		}
 	}
@@ -221,7 +241,7 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		// attempt to marshal event for publishing
 		eventJSON, err := json.Marshal(&event)
 		if err != nil {
-			callback(ctx, event, err)
+			_ = callback(ctx, event, err)
 			return
 		}
 
@@ -237,12 +257,11 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 
 		// attempt to publish event
 		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
-
 		if err != nil {
-			callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+			_ = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
 		}
 
-		callback(ctx, event, nil)
+		_ = callback(ctx, event, nil)
 		return
 	}
 }
@@ -279,19 +298,19 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 	// declare queue
 	q, err := channel.QueueDeclare(queue, true, false, false, false, nil)
 	if err != nil {
-		return fmt.Errorf("Failed to declare queue(%s). %s", q.Name, err)
+		return fmt.Errorf(libErrs.ErrorQueueDeclareFailure.Error(), q.Name, err)
 	}
 
 	// declare exchange
 	err = channel.ExchangeDeclare(exchName, exchType, true, false, false, false, nil)
 	if err != nil {
-		return fmt.Errorf("Failed to declare an exchange for queue(%s). %s", q.Name, err)
+		return fmt.Errorf(libErrs.ErrorExchangeDeclareFailure.Error(), q.Name, err)
 	}
 
 	// bind them together
 	err = channel.QueueBind(queue, queue, exchName, false, nil)
 	if err != nil {
-		return fmt.Errorf("Failed to bind exchange to queue(%s). %s", q.Name, err)
+		return fmt.Errorf(libErrs.ErrorExchangeBindFailure.Error(), q.Name, err)
 	}
 
 	return nil
@@ -368,7 +387,7 @@ func (rmq *RMQClient) CreateNewChannel(queue string) (*amqp.Channel, error) {
 	if rmq.connection != nil {
 		channel, err := rmq.connection.Channel()
 		if err != nil {
-			return nil, fmt.Errorf("Cannot create new channel for queue(%s). %s", queue, err)
+			return nil, fmt.Errorf(libErrs.ErrorChannelCreateFailure.Error(), queue, err)
 		}
 
 		rmq.mutex.Lock()
@@ -393,7 +412,7 @@ func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
 	if exists {
 		q, err := channel.QueueInspect(queue)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to inspect queue(%s). %s", queue, err)
+			return nil, fmt.Errorf(libErrs.ErrorQueueInspectFailure.Error(), queue, err)
 		}
 
 		inspect["Total Consumers"] = q.Consumers
@@ -402,7 +421,7 @@ func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
 		return inspect, nil
 	}
 
-	return nil, fmt.Errorf("Queue specified to inspect doesn't exist queue(%s)", queue)
+	return nil, fmt.Errorf(libErrs.ErrorQueueInspectMissingQueueFailure.Error(), queue)
 }
 
 func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery, eventErr error) error {
@@ -462,9 +481,31 @@ func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 }
 
 func getNameForChannel(queue string) string {
-	if config.ServiceName == "" {
-		return fmt.Sprintf("%s.%d", queue, rand.Uint64())
+	if config.HostName != "" {
+		return config.HostName
 	}
 
-	return fmt.Sprintf("%s.%d", config.ServiceName, rand.Uint64())
+	if config.ServiceName == "" {
+		return fmt.Sprintf("%s-%d", queue, rand.Uint64())
+	}
+
+	return fmt.Sprintf("%s-%d", config.ServiceName, rand.Uint64())
+}
+
+// ConnectionListener simply listens for a closed connection and
+// simply logs it for visibility. The `Consume` func is responsible
+// for notifying a consumer via a callback on lost connetion.
+func (rmq *RMQClient) ConnectionListener() {
+	go func() {
+		notify := rmq.connection.NotifyClose(make(chan *amqp.Error))
+		for range notify {
+			log.Warn("RMQ connection is closed!")
+			return
+		}
+	}()
+}
+
+// IsConnectionOpen gets the connection status to RMQ
+func (rmq *RMQClient) IsConnectionOpen() bool {
+	return !rmq.connection.IsClosed()
 }

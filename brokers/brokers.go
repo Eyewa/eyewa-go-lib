@@ -1,9 +1,12 @@
 package brokers
 
 import (
+	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/eyewa/eyewa-go-lib/brokers/kafka"
 	"github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
 	"github.com/eyewa/eyewa-go-lib/brokers/sqs"
@@ -17,22 +20,23 @@ const (
 )
 
 var (
-	broker *MessageBrokerClient
+	broker               *MessageBrokerClient
+	maxConnectionRetries uint64 = 100
 )
 
 func NewMessageBrokerClient(brokerType BrokerType, client MessageBroker) *MessageBrokerClient {
-	return &MessageBrokerClient{brokerType, client}
+	return &MessageBrokerClient{brokerType, client, maxConnectionRetries}
 }
 
 // OpenConnection opens a connection to the message broker
 func OpenConnection() (*MessageBrokerClient, error) {
 	switch strings.ToLower(os.Getenv("MESSAGE_BROKER")) {
 	case string(RabbitMQ):
-		broker = &MessageBrokerClient{RabbitMQ, new(rabbitmq.RMQClient)}
+		broker = &MessageBrokerClient{RabbitMQ, new(rabbitmq.RMQClient), maxConnectionRetries}
 	case string(SQS):
-		broker = &MessageBrokerClient{SQS, new(sqs.SQSClient)}
+		broker = &MessageBrokerClient{SQS, new(sqs.SQSClient), maxConnectionRetries}
 	case string(Kafka):
-		broker = &MessageBrokerClient{Kafka, new(kafka.KafkaClient)}
+		broker = &MessageBrokerClient{Kafka, new(kafka.KafkaClient), maxConnectionRetries}
 	default:
 		broker = new(MessageBrokerClient)
 	}
@@ -42,12 +46,20 @@ func OpenConnection() (*MessageBrokerClient, error) {
 
 func (*MessageBrokerClient) connect() (*MessageBrokerClient, error) {
 	if broker.Client != nil {
-		err := broker.Client.Connect()
+		// apply exponential backoff to try establishing a connection.
+		connect := func() error {
+			return broker.Client.Connect()
+		}
+
+		bkoff := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), broker.MaxConnectionRetries)
+		err := backoff.RetryNotify(connect, bkoff, func(err error, duration time.Duration) {
+			fmt.Println(err.Error())
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		return broker, nil
+		return broker, err
 	}
 
 	return nil, libErrs.ErrorBrokerClientNotRecognized
@@ -86,4 +98,25 @@ func getClient(brokerType BrokerType) MessageBroker {
 	}
 
 	return nil
+}
+
+// ReConnectConsumer attempts to re-establish connection to
+// a message broker using an exponential backoff.
+//
+// Consuming from a message broker should be a long lived connection
+// Should it be lost for whatever reason, this func initiates the
+// attempt of re-gaining it so consumption can resume.
+func ReConnectConsumer(errCh chan error, callback ConsumerCallbackFunc) {
+	go func() {
+		for {
+			for err := range errCh {
+				if err != nil {
+					broker, err = OpenConnection()
+					if err == nil {
+						callback(broker, errCh)
+					}
+				}
+			}
+		}
+	}()
 }

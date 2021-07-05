@@ -15,7 +15,12 @@ func (kafka *KafkaClient) Connect() error {
 	return nil
 }
 
+func (kafka *KafkaClient) ConnectionListener() {
+	//
+}
+
 func (kafka *KafkaClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+	//
 }
 
 func (kafka *KafkaClient) CloseConnection() error {
@@ -23,4 +28,9 @@ func (kafka *KafkaClient) CloseConnection() error {
 }
 
 func (kafka *KafkaClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
+	//
+}
+
+func (kafka *KafkaClient) IsConnectionOpen() bool {
+	return false
 }

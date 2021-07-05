@@ -18,7 +18,7 @@ func NewMockClient() *ClientMock {
 }
 
 func OpenMockConnection(client MessageBroker) (*MessageBrokerClient, error) {
-	broker = &MessageBrokerClient{Mock, client}
+	broker = &MessageBrokerClient{Mock, client, 1}
 	return broker.connect()
 }
 
@@ -32,10 +32,19 @@ func (mock *ClientMock) Connect() error {
 	return args.Error(0)
 }
 
+func (mock *ClientMock) ConnectionListener() {
+	mock.Called()
+}
+
 func (mock *ClientMock) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
-	_ = mock.Called()
+	mock.Called(queue, event, callback, wg)
 }
 
 func (mock *ClientMock) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
-	_ = mock.Called()
+	mock.Called(queue, callback)
+}
+
+func (mock *ClientMock) IsConnectionOpen() bool {
+	args := mock.Called()
+	return args.Bool(0)
 }

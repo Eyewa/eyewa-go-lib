@@ -14,7 +14,7 @@ func TestConnect(t *testing.T) {
 	var err error
 
 	sqsMock := new(ClientMock)
-	broker = &MessageBrokerClient{SQS, sqsMock}
+	broker = &MessageBrokerClient{SQS, sqsMock, 1}
 	sqsMock.On("Connect").Return(nil)
 	broker, err = broker.connect()
 	assert.Nil(t, err)
@@ -25,7 +25,7 @@ func TestConnectFail(t *testing.T) {
 	var err error
 
 	sqsMock := new(ClientMock)
-	broker = &MessageBrokerClient{SQS, sqsMock}
+	broker = &MessageBrokerClient{SQS, sqsMock, 1}
 	sqsMock.On("Connect").Return(errors.New("bleh"))
 	broker, err = broker.connect()
 	assert.EqualError(t, err, "bleh")

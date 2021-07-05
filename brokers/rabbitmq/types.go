@@ -28,6 +28,7 @@ type Config struct {
 
 	// Purely for identifying what service/service instance is connected to a RMQ channel
 	ServiceName string `mapstructure:"service_name"`
+	HostName    string
 }
 
 // RMQClient RMQ client for implementing the MessageBroker interface and handling all things RMQ.

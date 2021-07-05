@@ -6,6 +6,8 @@ This package provides an abstraction layer for Uber's Zap logger pkg under the h
 
 For each log level supported, there are equivalent log funcs for tracing capabilities if and when required.
 
+# How to use
+
 ```go
 package demo
 
@@ -19,4 +21,3 @@ func main() {
   log.InfoWithTraceID(uuid.NewString(), "testing 123")
 }
 ```
-
