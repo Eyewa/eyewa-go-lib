@@ -252,6 +252,7 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 			ContentType:  "application/json",
 			Body:         eventJSON,
 			DeliveryMode: amqp.Persistent,
+			Headers:      amqp.Table{},
 		}
 
 		// start tracing the publishing span
