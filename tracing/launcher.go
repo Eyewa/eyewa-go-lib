@@ -76,7 +76,6 @@ func Launch() (ShutdownFunc, error) {
 	if err != nil {
 		return shutdownfunc, fmt.Errorf("Failed to init tracing config: %v", err)
 	}
-	fmt.Printf("Config: %v", config)
 
 	exp, err := newOtelExporter()
 	if err != nil {
