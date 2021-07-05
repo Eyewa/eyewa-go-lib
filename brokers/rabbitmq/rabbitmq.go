@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -12,6 +13,7 @@ import (
 	"github.com/eyewa/eyewa-go-lib/base"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
+	amqptracing "github.com/eyewa/eyewa-go-lib/tracing/amqp"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
@@ -118,18 +120,19 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
+	ctx := context.Background()
 	// check if channel exists for queue
 	// if not create it
 	if !exists && channel == nil {
 		channel, err := rmq.CreateNewChannel(config.ConsumerQueueName)
 		if err != nil {
-			callback(nil, err)
+			callback(ctx, nil, err)
 			return
 		}
 
 		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
 		if errQ != nil {
-			callback(nil, errQ)
+			callback(ctx, nil, errQ)
 			return
 		}
 	}
@@ -144,37 +147,42 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 		// attempt to consume events from broker
 		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 		if err != nil {
-			callback(nil, fmt.Errorf("Failed to consume from queue(%s). %s", queue, err))
+			callback(ctx, nil, fmt.Errorf("Failed to consume from queue(%s). %s", queue, err))
 			return
 		}
 
 		var event *base.EyewaEvent
 		for msg := range msgs {
+			// start tracing
+			ctx, endSpan := amqptracing.StartDeliverySpan(ctx, msg)
+			defer endSpan()
+
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
 				errMsg := fmt.Errorf("Failed to unmarshal event from queue(%s). %s", queue, err)
-				callback(nil, errMsg)
+				callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
-					callback(nil, err)
+					callback(ctx, nil, err)
 				}
 
 				// publish message to DL
 				err := rmq.sendToDeadletterQueue(msg, errMsg)
 				if err != nil {
-					callback(nil, err)
+					callback(ctx, nil, err)
 				}
 			} else {
+
 				// ack message and send event to callback fn
 				err = msg.Ack(false)
 				if err != nil {
-					callback(nil, fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue))
+					callback(ctx, nil, fmt.Errorf("Failed to acknowledge new messages from queue(%s)", queue))
 				}
 
-				callback(event, nil)
+				callback(ctx, event, nil)
 			}
 		}
 	}
@@ -188,17 +196,19 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
+	ctx := context.Background()
+
 	// determine if channel exists for queue
 	if !exists && channel == nil {
 		channel, err := rmq.CreateNewChannel(config.PublisherQueueName)
 		if err != nil {
-			callback(event, err)
+			callback(ctx, event, err)
 			return
 		}
 
 		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType)
 		if errQ != nil {
-			callback(event, errQ)
+			callback(ctx, event, errQ)
 			return
 		}
 	}
@@ -211,22 +221,28 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		// attempt to marshal event for publishing
 		eventJSON, err := json.Marshal(&event)
 		if err != nil {
-			callback(event, err)
+			callback(ctx, event, err)
 			return
 		}
 
-		// attempt to publish event
-		err = channel.Publish("", config.PublisherQueueName, false, false,
-			amqp.Publishing{
-				ContentType:  "application/json",
-				Body:         eventJSON,
-				DeliveryMode: amqp.Persistent,
-			})
-		if err != nil {
-			callback(event, libErrs.ErrorFailedToPublishEvent)
+		msg := amqp.Publishing{
+			ContentType:  "application/json",
+			Body:         eventJSON,
+			DeliveryMode: amqp.Persistent,
 		}
 
-		callback(event, nil)
+		// start tracing the publishing span
+		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, msg)
+		defer endSpan()
+
+		// attempt to publish event
+		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
+
+		if err != nil {
+			callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+		}
+
+		callback(ctx, event, nil)
 		return
 	}
 }

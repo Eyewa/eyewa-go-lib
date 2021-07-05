@@ -66,7 +66,6 @@ func Launch() (ShutdownFunc, error) {
 	shutdownfunc := func() error {
 		return nil
 	}
-
 	var err error
 	_, err = initConfig()
 	if err != nil {
@@ -127,7 +126,6 @@ func (tl *launcher) launch(ctx context.Context) error {
 		log.Error(fmt.Sprintf("Failed to start tracing exporter: %v", err))
 		return err
 	}
-
 	return nil
 }
 
