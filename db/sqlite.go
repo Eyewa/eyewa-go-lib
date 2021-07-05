@@ -1,6 +1,10 @@
 package db
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/cenkalti/backoff"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
@@ -21,17 +25,25 @@ func NewSQLiteClientFromConfig(config Config) *SQLiteClient {
 
 // OpenConnection opens a sqlite connection
 func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
-	db, err := gorm.Open("sqlite3", client.Path)
-	if err != nil {
-		return nil, err
+	var (
+		db  *gorm.DB
+		err error
+	)
+
+	connect := func() error {
+		db, err = gorm.Open("sqlite3", client.Path)
+		return err
 	}
+
+	_ = backoff.RetryNotify(connect, backoff.NewExponentialBackOff(), func(err error, duration time.Duration) {
+		fmt.Println(err.Error())
+	})
 
 	client.gorm = db
 
 	return &DBClient{
 		client,
 	}, nil
-
 }
 
 // CloseConnection closes a sqlite connection

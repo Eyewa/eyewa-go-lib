@@ -15,6 +15,10 @@ func (sqs *SQSClient) Connect() error {
 	return nil
 }
 
+func (sqs *SQSClient) ConnectionListener() {
+	//
+}
+
 func (sqs *SQSClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 }
 
@@ -23,4 +27,9 @@ func (sqs *SQSClient) CloseConnection() error {
 }
 
 func (sqs *SQSClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
+	//
+}
+
+func (sqs *SQSClient) IsConnectionOpen() bool {
+	return false
 }

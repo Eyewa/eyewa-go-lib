@@ -2,7 +2,9 @@ package db
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -39,6 +41,11 @@ func NewPostgresClientFromConfig(config Config) *PostgresClient {
 
 // OpenConnection opens connection to postgres
 func (client *PostgresClient) OpenConnection() (*DBClient, error) {
+	var (
+		db  *gorm.DB
+		err error
+	)
+
 	connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s  dbname=%s",
 		client.User,
 		client.Password,
@@ -51,10 +58,14 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 		connStr = fmt.Sprintf("%s sslmode=%s", connStr, client.SSLMode)
 	}
 
-	db, err := gorm.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
+	connect := func() error {
+		db, err = gorm.Open("postgres", connStr)
+		return err
 	}
+
+	_ = backoff.RetryNotify(connect, backoff.NewExponentialBackOff(), func(err error, duration time.Duration) {
+		fmt.Println(err.Error())
+	})
 
 	client.gorm = db
 	client.gorm.DB().SetMaxOpenConns(1)
@@ -63,7 +74,6 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 	return &DBClient{
 		client,
 	}, nil
-
 }
 
 // CloseConnection closes a postgres connection

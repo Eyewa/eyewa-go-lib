@@ -40,4 +40,4 @@ type EyewaEventError struct {
 
 // MessageBrokerCallbackFunc all broker clients should define this callback fn
 // so as to react to the state of events published/consumed - success/failure
-type MessageBrokerCallbackFunc func(ctx context.Context, event *EyewaEvent, err error)
+type MessageBrokerCallbackFunc func(ctx context.Context, event *EyewaEvent, err error) error

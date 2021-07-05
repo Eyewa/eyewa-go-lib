@@ -4,6 +4,9 @@ Shared Go Lib for Eyewa's microservices.
 # db
 This package provides an abstraction layer for a couple of database drivers by means of creating clients. Currently this package only supports MySQL, SQLite & Postgres. In the future more drivers can be added if need the arises.
 
+The clients implement exponential backoffs in the following instance:
+- when on start of a service a connection to the db cannot be established
+
 # How to use
 The following env variables can be injected in order to use this pkg:
 

@@ -9,11 +9,14 @@ import (
 // BrokerType represents a type of broker - sqs, rmq etc.
 type BrokerType string
 
+type ConsumerCallbackFunc func(broker *MessageBrokerClient, errCh chan error)
+
 // MessageBrokerClient a message broker client with the
 // capability to act as both consumer and publisher.
 type MessageBrokerClient struct {
-	Type   BrokerType
-	Client MessageBroker
+	Type                 BrokerType
+	Client               MessageBroker
+	MaxConnectionRetries uint64
 }
 
 // MessageBrokerConsumerClient a consumer client.
@@ -33,7 +36,9 @@ type MessageBrokerPublisherClient struct {
 // a publisher and a consumer.
 type MessageBroker interface {
 	Connect() error
+	IsConnectionOpen() bool
 	CloseConnection() error
+	ConnectionListener()
 	Consumer
 	Publisher
 }

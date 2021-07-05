@@ -6,6 +6,10 @@ This package provides an abstraction layer for any underlying third party pkgs w
 
 A client can either be a **Consumer**, a **Publisher** or **both** - there are contracts in place to cater for such scenarios. On calling the `OpenConnection`, a client will be regarded as requiring both capabilities. If otherwise, there are direct client calls for initiating either a consumer/publisher for any client of choice.
 
+Clients implement exponential backoffs in the following instances:
+- on the start of a service, and a connection to the broker cannot be established.
+- during the running of a service, and the connection to the broker is lost for whatever reason.
+
 # How to use
 
 ```go

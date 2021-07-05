@@ -2,7 +2,9 @@ package db
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -37,6 +39,11 @@ func NewMySQLClientFromConfig(config Config) *MySQLClient {
 
 // OpenConnection opens connection to mysql
 func (client *MySQLClient) OpenConnection() (*DBClient, error) {
+	var (
+		db  *gorm.DB
+		err error
+	)
+
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True&loc=Local",
 		client.User,
 		client.Password,
@@ -44,10 +51,14 @@ func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 		client.Port,
 		client.Name)
 
-	db, err := gorm.Open("mysql", connStr)
-	if err != nil {
-		return nil, err
+	connect := func() error {
+		db, err = gorm.Open("mysql", connStr)
+		return err
 	}
+
+	_ = backoff.RetryNotify(connect, backoff.NewExponentialBackOff(), func(err error, duration time.Duration) {
+		fmt.Println(err.Error())
+	})
 
 	client.gorm = db
 	client.gorm.DB().SetMaxOpenConns(1)
@@ -56,7 +67,6 @@ func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 	return &DBClient{
 		client,
 	}, nil
-
 }
 
 // CloseConnection closes a mysql connection
