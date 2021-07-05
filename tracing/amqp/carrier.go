@@ -12,7 +12,7 @@ var _ propagation.TextMapCarrier = (*DeliveryCarrier)(nil)
 
 // DeliveryCarrier constructs a new DeliveryCarrier.
 func NewDeliveryCarrier(d amqp.Delivery) DeliveryCarrier {
-	return DeliveryCarrier{delivery: d}
+	return DeliveryCarrier{delivery: &d}
 }
 
 // Get gets a header from the delivery.
@@ -47,7 +47,7 @@ func (c DeliveryCarrier) Keys() []string {
 
 // NewPublishingCarrier constructs a new PublishingCarrier.
 func NewPublishingCarrier(p amqp.Publishing) PublishingCarrier {
-	return PublishingCarrier{publishing: p}
+	return PublishingCarrier{publishing: &p}
 }
 
 // Get gets a header from the publishing.

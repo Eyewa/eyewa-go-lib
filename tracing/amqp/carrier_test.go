@@ -26,7 +26,7 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 	}{
 		{
 			name: "header exists",
-			carrier: PublishingCarrier{publishing: amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{
 				"foo": "bar",
 			}}},
 			key:      "foo",
@@ -34,7 +34,7 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  PublishingCarrier{publishing: amqp.Publishing{Headers: amqp.Table{}}},
+			carrier:  PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{}}},
 			key:      "foo",
 			expected: "",
 		},
@@ -52,13 +52,13 @@ func TestPublishingCarrierSet(t *testing.T) {
 	pub := amqp.Publishing{Headers: amqp.Table{
 		"foo": "bar",
 	}}
-	carrier := PublishingCarrier{publishing: pub}
+	carrier := PublishingCarrier{publishing: &pub}
 
 	carrier.Set("foo", "bar1")
 	carrier.Set("abc", "test")
 	carrier.Set("hello", "world")
 
-	expected := PublishingCarrier{amqp.Publishing{Headers: amqp.Table{
+	expected := PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{
 		"foo":   "bar1",
 		"abc":   "test",
 		"hello": "world",
@@ -74,20 +74,20 @@ func TestPublishingHeaderCarrierKeys(t *testing.T) {
 	}{
 		{
 			name: "one header",
-			carrier: PublishingCarrier{amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{
 				"foo": "bar1",
 			}}},
 			expected: []string{"foo"},
 		},
 		{
 			name: "no headers",
-			carrier: PublishingCarrier{publishing: amqp.Publishing{
+			carrier: PublishingCarrier{&amqp.Publishing{
 				Headers: amqp.Table{}}},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: PublishingCarrier{amqp.Publishing{Headers: amqp.Table{
+			carrier: PublishingCarrier{&amqp.Publishing{Headers: amqp.Table{
 				"foo":   "bar1",
 				"abc":   "test",
 				"hello": "world",
@@ -123,7 +123,7 @@ func TestDeliveryCarrierGet(t *testing.T) {
 	}{
 		{
 			name: "header exists",
-			carrier: DeliveryCarrier{delivery: amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar",
 			}}},
 			key:      "foo",
@@ -131,7 +131,7 @@ func TestDeliveryCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  DeliveryCarrier{delivery: amqp.Delivery{Headers: amqp.Table{}}},
+			carrier:  DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{}}},
 			key:      "foo",
 			expected: "",
 		},
@@ -149,13 +149,13 @@ func TestDeliveryHeaderCarrierSet(t *testing.T) {
 	d := amqp.Delivery{Headers: amqp.Table{
 		"foo": "bar",
 	}}
-	carrier := DeliveryCarrier{delivery: d}
+	carrier := DeliveryCarrier{delivery: &d}
 
 	carrier.Set("foo", "bar1")
 	carrier.Set("abc", "test")
 	carrier.Set("hello", "world")
 
-	expected := DeliveryCarrier{amqp.Delivery{Headers: amqp.Table{
+	expected := DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{
 		"foo":   "bar1",
 		"abc":   "test",
 		"hello": "world",
@@ -171,20 +171,20 @@ func TestDeliveryHeaderCarrierKeys(t *testing.T) {
 	}{
 		{
 			name: "one header",
-			carrier: DeliveryCarrier{amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{
 				"foo": "bar1",
 			}}},
 			expected: []string{"foo"},
 		},
 		{
 			name: "no headers",
-			carrier: DeliveryCarrier{amqp.Delivery{
+			carrier: DeliveryCarrier{&amqp.Delivery{
 				Headers: amqp.Table{}}},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: DeliveryCarrier{amqp.Delivery{Headers: amqp.Table{
+			carrier: DeliveryCarrier{&amqp.Delivery{Headers: amqp.Table{
 				"foo":   "bar1",
 				"abc":   "test",
 				"hello": "world",

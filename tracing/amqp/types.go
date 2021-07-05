@@ -35,11 +35,11 @@ type Option func(*config)
 // DeliveryCarrier injects and extracts
 // traces from the headers of a amqp.Delivery.
 type DeliveryCarrier struct {
-	delivery amqp.Delivery
+	delivery *amqp.Delivery
 }
 
 // PublishingCarrier injects and extracts
 // traces from the headers of a amqp.Publishing.
 type PublishingCarrier struct {
-	publishing amqp.Publishing
+	publishing *amqp.Publishing
 }
