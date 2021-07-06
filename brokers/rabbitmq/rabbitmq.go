@@ -258,12 +258,14 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		// start tracing the publishing span and inject
 		// trace context into headers on the msg
 		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, &msg)
+		defer endSpan()
 
 		// attempt to publish event
 		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
-		endSpan()
+
 		if err != nil {
 			_ = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+			return
 		}
 
 		_ = callback(ctx, event, nil)
