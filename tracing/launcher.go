@@ -61,7 +61,7 @@ func initConfig() (Config, error) {
 		return config, errors.ErrorNoExporterEndpointSpecified
 	}
 
-	log.Debug(fmt.Sprintf("Tracing config initialised: %v", config))
+	log.Debug(fmt.Sprintf("Tracing config initialised: %+v \n", config))
 	return config, nil
 }
 
