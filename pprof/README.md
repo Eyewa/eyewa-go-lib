@@ -2,7 +2,7 @@
 Shared Go Lib for Eyewa's microservices.
 
 # pprof
-This package exposes Go's profiling capability via its HTTP server runtime profiling data in the format expected by the pprof visualization tool. This 
+This package exposes Go's profiling capability via its HTTP server for profiling a service/application.
 
 Default port exposed is `9111`. 
 
@@ -19,4 +19,4 @@ import (
 )
 ```
 
-This can now reachable on: `http://locahost:9111/debug/pprof`.
+This can then be reachable on: `http://locahost:9111/debug/pprof`.

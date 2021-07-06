@@ -2,7 +2,7 @@
 Shared Go Lib for Eyewa's microservices.
 
 # How to use
-This is private repository so in order to be able to include it in your microservice or Go application the following steps needs to be carried out:
+This is a private repository, so in order to include it in a microservice or application the following steps need to be carried out:
 
 - Create a `~/.netrc` file on your workstation (if you don't have one).
 - Add an entry similar to the following:
@@ -13,7 +13,7 @@ login {YOUR_GITHUB_USER_NAME}
 password {YOUR_PERSONAL_ACCESS_TOKEN_FROM_GITHUB}
 ```
 
-Update the `GOPRIVATE` variable in your Go environment to allow Go to look for the private repo at the location as a source and not use a proxy.
+Update the `GOPRIVATE` variable in your Go environment so the private repo can be located as the module's source and not use a proxy.
 
 ```bash
 go env -w GOPRIVATE=github.com/eyewa/eyewa-go-lib
