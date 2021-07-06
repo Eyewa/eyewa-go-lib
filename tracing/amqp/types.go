@@ -9,8 +9,8 @@ import (
 // deliverySpan is the span responsible for tracing an amqp.Delivery
 // and attaching amqp related attributes.
 type deliverySpan struct {
+	delivery *amqp.Delivery
 	cfg      config
-	delivery amqp.Delivery
 }
 
 // deliverySpan is the span responsible for tracing an amqp.Publishing

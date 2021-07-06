@@ -10,9 +10,9 @@ import (
 )
 
 // StartDeliverySpan starts tracing a delivery and returns the new context and end span function.
-func StartDeliverySpan(ctx context.Context, d amqp.Delivery, opts ...Option) (context.Context, func()) {
+func StartDeliverySpan(ctx context.Context, d *amqp.Delivery, opts ...Option) (context.Context, func()) {
 	cfg := newConfig(opts...)
-	dspan := &deliverySpan{
+	dspan := deliverySpan{
 		cfg:      cfg,
 		delivery: d,
 	}

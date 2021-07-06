@@ -11,8 +11,8 @@ var _ propagation.TextMapCarrier = (*PublishingCarrier)(nil)
 var _ propagation.TextMapCarrier = (*DeliveryCarrier)(nil)
 
 // DeliveryCarrier constructs a new DeliveryCarrier.
-func NewDeliveryCarrier(d amqp.Delivery) DeliveryCarrier {
-	return DeliveryCarrier{delivery: &d}
+func NewDeliveryCarrier(d *amqp.Delivery) DeliveryCarrier {
+	return DeliveryCarrier{delivery: d}
 }
 
 // Get gets a header from the delivery.

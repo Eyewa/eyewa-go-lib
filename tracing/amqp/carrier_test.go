@@ -106,8 +106,8 @@ func TestPublishingHeaderCarrierKeys(t *testing.T) {
 
 func TestNewDeliveryCarrier(t *testing.T) {
 	headers := amqp.Table{"foo": "bar"}
-	pub := amqp.Delivery{Headers: headers}
-	c := NewDeliveryCarrier(pub)
+	d := &amqp.Delivery{Headers: headers}
+	c := NewDeliveryCarrier(d)
 
 	assert.NotNil(t, c)
 	assert.NotZero(t, c)

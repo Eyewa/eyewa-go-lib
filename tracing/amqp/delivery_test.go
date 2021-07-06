@@ -21,7 +21,7 @@ type expectedList struct {
 	spanName      string
 }
 
-func injectTraceInfo(parentCtx context.Context, d amqp.Delivery) {
+func injectTraceInfo(parentCtx context.Context, d *amqp.Delivery) {
 	propagator := propagation.TraceContext{}
 	propagator.Inject(parentCtx, NewDeliveryCarrier(d))
 }
@@ -34,11 +34,11 @@ func TestStartDeliverySpan(t *testing.T) {
 	// setup an upstream span so that we have a context with a span and trace id to start with.
 	parentCtx, _ := provider.Tracer(instrumentationName).Start(context.Background(), "test")
 	tests := []struct {
-		delivery amqp.Delivery
+		delivery *amqp.Delivery
 		expected expectedList
 	}{
 		{
-			delivery: amqp.Delivery{
+			delivery: &amqp.Delivery{
 				Body:       []byte("this is a test"),
 				Headers:    amqp.Table{"testkey": "testvalue"},
 				RoutingKey: "routing.key",
@@ -108,7 +108,7 @@ func TestStartDeliverySpan(t *testing.T) {
 
 func BenchmarkStartDeliverySpan(b *testing.B) {
 
-	delivery := amqp.Delivery{
+	delivery := &amqp.Delivery{
 		Body:       []byte("testing2"),
 		Headers:    amqp.Table{"testkey2": "testvalue2"},
 		RoutingKey: "routing.key",
