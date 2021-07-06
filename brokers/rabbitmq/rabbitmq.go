@@ -168,7 +168,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 		var event *base.EyewaEvent
 		for msg := range msgs {
 			// start tracing
-			ctx, endSpan = amqptracing.StartDeliverySpan(ctx, msg)
+			ctx, endSpan = amqptracing.StartDeliverySpan(ctx, &msg)
 
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
