@@ -1,6 +1,7 @@
 package tracing
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestNewResource(t *testing.T) {
 	_, err := initConfig()
 	assert.Nil(t, err)
 
-	res, _ := newResource()
+	res, _ := newResource(context.Background())
 
 	assert.NotNil(t, res)
 	assert.NotNil(t, res.Attributes())
