@@ -18,7 +18,7 @@ import (
 
 var (
 	config          Config
-	exporterTimeout = 2 * time.Second
+	exporterTimeout = 4 * time.Second
 )
 
 // intitialises and verifies the validity of a configuration.
@@ -82,7 +82,7 @@ func Launch() (ShutdownFunc, error) {
 		return shutdownfunc, err
 	}
 
-	res, err := newResource()
+	res, err := newResource(ctx)
 	if err != nil {
 		return shutdownfunc, err
 	}
