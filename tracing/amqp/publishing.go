@@ -44,10 +44,10 @@ func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace
 	}
 
 	// start the span and and receive a new ctx.
-	newCtx, span := pubspan.cfg.Tracer.Start(ctx, publishSpanName, opts...)
+	ctx, span := pubspan.cfg.Tracer.Start(ctx, publishSpanName, opts...)
 
 	// Inject current span context, so publishers can use it to propagate span.
-	pubspan.cfg.Propagators.Inject(newCtx, carrier)
+	pubspan.cfg.Propagators.Inject(ctx, carrier)
 
-	return newCtx, span
+	return ctx, span
 }

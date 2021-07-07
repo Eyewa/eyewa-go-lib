@@ -167,7 +167,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 		var event *base.EyewaEvent
 		for msg := range msgs {
-			// start tracing
+			// extract trace context and start a span
 			ctx, endSpan = amqptracing.StartDeliverySpan(ctx, &msg)
 
 			// attempt to unmarshal event
@@ -212,14 +212,12 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 }
 
 // Publish publishes a message to a queue
-func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
-
-	ctx := context.Background()
 
 	// determine if channel exists for queue
 	if !exists && channel == nil {

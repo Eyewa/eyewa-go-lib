@@ -1,6 +1,7 @@
 package sqs
 
 import (
+	"context"
 	"sync"
 
 	"github.com/eyewa/eyewa-go-lib/base"
@@ -19,7 +20,7 @@ func (sqs *SQSClient) ConnectionListener() {
 	//
 }
 
-func (sqs *SQSClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+func (sqs *SQSClient) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 }
 
 func (sqs *SQSClient) CloseConnection() error {
