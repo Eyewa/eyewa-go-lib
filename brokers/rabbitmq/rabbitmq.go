@@ -271,7 +271,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 			return
 		}
 
-		msg := amqp.Publishing{
+		msg := &amqp.Publishing{
 			ContentType:  "application/json",
 			Body:         eventJSON,
 			DeliveryMode: amqp.Persistent,
@@ -289,14 +289,13 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 
 		// inject context into headers, if none, the
 		// context will use the Background context.
-		headers := msg.Headers
-		otel.GetTextMapPropagator().Inject(ctx, amqptracing.HeaderCarrier(headers))
+		otel.GetTextMapPropagator().Inject(ctx, amqptracing.HeaderCarrier(msg.Headers))
 
 		// start the span and and receive a new ctx containing the parent
-		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Consume", spanOpts...)
-
+		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Publish", spanOpts...)
+		defer span.End()
 		// attempt to publish event
-		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
+		err = channel.Publish("", config.PublisherQueueName, false, false, *msg)
 
 		if err != nil {
 			span.RecordError(err)
