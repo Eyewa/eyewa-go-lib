@@ -12,7 +12,7 @@ import (
 )
 
 // StartDeliverySpan starts tracing a publishing and returns the new context and end span function.
-func StartPublishingSpan(ctx context.Context, publishing *amqp.Publishing, opts ...Option) (context.Context, func()) {
+func StartPublishingSpan(ctx context.Context, publishing *amqp.Publishing, opts ...Option) (context.Context, trace.Span) {
 	cfg := newConfig(opts...)
 	pubspan := publishingSpan{
 		publishing: publishing,
@@ -21,9 +21,7 @@ func StartPublishingSpan(ctx context.Context, publishing *amqp.Publishing, opts 
 
 	ctx, span := pubspan.start(ctx)
 
-	return ctx, func() {
-		span.End()
-	}
+	return ctx, span
 }
 
 // start starts a span

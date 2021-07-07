@@ -255,20 +255,25 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 
 		// start tracing the publishing span and inject
 		// trace context into headers on the msg
-		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, &msg)
+		ctx, span := amqptracing.StartPublishingSpan(ctx, &msg)
+		defer span.End()
 
 		// attempt to publish event
 		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
 
 		if err != nil {
-			_ = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+			err = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+			if err != nil {
+				span.RecordError(err)
+			}
 			return
 		}
 
-		_ = callback(ctx, event, nil)
-		log.Info("Done with rabbitmq")
-		endSpan()
-		return
+		// record the callback failing
+		err = callback(ctx, event, nil)
+		if err != nil {
+			span.RecordError(err)
+		}
 	}
 }
 
