@@ -16,6 +16,9 @@ import (
 	amqptracing "github.com/eyewa/eyewa-go-lib/tracing/amqp"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/semconv"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -28,6 +31,8 @@ var (
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
 	}
 	defaultPrefetchCount = 5
+	tracerName           = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
+	messagingSystem      = "RabbitMQ"
 )
 
 func initConfig() (Config, string, error) {
@@ -120,16 +125,7 @@ func (rmq *RMQClient) Connect() error {
 
 // Consume consumes messages from a queue
 func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
-	var (
-		ctx     = context.Background()
-		endSpan func()
-	)
-
-	defer func() {
-		// reaching here means the connection meant to be long lived has died.
-		_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
-		defer endSpan()
-	}()
+	ctx := context.Background()
 
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
@@ -167,33 +163,56 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 		var event *base.EyewaEvent
 		for msg := range msgs {
-			// extract trace context and start a span
-			ctx, endSpan = amqptracing.StartDeliverySpan(ctx, &msg)
+			// set amqp message span attributes.
+			spanOpts := []trace.SpanOption{
+				trace.WithAttributes(
+					semconv.MessagingSystemKey.String(messagingSystem),
+					semconv.MessagingDestinationKindKeyQueue,
+					semconv.MessagingOperationReceive,
+					semconv.MessagingRabbitMQRoutingKeyKey.String(msg.RoutingKey)),
+				trace.WithSpanKind(trace.SpanKindConsumer),
+			}
+
+			// extract context from headers, if none, the
+			// context will use the Background context.
+			ctx = otel.GetTextMapPropagator().Extract(
+				context.Background(),
+				amqptracing.HeaderCarrier(msg.Headers),
+			)
+
+			// start the span and and receive a new ctx containing the parent
+			ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Consume", spanOpts...)
 
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
+				span.RecordError(err)
 				_ = callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
+					span.RecordError(err)
 					_ = callback(ctx, nil, err)
 				}
 
 				// publish message to DL
 				err := rmq.sendToDeadletterQueue(msg, errMsg)
 				if err != nil {
+					span.RecordError(err)
 					_ = callback(ctx, nil, err)
 				}
 			} else {
 				// ONLY ack message once there is no error from callback.
 				if err := callback(ctx, event, nil); err == nil {
+					span.RecordError(err)
 					if err = msg.Ack(false); err != nil {
+						span.RecordError(err)
 						// nack message and push back to queue
 						err = msg.Nack(false, true)
 						if err != nil {
+							span.RecordError(err)
 							log.Error(libErrs.ErrorNackFailure.Error(),
 								zap.String("queue", queue),
 								zap.String("event", string(msg.Body)),
@@ -207,8 +226,14 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 					}
 				}
 			}
+			// manually end span since this is a
+			// long lived function and will never end.
+			span.End()
 		}
 	}
+
+	// reaching here means the connection meant to be long lived has died.
+	_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
 }
 
 // Publish publishes a message to a queue
@@ -253,15 +278,28 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 			Headers:      amqp.Table{},
 		}
 
-		// start tracing the publishing span and inject
-		// trace context into headers on the msg
-		ctx, span := amqptracing.StartPublishingSpan(ctx, &msg)
-		defer span.End()
+		// set amqp message span attributes.
+		spanOpts := []trace.SpanOption{
+			trace.WithAttributes(
+				semconv.MessagingSystemKey.String(messagingSystem),
+				semconv.MessagingDestinationKindKeyQueue,
+				semconv.MessagingRabbitMQRoutingKeyKey.String(config.PublisherQueueName)),
+			trace.WithSpanKind(trace.SpanKindProducer),
+		}
+
+		// inject context into headers, if none, the
+		// context will use the Background context.
+		headers := msg.Headers
+		otel.GetTextMapPropagator().Inject(ctx, amqptracing.HeaderCarrier(headers))
+
+		// start the span and and receive a new ctx containing the parent
+		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Consume", spanOpts...)
 
 		// attempt to publish event
 		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
 
 		if err != nil {
+			span.RecordError(err)
 			err = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
 			if err != nil {
 				span.RecordError(err)

@@ -1,54 +1,58 @@
 package amqp
 
-import (
-	"context"
-	"fmt"
+// import (
+// 	"context"
+// 	"fmt"
 
-	"github.com/eyewa/eyewa-go-lib/log"
-	"github.com/streadway/amqp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/semconv"
-	"go.opentelemetry.io/otel/trace"
-)
+// 	"github.com/eyewa/eyewa-go-lib/log"
+// 	"github.com/streadway/amqp"
+// 	"go.opentelemetry.io/otel/attribute"
+// 	"go.opentelemetry.io/otel/semconv"
+// 	"go.opentelemetry.io/otel/trace"
+// )
 
-// StartDeliverySpan starts tracing a publishing and returns the new context and end span function.
-func StartPublishingSpan(ctx context.Context, publishing *amqp.Publishing, opts ...Option) (context.Context, trace.Span) {
-	cfg := newConfig(opts...)
-	pubspan := publishingSpan{
-		publishing: publishing,
-		cfg:        cfg,
-	}
+// var (
+// 	publishingSpanName = fmt.Sprintf("%s.PublishPublishing", messagingSystem)
+// )
 
-	ctx, span := pubspan.start(ctx)
+// // StartDeliverySpan starts tracing a publishing and returns the new context and end span function.
+// func StartPublishingSpan(publishing *amqp.Publishing, opts ...Option) (context.Context, trace.Span) {
+// 	cfg := newConfig(opts...)
+// 	pubspan := publishingSpan{
+// 		publishing: publishing,
+// 		cfg:        cfg,
+// 	}
 
-	return ctx, span
-}
+// 	ctx, span := pubspan.start()
 
-// start starts a span
-// returns the new context and a function that ends the span.
-func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace.Span) {
-	// If there's a span context in the message, use that as the parent context.
-	carrier := NewPublishingCarrier(pubspan.publishing)
-	ctx = pubspan.cfg.Propagators.Extract(ctx, carrier)
-	log.Info(fmt.Sprintf("publishing carrier keys: %s", carrier.Keys()))
+// 	return ctx, span
+// }
 
-	// Create a span.
-	attrs := []attribute.KeyValue{
-		semconv.MessagingSystemKey.String(messagingSystem),
-		semconv.MessagingDestinationKindKeyQueue,
-	}
+// // start starts a span
+// // returns the new context and a function that ends the span.
+// func (pubspan publishingSpan) start() (context.Context, trace.Span) {
+// 	// If there's a span context in the message, use that as the parent context.
+// 	carrier := HeaderCarrier(pubspan.publishing.Headers)
+// 	ctx := pubspan.cfg.Propagators.Extract(context.Background(), carrier)
+// 	log.Info(fmt.Sprintf("publishing carrier keys: %s", carrier.Keys()))
 
-	// setup span options.
-	opts := []trace.SpanOption{
-		trace.WithAttributes(attrs...),
-		trace.WithSpanKind(trace.SpanKindProducer),
-	}
+// 	// Create a span.
+// 	attrs := []attribute.KeyValue{
+// 		semconv.MessagingSystemKey.String(messagingSystem),
+// 		semconv.MessagingDestinationKindKeyQueue,
+// 	}
 
-	// start the span and and receive a new ctx.
-	ctx, span := pubspan.cfg.Tracer.Start(ctx, publishSpanName, opts...)
+// 	// setup span options.
+// 	opts := []trace.SpanOption{
+// 		trace.WithAttributes(attrs...),
+// 		trace.WithSpanKind(trace.SpanKindProducer),
+// 	}
 
-	// Inject current span context, so publishers can use it to propagate span.
-	pubspan.cfg.Propagators.Inject(ctx, carrier)
+// 	// start the span and and receive a new ctx.
+// 	ctx, span := pubspan.cfg.Tracer.Start(ctx, publishingSpanName, opts...)
 
-	return ctx, span
-}
+// 	// Inject current span context, so publishers can use it to propagate span.
+// 	pubspan.cfg.Propagators.Inject(ctx, carrier)
+
+// 	return ctx, span
+// }

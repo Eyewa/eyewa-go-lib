@@ -1,58 +1,44 @@
 package amqp
 
-import (
-	"context"
-	"fmt"
+// import (
+// 	"context"
+// 	"fmt"
 
-	"github.com/eyewa/eyewa-go-lib/log"
-	"github.com/streadway/amqp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/semconv"
-	"go.opentelemetry.io/otel/trace"
-)
+// 	"github.com/streadway/amqp"
+// 	"go.opentelemetry.io/otel/semconv"
+// 	"go.opentelemetry.io/otel/trace"
+// )
 
-// StartDeliverySpan starts tracing a delivery and returns the new context and end span function.
-func StartDeliverySpan(ctx context.Context, d *amqp.Delivery, opts ...Option) (context.Context, func()) {
-	cfg := newConfig(opts...)
-	dspan := deliverySpan{
-		delivery: d,
-		cfg:      cfg,
-	}
+// var (
+// 	deliverySpanName = fmt.Sprintf("%s.ConsumeDelivery", messagingSystem)
+// )
 
-	ctx, span := dspan.start(ctx)
+// // StartDeliverySpan starts a span from an amqp.Delivery. It decorates
+// // the span with amqp related attributes. If the amqp.Delivery
+// // contains an existing trace context, then it will continue from there.
+// func StartDeliverySpan(d amqp.Delivery, opts ...Option) (context.Context, EndSpanFunc, trace.Span) {
+// 	cfg := newConfig(opts...)
 
-	return ctx, func() {
-		span.End()
-	}
-}
+// 	// set amqp message span attributes.
+// 	spanOpts := []trace.SpanOption{
+// 		trace.WithAttributes(
+// 			semconv.MessagingSystemKey.String(messagingSystem),
+// 			semconv.MessagingDestinationKindKeyQueue,
+// 			semconv.MessagingOperationReceive,
+// 			semconv.MessagingRabbitMQRoutingKeyKey.String(d.RoutingKey)),
+// 		trace.WithSpanKind(trace.SpanKindConsumer),
+// 	}
 
-// start starts a span
-// returns the new context and a function that ends the span.
-func (dspan deliverySpan) start(ctx context.Context) (context.Context, trace.Span) {
-	// If there's a span context in the message, use that as the parent context.
-	carrier := NewDeliveryCarrier(dspan.delivery)
-	parentSpanContext := dspan.cfg.Propagators.Extract(ctx, carrier)
-	log.Info(fmt.Sprintf("delivery carrier keys: %s", carrier.Keys()))
+// 	// extract context from headers, if none, the context will use Background context.
+// 	ctx := cfg.Propagators.Extract(context.Background(), HeaderCarrier(d.Headers))
 
-	// Create a span.
-	attrs := []attribute.KeyValue{
-		semconv.MessagingSystemKey.String(messagingSystem),
-		semconv.MessagingDestinationKindKeyQueue,
-		semconv.MessagingOperationReceive,
-		semconv.MessagingMessageIDKey.String(dspan.delivery.MessageId),
-		semconv.MessagingRabbitMQRoutingKeyKey.String(dspan.delivery.RoutingKey),
-	}
+// 	// start the span and and receive a new ctx containing the parent
+// 	ctx, span := cfg.Tracer.Start(ctx, deliverySpanName, spanOpts...)
 
-	opts := []trace.SpanOption{
-		trace.WithAttributes(attrs...),
-		trace.WithSpanKind(trace.SpanKindConsumer),
-	}
+// 	// Inject current span context, so consumers can use it to propagate span.
+// 	// cfg.Propagators.Inject(ctx, carrier)
 
-	// start the span and and receive a new ctx.
-	ctx, span := dspan.cfg.Tracer.Start(parentSpanContext, consumeSpanName, opts...)
-
-	// Inject current span context, so consumers can use it to propagate span.
-	dspan.cfg.Propagators.Inject(ctx, carrier)
-
-	return ctx, span
-}
+// 	// return an end func to force the user of StartDeliverySpan to call end on the span.
+// 	endFunc := span.End
+// 	return ctx, endFunc, span
+// }
