@@ -33,6 +33,7 @@ func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace
 	carrier := NewPublishingCarrier(pubspan.publishing)
 	ctx = pubspan.cfg.Propagators.Extract(ctx, carrier)
 	log.Info(fmt.Sprint(carrier.Keys()))
+	log.Info(fmt.Sprintf("Context key publishing: %s", ctx.Value("testkey")))
 
 	// Create a span.
 	attrs := []attribute.KeyValue{

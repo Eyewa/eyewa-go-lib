@@ -33,6 +33,7 @@ func (dspan deliverySpan) start(ctx context.Context) (context.Context, trace.Spa
 	carrier := NewDeliveryCarrier(dspan.delivery)
 	parentSpanContext := dspan.cfg.Propagators.Extract(ctx, carrier)
 	log.Info(fmt.Sprint(carrier.Keys()))
+	log.Info(fmt.Sprintf("Context key delivery: %s", ctx.Value("testkey")))
 
 	// Create a span.
 	attrs := []attribute.KeyValue{
