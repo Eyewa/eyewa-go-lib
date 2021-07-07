@@ -2,7 +2,9 @@ package amqp
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
@@ -30,6 +32,7 @@ func (dspan deliverySpan) start(ctx context.Context) (context.Context, trace.Spa
 	// If there's a span context in the message, use that as the parent context.
 	carrier := NewDeliveryCarrier(dspan.delivery)
 	parentSpanContext := dspan.cfg.Propagators.Extract(ctx, carrier)
+	log.Info(fmt.Sprint(carrier.Keys()))
 
 	// Create a span.
 	attrs := []attribute.KeyValue{
