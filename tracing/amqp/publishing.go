@@ -49,5 +49,5 @@ func (pubspan publishingSpan) start(ctx context.Context) (context.Context, trace
 	// Inject current span context, so publishers can use it to propagate span.
 	pubspan.cfg.Propagators.Inject(newCtx, carrier)
 
-	return ctx, span
+	return newCtx, span
 }

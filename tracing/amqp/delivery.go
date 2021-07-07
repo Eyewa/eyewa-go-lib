@@ -13,11 +13,12 @@ import (
 func StartDeliverySpan(ctx context.Context, d *amqp.Delivery, opts ...Option) (context.Context, func()) {
 	cfg := newConfig(opts...)
 	dspan := deliverySpan{
-		cfg:      cfg,
 		delivery: d,
+		cfg:      cfg,
 	}
 
 	ctx, span := dspan.start(ctx)
+
 	return ctx, func() {
 		span.End()
 	}
