@@ -1,5 +1,10 @@
 # eyewa-go-lib
-Shared Go Lib for Eyewa's microservices.
+Shared Go Lib for Eyewa's microservices
+
+## List of capabilities
+- Package to produce/consume events to/from RabbitMQ
+- Package to record metrics using OpenTelemetry
+- Package to use request tracing (for REST, gRPC and amqp)
 
 # How to use
 This is a private repository, so in order to include it in a microservice or application the following steps need to be carried out:
