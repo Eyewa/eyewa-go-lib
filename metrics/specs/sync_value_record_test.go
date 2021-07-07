@@ -1,14 +1,15 @@
 package specs
 
 import (
+	"net/http"
+	"sync"
+
 	"github.com/eyewa/eyewa-go-lib/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/common/expfmt"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"net/http"
-	"sync"
 )
 
 var _ = Describe("Given that metric launcher is launched", func() {

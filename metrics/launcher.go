@@ -1,19 +1,39 @@
 package metrics
 
 import (
+	"net/http"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/ory/viper"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/metric/global"
-	"net/http"
-	"strings"
-	"time"
 )
 
-// NewLauncher initializes MetricLauncher.
-func NewLauncher() (*Launcher, error) {
+var once sync.Once
+
+func init() {
+	once.Do(func() {
+		ml, err := newLauncher()
+		if err != nil {
+			log.Error(errors.ErrorFailedToStartMetricServer.Error())
+
+			return
+		}
+
+		ml.setMeterProvider().
+			enableHostInstrumentation().
+			enableRuntimeInstrumentation().
+			launch()
+	})
+}
+
+// newLauncher initializes MetricLauncher.
+func newLauncher() (*Launcher, error) {
 	option, err := initConfig()
 	if err != nil {
 		return nil, err
@@ -54,25 +74,25 @@ func initConfig() (ExportOption, error) {
 	return exportOption, nil
 }
 
-func (ml *Launcher) SetMeterProvider() *Launcher {
+func (ml *Launcher) setMeterProvider() *Launcher {
 	global.SetMeterProvider(ml.exporter.MeterProvider())
 	return ml
 }
 
-// EnableHostInstrumentation enables host instrumentation
-func (ml *Launcher) EnableHostInstrumentation() *Launcher {
+// enableHostInstrumentation enables host instrumentation
+func (ml *Launcher) enableHostInstrumentation() *Launcher {
 	ml.enableHostInstrument = true
 	return ml
 }
 
-// EnableRuntimeInstrumentation enables runtime instrumentation
-func (ml *Launcher) EnableRuntimeInstrumentation() *Launcher {
+// enableRuntimeInstrumentation enables runtime instrumentation
+func (ml *Launcher) enableRuntimeInstrumentation() *Launcher {
 	ml.enableRuntimeInstrument = true
 	return ml
 }
 
-// Launch starts serving metrics. Also starts Host and Runtime instruments if they are enabled.
-func (ml *Launcher) Launch() {
+// launch starts serving metrics. Also starts Host and Runtime instruments if they are enabled.
+func (ml *Launcher) launch() {
 	if ml.enableHostInstrument {
 		err := host.Start()
 		if err != nil {

@@ -1,9 +1,10 @@
 package specs
 
 import (
+	"net/http"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"net/http"
 )
 
 var _ = Describe("Given that metric launcher is launched", func() {

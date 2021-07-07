@@ -3,11 +3,12 @@ package specs
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/common/expfmt"
 	"go.opentelemetry.io/otel/metric"
-	"net/http"
 )
 
 var _ = Describe("Given that metric launcher is launched", func() {

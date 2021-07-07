@@ -1,10 +1,11 @@
 package metrics
 
 import (
-	"github.com/eyewa/eyewa-go-lib/log"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/eyewa/eyewa-go-lib/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewResource(t *testing.T) {

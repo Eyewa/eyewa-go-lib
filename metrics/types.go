@@ -2,9 +2,10 @@ package metrics
 
 import (
 	"context"
+	"time"
+
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
-	"time"
 )
 
 // Launcher is used for serving metrics.
