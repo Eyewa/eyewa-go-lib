@@ -5,7 +5,7 @@ Shared Go Lib for Eyewa's microservices
 - Packages:
   - Produce/consume events to/from RabbitMQ
   - Record metrics using OpenTelemetry
-  - Use request tracing (for REST, gRPC and amqp)
+  - Use request tracing
   - Implement a logger
   - Generate and manage uuids
   - Implement pprof
