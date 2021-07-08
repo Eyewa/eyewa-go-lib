@@ -264,16 +264,10 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 	rmq.mutex.RUnlock()
 
 	if exists && channel != nil {
-		// attempt to marshal event for publishing
-		eventJSON, err := json.Marshal(&event)
-		if err != nil {
-			_ = callback(ctx, event, err)
-			return
-		}
 
 		msg := &amqp.Publishing{
 			ContentType:  "application/json",
-			Body:         eventJSON,
+			Body:         []byte(""),
 			DeliveryMode: amqp.Persistent,
 			Headers:      amqp.Table{},
 		}
@@ -298,6 +292,17 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		// start the span and and receive a new ctx containing the parent
 		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Publish", spanOpts...)
 		defer span.End()
+
+		// attempt to marshal event for publishing
+		eventJSON, err := json.Marshal(&event)
+		if err != nil {
+			span.RecordError(err)
+			_ = callback(ctx, event, err)
+			return
+		}
+
+		msg.Body = eventJSON
+
 		// attempt to publish event
 		err = channel.Publish("", config.PublisherQueueName, false, false, *msg)
 
