@@ -177,7 +177,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			// context will use the Background context.
 			carrier := amqptracing.HeaderCarrier(msg.Headers)
 			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
-			ctx = otel.GetTextMapPropagator().Extract(context.Background(), carrier)
+			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
 			log.Debug(fmt.Sprintf("carrier after extract: %v", carrier.Keys()))
 
 			// start the span and and receive a new ctx containing the parent
