@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/eyewa/eyewa-go-lib/base"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -20,8 +22,9 @@ import (
 )
 
 var (
-	config        Config
-	exchangeTypes = map[string]string{
+	config          Config
+	standardMetrics *RabbitMQMetrics
+	exchangeTypes   = map[string]string{
 		amqp.ExchangeDirect:  amqp.ExchangeDirect,
 		amqp.ExchangeFanout:  amqp.ExchangeFanout,
 		amqp.ExchangeHeaders: amqp.ExchangeHeaders,
@@ -82,6 +85,9 @@ func (rmq *RMQClient) Connect() error {
 	if err != nil {
 		return err
 	}
+
+	// init metrics
+	standardMetrics = NewRabbitMQMetrics()
 
 	// if no queues are specified, back off.
 	if config.ConsumerQueueName == "" && config.PublisherQueueName == "" {
@@ -167,24 +173,30 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 		var event *base.EyewaEvent
 		for msg := range msgs {
+			started := time.Now()
 			// start tracing
 			ctx, endSpan = amqptracing.StartDeliverySpan(ctx, msg)
+
+			go standardMetrics.ActiveConsumingEventCounter.Add(1)
 
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
+				go standardMetrics.FailedConsumedEventCounter.Add(1, attribute.Any("err", errMsg.Error()))
 				_ = callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
+					go standardMetrics.FailedConsumedEventCounter.Add(1, attribute.Any("err", err.Error()))
 					_ = callback(ctx, nil, err)
 				}
 
 				// publish message to DL
 				err := rmq.sendToDeadletterQueue(msg, errMsg)
 				if err != nil {
+					go standardMetrics.FailedConsumedEventCounter.Add(1, attribute.Any("err", err.Error()))
 					_ = callback(ctx, nil, err)
 				}
 			} else {
@@ -205,8 +217,13 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 							zap.String("event", string(msg.Body)),
 							zap.Error(err))
 					}
+
+					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_type", event.Name))
 				}
 			}
+
+			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
 		}
 	}
 }
@@ -244,6 +261,7 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		// attempt to marshal event for publishing
 		eventJSON, err := json.Marshal(&event)
 		if err != nil {
+			go standardMetrics.FailedPublishedEventCounter.Add(1, attribute.Any("err", err.Error()))
 			_ = callback(ctx, event, err)
 			return
 		}
@@ -262,8 +280,11 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
 		if err != nil {
 			_ = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+			go standardMetrics.FailedPublishedEventCounter.Add(1, attribute.Any("event_type", event.Name))
+			return
 		}
 
+		go standardMetrics.PublishedEventCounter.Add(1, attribute.Any("event_type", event.Name))
 		_ = callback(ctx, event, nil)
 		return
 	}
@@ -406,7 +427,7 @@ func (rmq *RMQClient) CreateNewChannel(queue string) (*amqp.Channel, error) {
 // QueueInspect inspects a queue and returns no. of consumers + messages
 // currently unacked.
 func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
-	var inspect = make(map[string]int, 2)
+	inspect := make(map[string]int, 2)
 
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]

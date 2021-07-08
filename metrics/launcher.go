@@ -1,9 +1,9 @@
 package metrics
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/eyewa/eyewa-go-lib/errors"
@@ -14,22 +14,18 @@ import (
 	"go.opentelemetry.io/otel/metric/global"
 )
 
-var once sync.Once
-
 func init() {
-	once.Do(func() {
-		ml, err := newLauncher()
-		if err != nil {
-			log.Error(errors.ErrorFailedToStartMetricServer.Error())
+	ml, err := newLauncher()
+	if err != nil {
+		log.Error(fmt.Sprintf(errors.ErrorFailedToStartMetricServer.Error(), err.Error()))
 
-			return
-		}
+		return
+	}
 
-		ml.setMeterProvider().
-			enableHostInstrumentation().
-			enableRuntimeInstrumentation().
-			launch()
-	})
+	ml.setMeterProvider().
+		enableHostInstrumentation().
+		enableRuntimeInstrumentation().
+		launch()
 }
 
 // newLauncher initializes MetricLauncher.
@@ -67,7 +63,9 @@ func initConfig() (ExportOption, error) {
 			return exportOption, err
 		}
 	}
-	if err := viper.Unmarshal(&exportOption); err != nil {
+
+	err := viper.Unmarshal(&exportOption)
+	if err != nil {
 		return exportOption, err
 	}
 
@@ -76,18 +74,21 @@ func initConfig() (ExportOption, error) {
 
 func (ml *Launcher) setMeterProvider() *Launcher {
 	global.SetMeterProvider(ml.exporter.MeterProvider())
+
 	return ml
 }
 
 // enableHostInstrumentation enables host instrumentation
 func (ml *Launcher) enableHostInstrumentation() *Launcher {
 	ml.enableHostInstrument = true
+
 	return ml
 }
 
 // enableRuntimeInstrumentation enables runtime instrumentation
 func (ml *Launcher) enableRuntimeInstrumentation() *Launcher {
 	ml.enableRuntimeInstrument = true
+
 	return ml
 }
 
