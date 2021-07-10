@@ -183,20 +183,20 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
-				go standardMetrics.FailedConsumedEventCounter.Add(1, attribute.Any("err", errMsg.Error()))
+				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
 				_ = callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
-					go standardMetrics.FailedConsumedEventCounter.Add(1, attribute.Any("err", err.Error()))
+					go standardMetrics.NackFailureCounter.Add(1)
 					_ = callback(ctx, nil, err)
 				}
 
 				// publish message to DL
 				err := rmq.sendToDeadletterQueue(msg, errMsg)
 				if err != nil {
-					go standardMetrics.FailedConsumedEventCounter.Add(1, attribute.Any("err", err.Error()))
+					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 					_ = callback(ctx, nil, err)
 				}
 			} else {
@@ -218,7 +218,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 							zap.Error(err))
 					}
 
-					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_type", event.Name))
+					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 				}
 			}
 
@@ -261,7 +261,7 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		// attempt to marshal event for publishing
 		eventJSON, err := json.Marshal(&event)
 		if err != nil {
-			go standardMetrics.FailedPublishedEventCounter.Add(1, attribute.Any("err", err.Error()))
+			go standardMetrics.MarshalEventFailureCounter.Add(1)
 			_ = callback(ctx, event, err)
 			return
 		}
@@ -280,11 +280,11 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
 		if err != nil {
 			_ = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
-			go standardMetrics.FailedPublishedEventCounter.Add(1, attribute.Any("event_type", event.Name))
+			go standardMetrics.PublishEventFailureCounter.Add(1, attribute.Any("event_name", event.Name))
 			return
 		}
 
-		go standardMetrics.PublishedEventCounter.Add(1, attribute.Any("event_type", event.Name))
+		go standardMetrics.PublishedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 		_ = callback(ctx, event, nil)
 		return
 	}

@@ -11,15 +11,20 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
+// RabbitMQMetrics is a collection of standart metrics
 type RabbitMQMetrics struct {
-	PublishedEventCounter        *metrics.Counter
-	FailedPublishedEventCounter  *metrics.Counter
-	ConsumedEventCounter         *metrics.Counter
-	FailedConsumedEventCounter   *metrics.Counter
-	ActiveConsumingEventCounter  *metrics.UpDownCounter
-	ConsumedEventLatencyRecorder *metrics.ValueRecorder
+	PublishedEventCounter           *metrics.Counter
+	PublishEventFailureCounter      *metrics.Counter
+	ConsumedEventCounter            *metrics.Counter
+	UnmarshalEventFailureCounter    *metrics.Counter
+	MarshalEventFailureCounter      *metrics.Counter
+	NackFailureCounter              *metrics.Counter
+	DeadletterPublishFailureCounter *metrics.Counter
+	ActiveConsumingEventCounter     *metrics.UpDownCounter
+	ConsumedEventLatencyRecorder    *metrics.ValueRecorder
 }
 
+// NewRabbitMQMetrics creates a instance of RabbitMQMetrics
 func NewRabbitMQMetrics() *RabbitMQMetrics {
 	meter := metrics.NewMeter("rabbitmq.meter", context.Background())
 
@@ -29,7 +34,7 @@ func NewRabbitMQMetrics() *RabbitMQMetrics {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	failedPublishedEventCounter, err := meter.NewCounter("failed.published.event.counter",
+	publishEventFailureCounter, err := meter.NewCounter("publish.event.failure.counter",
 		metric.WithDescription("Counts failed published events"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
@@ -41,8 +46,26 @@ func NewRabbitMQMetrics() *RabbitMQMetrics {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	failedConsumedEventCounter, err := meter.NewCounter("failed.consumed.event.counter",
-		metric.WithDescription("Counts failed consumed events"))
+	marshalEventFailureCounter, err := meter.NewCounter("marshal.event.failure.counter",
+		metric.WithDescription("Counts marshal event failures"))
+	if err != nil {
+		log.Error(errors.ErrorFailedToCreateInstrument.Error())
+	}
+
+	unmarshalEventFailureCounter, err := meter.NewCounter("unmarshal.event.failure.counter",
+		metric.WithDescription("Counts unmarshal event failures"))
+	if err != nil {
+		log.Error(errors.ErrorFailedToCreateInstrument.Error())
+	}
+
+	nackFailureCounter, err := meter.NewCounter("nack.failure.counter",
+		metric.WithDescription("Counts nack failures"))
+	if err != nil {
+		log.Error(errors.ErrorFailedToCreateInstrument.Error())
+	}
+
+	deadletterPublishFailureCounter, err := meter.NewCounter("deadletter.publish.failure.counter",
+		metric.WithDescription("Counts deadletter publishing failures"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
@@ -61,11 +84,14 @@ func NewRabbitMQMetrics() *RabbitMQMetrics {
 	}
 
 	return &RabbitMQMetrics{
-		PublishedEventCounter:        publishedEventCounter,
-		FailedPublishedEventCounter:  failedPublishedEventCounter,
-		ConsumedEventCounter:         consumedEventCounter,
-		FailedConsumedEventCounter:   failedConsumedEventCounter,
-		ActiveConsumingEventCounter:  activeConsumingEventCounter,
-		ConsumedEventLatencyRecorder: consumedEventLatencyRecorder,
+		PublishedEventCounter:           publishedEventCounter,
+		PublishEventFailureCounter:      publishEventFailureCounter,
+		ConsumedEventCounter:            consumedEventCounter,
+		MarshalEventFailureCounter:      marshalEventFailureCounter,
+		UnmarshalEventFailureCounter:    unmarshalEventFailureCounter,
+		NackFailureCounter:              nackFailureCounter,
+		DeadletterPublishFailureCounter: deadletterPublishFailureCounter,
+		ActiveConsumingEventCounter:     activeConsumingEventCounter,
+		ConsumedEventLatencyRecorder:    consumedEventLatencyRecorder,
 	}
 }
