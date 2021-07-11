@@ -285,9 +285,9 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		// context will use the Background context.
 		carrier := amqptracing.HeaderCarrier(msg.Headers)
 
-		log.Debug(fmt.Sprintf("carrier before inject: %v", carrier.Keys()))
+		log.Debug(fmt.Sprintf("Injecting trace context into rabbitmq Table headers"), zap.Any("headers", carrier.Keys()))
 		otel.GetTextMapPropagator().Inject(ctx, carrier)
-		log.Debug(fmt.Sprintf("carrier after inject: %v", carrier.Keys()))
+		log.Debug(fmt.Sprintf("Trace context injected into rabbitmq Table headers"), zap.Any("headers", carrier.Keys()))
 
 		// start the span and and receive a new ctx containing the parent
 		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Publish", spanOpts...)
