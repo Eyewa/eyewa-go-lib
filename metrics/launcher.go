@@ -54,6 +54,8 @@ func initConfig() (ExportOption, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.SetDefault("METRICS_COLLECTOR_INTERVAL", "10s")
 
+	log.SetLogLevel()
+
 	envVars := []string{
 		"METRICS_COLLECTOR_INTERVAL",
 	}
