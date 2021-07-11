@@ -9,7 +9,7 @@ import (
 )
 
 // Launcher is used for serving metrics.
-type Launcher struct {
+type launcher struct {
 	exporter                *prometheus.Exporter
 	enableHostInstrument    bool
 	enableRuntimeInstrument bool
