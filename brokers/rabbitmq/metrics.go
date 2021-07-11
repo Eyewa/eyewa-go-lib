@@ -34,49 +34,49 @@ func NewRabbitMQMetrics() *RabbitMQMetrics {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	publishEventFailureCounter, err := meter.NewCounter("publish.event.failure.counter",
+	publishEventFailureCounter, err := meter.NewCounter("rabbitmq.publish.event.failure.counter",
 		metric.WithDescription("Counts failed published events"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	consumedEventCounter, err := meter.NewCounter("consumed.event.counter",
+	consumedEventCounter, err := meter.NewCounter("rabbitmq.consumed.event.counter",
 		metric.WithDescription("Counts consumed events"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	marshalEventFailureCounter, err := meter.NewCounter("marshal.event.failure.counter",
+	marshalEventFailureCounter, err := meter.NewCounter("rabbitmq.marshal.event.failure.counter",
 		metric.WithDescription("Counts marshal event failures"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	unmarshalEventFailureCounter, err := meter.NewCounter("unmarshal.event.failure.counter",
+	unmarshalEventFailureCounter, err := meter.NewCounter("rabbitmq.unmarshal.event.failure.counter",
 		metric.WithDescription("Counts unmarshal event failures"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	nackFailureCounter, err := meter.NewCounter("nack.failure.counter",
+	nackFailureCounter, err := meter.NewCounter("rabbitmq.nack.failure.counter",
 		metric.WithDescription("Counts nack failures"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	deadletterPublishFailureCounter, err := meter.NewCounter("deadletter.publish.failure.counter",
+	deadletterPublishFailureCounter, err := meter.NewCounter("rabbitmq.deadletter.publish.failure.counter",
 		metric.WithDescription("Counts deadletter publishing failures"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	activeConsumingEventCounter, err := meter.NewUpDownCounter("active.consuming.event.counter",
+	activeConsumingEventCounter, err := meter.NewUpDownCounter("rabbitmq.active.consuming.event.counter",
 		metric.WithDescription("Counts active consuming events"))
 	if err != nil {
 		log.Error(errors.ErrorFailedToCreateInstrument.Error())
 	}
 
-	consumedEventLatencyRecorder, err := meter.NewValueRecorder("consumed.event.latency.recorder",
+	consumedEventLatencyRecorder, err := meter.NewValueRecorder("rabbitmq.consumed.event.latency.recorder",
 		metric.WithUnit(unit.Milliseconds),
 		metric.WithDescription("Records consumed event latency"))
 	if err != nil {
