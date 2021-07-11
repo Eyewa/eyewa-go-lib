@@ -153,7 +153,10 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 	if exists && channel != nil {
 		log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
-
+		defer func() {
+			// reaching here means the connection meant to be long lived has died.
+			_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
+		}()
 		// attempt to consume events from broker
 		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 		if err != nil {
@@ -231,9 +234,6 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			span.End()
 		}
 	}
-
-	// reaching here means the connection meant to be long lived has died.
-	_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
 }
 
 // Publish publishes a message to a queue
