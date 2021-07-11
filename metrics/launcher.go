@@ -58,6 +58,7 @@ func initConfig() (ExportOption, error) {
 
 	envVars := []string{
 		"METRICS_COLLECTOR_INTERVAL",
+		"SERVICE_NAME",
 	}
 
 	for _, v := range envVars {
