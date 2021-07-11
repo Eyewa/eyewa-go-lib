@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-// RabbitMQMetrics is a collection of standart metrics
+// RabbitMQMetrics is a collection of standard metrics
 type RabbitMQMetrics struct {
 	PublishedEventCounter           *metrics.Counter
 	PublishEventFailureCounter      *metrics.Counter
