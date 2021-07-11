@@ -9,11 +9,11 @@ import (
 )
 
 // constructs a new Resource with attributes.
-func newResource(option ExportOption) (*resource.Resource, error) {
+func newResource(option exportOption) (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
 	attributes = append(attributes,
-		semconv.ServiceNameKey.String(option.ServiceName),
+		semconv.ServiceNameKey.String(option.serviceName),
 	)
 
 	// These detectors can't actually fail, ignoring the error.

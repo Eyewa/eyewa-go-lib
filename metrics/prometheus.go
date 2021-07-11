@@ -11,7 +11,7 @@ import (
 )
 
 // newPrometheusExporter creates a new PrometheusExporter with given ExportOption
-func newPrometheusExporter(option ExportOption) (*prometheus.Exporter, error) {
+func newPrometheusExporter(option exportOption) (*prometheus.Exporter, error) {
 	config := prometheus.Config{}
 
 	resource, err := newResource(option)
@@ -27,7 +27,7 @@ func newPrometheusExporter(option ExportOption) (*prometheus.Exporter, error) {
 			export.CumulativeExportKindSelector(),
 			processor.WithMemory(true),
 		),
-		controller.WithCollectPeriod(option.CollectPeriod),
+		controller.WithCollectPeriod(option.collectPeriod),
 		controller.WithResource(resource),
 	)
 

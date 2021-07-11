@@ -47,8 +47,8 @@ func newLauncher() (*launcher, error) {
 	}, nil
 }
 
-func initConfig() (ExportOption, error) {
-	var exportOption ExportOption
+func initConfig() (exportOption, error) {
+	var option exportOption
 
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -63,16 +63,16 @@ func initConfig() (ExportOption, error) {
 
 	for _, v := range envVars {
 		if err := viper.BindEnv(v); err != nil {
-			return exportOption, err
+			return option, err
 		}
 	}
 
-	err := viper.Unmarshal(&exportOption)
+	err := viper.Unmarshal(&option)
 	if err != nil {
-		return exportOption, err
+		return option, err
 	}
 
-	return exportOption, nil
+	return option, nil
 }
 
 func (l *launcher) setMeterProvider() *launcher {
