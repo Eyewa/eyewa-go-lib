@@ -21,5 +21,9 @@ func newResource(ctx context.Context) (*resource.Resource, error) {
 		resource.WithAttributes(attributes...),
 	)
 
-	return r, err
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }

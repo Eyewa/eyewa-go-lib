@@ -1,6 +1,7 @@
 package tracing
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -11,7 +12,7 @@ import (
 )
 
 // constructs a new Open Telemetry Exporter.
-func newOtelExporter() (*otlp.Exporter, error) {
+func newOtelExporter(ctx context.Context) (*otlp.Exporter, error) {
 	// configures exporter secure option
 	var secureOpt otlpgrpc.Option
 	if config.TracingSecureExporter {
@@ -19,6 +20,7 @@ func newOtelExporter() (*otlp.Exporter, error) {
 	} else {
 		secureOpt = otlpgrpc.WithInsecure()
 	}
+
 	log.Debug(fmt.Sprintf("Setting secure option for tracing exporter: %v", config.TracingSecureExporter))
 
 	// configures exporter blocking option
@@ -30,13 +32,21 @@ func newOtelExporter() (*otlp.Exporter, error) {
 	} else {
 		blockingOpt = otlpgrpc.WithDialOption()
 	}
+
 	log.Debug(fmt.Sprintf("Setting blocking option for tracing exporter: %v", config.TracingBlockExporter))
 
-	return otlp.NewUnstartedExporter(
+	// start the exporter
+	exporter, err := otlp.NewExporter(ctx,
 		otlpgrpc.NewDriver(
 			secureOpt,
 			blockingOpt,
 			otlpgrpc.WithEndpoint(config.TracingExporterEndpoint),
 		),
-	), nil
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return exporter, nil
 }

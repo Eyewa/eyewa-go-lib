@@ -1,6 +1,7 @@
 package brokers
 
 import (
+	"context"
 	"sync"
 
 	"github.com/eyewa/eyewa-go-lib/base"
@@ -36,8 +37,8 @@ func (mock *ClientMock) ConnectionListener() {
 	mock.Called()
 }
 
-func (mock *ClientMock) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
-	mock.Called(queue, event, callback, wg)
+func (mock *ClientMock) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+	mock.Called(ctx, queue, event, callback, wg)
 }
 
 func (mock *ClientMock) Consume(queue string, callback base.MessageBrokerCallbackFunc) {

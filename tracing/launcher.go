@@ -13,7 +13,8 @@ import (
 
 	"github.com/ory/viper"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 var (
@@ -60,7 +61,7 @@ func initConfig() (Config, error) {
 		return config, errors.ErrorNoExporterEndpointSpecified
 	}
 
-	log.Debug(fmt.Sprintf("Tracing config initialised: %v", config))
+	log.Debug(fmt.Sprintf("Tracing config initialised: %+v \n", config))
 	return config, nil
 }
 
@@ -71,98 +72,65 @@ func Launch() (ShutdownFunc, error) {
 	shutdownfunc := func() error {
 		return nil
 	}
-	var err error
-	_, err = initConfig()
+
+	// initialize the global configuration
+	_, err := initConfig()
 	if err != nil {
-		return shutdownfunc, fmt.Errorf("Failed to init tracing config: %v", err)
+		return shutdownfunc, fmt.Errorf("Failed to initialize tracing configuration: %v", err)
 	}
 
-	exp, err := newOtelExporter()
-	if err != nil {
-		return shutdownfunc, err
-	}
-
-	res, err := newResource(ctx)
-	if err != nil {
-		return shutdownfunc, err
-	}
-
-	var processors []trace.SpanProcessor
-	bsp := trace.NewBatchSpanProcessor(exp)
-	processors = append(processors, bsp)
-
-	tp := trace.NewTracerProvider(
-		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithResource(res),
-		trace.WithSpanProcessor(bsp),
-	)
-
-	registerPropagators()
-	otel.SetTracerProvider(tp)
-
-	l := &launcher{
-		exporter:  exp,
-		resource:  res,
-		spanprocs: processors,
-		provider:  tp,
-	}
-
-	if err = l.launch(ctx); err != nil {
-		log.Error(fmt.Sprintf("Failed to launch tracing launcher: %v", err))
-		l.shutdown(ctx)
-		return shutdownfunc, err
-	}
-
+	// setup and connect to the open telemetry collector
+	exp, err := newOtelExporter(ctx)
 	shutdownfunc = func() error {
-		if err := l.shutdown(ctx); err != nil {
-			log.Error(fmt.Sprintf("Failed to shutdown tracing launcher: %v", err))
+		if err := exp.Shutdown(ctx); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	return shutdownfunc, nil
-}
-
-// launch initiates the connection to the exporter.
-func (tl *launcher) launch(ctx context.Context) error {
-	log.Debug("Launching tracing launcher.")
-	if err := tl.exporter.Start(ctx); err != nil {
-		log.Error(fmt.Sprintf("Failed to start tracing exporter: %v", err))
-		return err
-	}
-	return nil
-}
-
-// shutdown shuts down underlying connections.
-func (tl *launcher) shutdown(ctx context.Context) error {
-	var err error
-
-	// shutdown the exporter.
-	if tl.exporter != nil {
-		log.Debug("Shutting down tracing exporter.")
-		if err = tl.exporter.Shutdown(ctx); err != nil {
-			log.Error(fmt.Sprintf("Failed to shutdown tracing exporter: %v", err))
-		}
+	if err != nil {
+		return shutdownfunc, err
 	}
 
-	// shutdown span processors.
-	if len(tl.spanprocs) > 0 {
-		for _, proc := range tl.spanprocs {
-			log.Debug("Shutting down tracing processors.")
-			if err = proc.Shutdown(ctx); err != nil {
-				log.Error(fmt.Sprintf("Failed to shutdown tracing span processor: %v", err))
+	// setup the resource from which the trace comes from
+	res, err := newResource(ctx)
+	if err != nil {
+		return shutdownfunc, err
+	}
+
+	// setup a tracer provider
+	tracerProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithResource(res),
+		sdktrace.WithSpanProcessor(sdktrace.NewBatchSpanProcessor(exp)),
+	)
+
+	// set globals for propagation and the trace provider
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+	otel.SetTracerProvider(tracerProvider)
+
+	shutdownfunc = func() error {
+		var err error
+
+		// shutdown the tracer provider.
+		// this already shuts down all underlying processors.
+		if tracerProvider != nil {
+			log.Debug("Shutting down tracing provider")
+			if err = tracerProvider.Shutdown(ctx); err != nil {
+				log.Error(fmt.Sprintf("Failed to shutdown tracing provider: %v", err))
 			}
 		}
-	}
 
-	// shutdown the tracer provider.
-	if tl.provider != nil {
-		log.Debug("Shutting down tracing provider")
-		if err = tl.provider.Shutdown(ctx); err != nil {
-			log.Error(fmt.Sprintf("Failed to shutdown tracing provider: %v", err))
+		// shutdown the exporter.
+		if exp != nil {
+			log.Debug("Shutting down tracing exporter.")
+			if err = exp.Shutdown(ctx); err != nil {
+				log.Error(fmt.Sprintf("Failed to shutdown tracing exporter: %v", err))
+			}
 		}
+
+		return err
 	}
 
-	return err
+	return shutdownfunc, nil
 }
