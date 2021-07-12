@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/semconv"
 )
 
-// constructs a new Resource with attributes.
+// newResource constructs a new Resource with attributes.
 func newResource(option exportOption) (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 

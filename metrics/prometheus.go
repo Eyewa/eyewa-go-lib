@@ -10,7 +10,7 @@ import (
 	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
-// newPrometheusExporter creates a new PrometheusExporter with given ExportOption
+// newPrometheusExporter creates a new PrometheusExporter with given exportOption
 func newPrometheusExporter(option exportOption) (*prometheus.Exporter, error) {
 	config := prometheus.Config{}
 

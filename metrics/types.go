@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-// Launcher is used for serving metrics.
+// launcher is used for serving metrics.
 type launcher struct {
 	exporter                *prometheus.Exporter
 	enableHostInstrument    bool
@@ -22,7 +22,7 @@ type Meter struct {
 	ctx context.Context
 }
 
-// ExportOption is configuration for MetricLauncher.
+// exportOption is configuration for launcher.
 type exportOption struct {
 	serviceName string `mapstructure:"SERVICE_NAME"`
 
