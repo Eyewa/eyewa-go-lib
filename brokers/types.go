@@ -1,6 +1,7 @@
 package brokers
 
 import (
+	"context"
 	"sync"
 
 	"github.com/eyewa/eyewa-go-lib/base"
@@ -54,5 +55,5 @@ type Consumer interface {
 type Publisher interface {
 	Connect() error
 	CloseConnection() error
-	Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup)
+	Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup)
 }

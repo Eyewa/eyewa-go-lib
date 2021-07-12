@@ -9,7 +9,7 @@ import (
 )
 
 // constructs a new Resource with attributes.
-func newResource() (*resource.Resource, error) {
+func newResource(ctx context.Context) (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
 	attributes = append(attributes,
@@ -17,11 +17,13 @@ func newResource() (*resource.Resource, error) {
 		semconv.HostNameKey.String(config.HostName),
 	)
 
-	// These detectors can't actually fail, ignoring the error.
-	r, err := resource.New(
-		context.Background(),
+	r, err := resource.New(ctx,
 		resource.WithAttributes(attributes...),
 	)
 
-	return r, err
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
