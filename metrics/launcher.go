@@ -14,6 +14,11 @@ import (
 	"go.opentelemetry.io/otel/metric/global"
 )
 
+const (
+	PORT         = ":2222"
+	HANDLER_PATH = "/"
+)
+
 func init() {
 	l, err := newLauncher()
 	if err != nil {
@@ -111,7 +116,7 @@ func (l *launcher) launch() {
 		}
 	}
 
-	http.HandleFunc("/", l.exporter.ServeHTTP)
+	http.HandleFunc(HANDLER_PATH, l.exporter.ServeHTTP)
 
 	go func() {
 		defer func() {
@@ -120,7 +125,7 @@ func (l *launcher) launch() {
 			}
 		}()
 
-		err := http.ListenAndServe(":2222", nil)
+		err := http.ListenAndServe(PORT, nil)
 		if err != nil {
 			log.Error(fmt.Sprintf(errors.ErrorFailedToStartMetricServer.Error(), err.Error()))
 		}
