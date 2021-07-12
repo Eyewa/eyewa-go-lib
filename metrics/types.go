@@ -2,13 +2,14 @@ package metrics
 
 import (
 	"context"
+	"time"
+
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
-	"time"
 )
 
-// Launcher is used for serving metrics.
-type Launcher struct {
+// launcher is used for serving metrics.
+type launcher struct {
 	exporter                *prometheus.Exporter
 	enableHostInstrument    bool
 	enableRuntimeInstrument bool
@@ -21,12 +22,12 @@ type Meter struct {
 	ctx context.Context
 }
 
-// ExportOption is configuration for MetricLauncher.
-type ExportOption struct {
-	ServiceName string `mapstructure:"SERVICE_NAME"`
+// exportOption is configuration for launcher.
+type exportOption struct {
+	serviceName string `mapstructure:"SERVICE_NAME"`
 
 	// CollectPeriod sets period interval of exporting process.
-	CollectPeriod time.Duration `mapstructure:"METRIC_COLLECT_PERIOD"`
+	collectPeriod time.Duration `mapstructure:"METRIC_COLLECT_PERIOD"`
 }
 
 // Counter is counter instrument accumulates float64 values

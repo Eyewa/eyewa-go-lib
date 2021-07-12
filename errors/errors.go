@@ -33,7 +33,7 @@ var (
 	ErrorFailedToInitPrometheusExporter = errors.New("Failed to initialize prometheus exporter.")
 	ErrorFailedToStartRuntimeMetrics    = errors.New("Failed to start runtime metrics.")
 	ErrorFailedToStartHostMetrics       = errors.New("Failed to start host metrics.")
-	ErrorFailedToStartMetricServer      = errors.New("Failed to start metric server.")
+	ErrorFailedToStartMetricServer      = errors.New("Failed to start metric server. Error is %s")
 	ErrorFailedToCreateInstrument       = errors.New("Failed to create instrument.")
 
 	// DBClient errors
