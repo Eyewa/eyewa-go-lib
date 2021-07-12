@@ -18,6 +18,9 @@ import (
 	amqptracing "github.com/eyewa/eyewa-go-lib/tracing/amqp"
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/semconv"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -31,6 +34,8 @@ var (
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
 	}
 	defaultPrefetchCount = 5
+	tracerName           = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
+	messagingSystem      = "RabbitMQ"
 )
 
 func initConfig() (Config, string, error) {
@@ -126,15 +131,10 @@ func (rmq *RMQClient) Connect() error {
 
 // Consume consumes messages from a queue
 func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
-	var (
-		ctx     = context.Background()
-		endSpan func()
-	)
-
+	ctx := context.Background()
 	defer func() {
 		// reaching here means the connection meant to be long lived has died.
 		_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
-		defer endSpan()
 	}()
 
 	rmq.mutex.RLock()
@@ -174,8 +174,25 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 		var event *base.EyewaEvent
 		for msg := range msgs {
 			started := time.Now()
-			// start tracing
-			ctx, endSpan = amqptracing.StartDeliverySpan(ctx, msg)
+			// set amqp message span attributes.
+			spanOpts := []trace.SpanOption{
+				trace.WithAttributes(
+					semconv.MessagingSystemKey.String(messagingSystem),
+					semconv.MessagingDestinationKindKeyQueue,
+					semconv.MessagingOperationReceive,
+					semconv.MessagingRabbitMQRoutingKeyKey.String(msg.RoutingKey)),
+				trace.WithSpanKind(trace.SpanKindConsumer),
+			}
+
+			// extract context from headers, if none, the
+			// context will use the Background context.
+			carrier := amqptracing.HeaderCarrier(msg.Headers)
+			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
+			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+			log.Debug(fmt.Sprintf("carrier after extract: %v", carrier.Keys()))
+
+			// start the span and and receive a new ctx containing the parent
+			ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Consume", spanOpts...)
 
 			go standardMetrics.ActiveConsumingEventCounter.Add(1)
 
@@ -184,12 +201,14 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
 				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
+				span.RecordError(err)
 				_ = callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
 					go standardMetrics.NackFailureCounter.Add(1)
+					span.RecordError(err)
 					_ = callback(ctx, nil, err)
 				}
 
@@ -197,15 +216,19 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 				err := rmq.sendToDeadletterQueue(msg, errMsg)
 				if err != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
+					span.RecordError(err)
 					_ = callback(ctx, nil, err)
 				}
 			} else {
 				// ONLY ack message once there is no error from callback.
 				if err := callback(ctx, event, nil); err == nil {
+					span.RecordError(err)
 					if err = msg.Ack(false); err != nil {
+						span.RecordError(err)
 						// nack message and push back to queue
 						err = msg.Nack(false, true)
 						if err != nil {
+							span.RecordError(err)
 							log.Error(libErrs.ErrorNackFailure.Error(),
 								zap.String("queue", queue),
 								zap.String("event", string(msg.Body)),
@@ -221,22 +244,22 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 				}
 			}
-
 			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
 			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+			// manually end span since this is a
+			// long lived function and will never end.
+			span.End()
 		}
 	}
 }
 
 // Publish publishes a message to a queue
-func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
-
-	ctx := context.Background()
 
 	// determine if channel exists for queue
 	if !exists && channel == nil {
@@ -258,35 +281,65 @@ func (rmq *RMQClient) Publish(queue string, event *base.EyewaEvent, callback bas
 	rmq.mutex.RUnlock()
 
 	if exists && channel != nil {
+
+		msg := &amqp.Publishing{
+			ContentType:  "application/json",
+			Body:         []byte(""),
+			DeliveryMode: amqp.Persistent,
+			Headers:      amqp.Table{},
+		}
+
+		// set amqp message span attributes.
+		spanOpts := []trace.SpanOption{
+			trace.WithAttributes(
+				semconv.MessagingSystemKey.String(messagingSystem),
+				semconv.MessagingDestinationKindKeyQueue,
+				semconv.MessagingRabbitMQRoutingKeyKey.String(config.PublisherQueueName)),
+			trace.WithSpanKind(trace.SpanKindProducer),
+		}
+
+		// inject context into headers, if none, the
+		// context will use the Background context.
+		carrier := amqptracing.HeaderCarrier(msg.Headers)
+
+		log.Debug(fmt.Sprintf("Injecting trace context into rabbitmq Table headers"), zap.Any("headers", carrier.Keys()))
+		otel.GetTextMapPropagator().Inject(ctx, carrier)
+		log.Debug(fmt.Sprintf("Trace context injected into rabbitmq Table headers"), zap.Any("headers", carrier.Keys()))
+
+		// start the span and and receive a new ctx containing the parent
+		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Publish", spanOpts...)
+		defer span.End()
+
 		// attempt to marshal event for publishing
 		eventJSON, err := json.Marshal(&event)
 		if err != nil {
 			go standardMetrics.MarshalEventFailureCounter.Add(1)
+			span.RecordError(err)
 			_ = callback(ctx, event, err)
 			return
 		}
 
-		msg := amqp.Publishing{
-			ContentType:  "application/json",
-			Body:         eventJSON,
-			DeliveryMode: amqp.Persistent,
-		}
-
-		// start tracing the publishing span
-		ctx, endSpan := amqptracing.StartPublishingSpan(ctx, msg)
-		defer endSpan()
+		msg.Body = eventJSON
 
 		// attempt to publish event
-		err = channel.Publish("", config.PublisherQueueName, false, false, msg)
+		err = channel.Publish("", config.PublisherQueueName, false, false, *msg)
+
 		if err != nil {
-			_ = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
 			go standardMetrics.PublishEventFailureCounter.Add(1, attribute.Any("event_name", event.Name))
+			span.RecordError(err)
+			err = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+			if err != nil {
+				span.RecordError(err)
+			}
 			return
 		}
 
 		go standardMetrics.PublishedEventCounter.Add(1, attribute.Any("event_name", event.Name))
-		_ = callback(ctx, event, nil)
-		return
+		// record the callback failing
+		err = callback(ctx, event, nil)
+		if err != nil {
+			span.RecordError(err)
+		}
 	}
 }
 

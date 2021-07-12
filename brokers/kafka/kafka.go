@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"sync"
 
 	"github.com/eyewa/eyewa-go-lib/base"
@@ -19,7 +20,7 @@ func (kafka *KafkaClient) ConnectionListener() {
 	//
 }
 
-func (kafka *KafkaClient) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+func (kafka *KafkaClient) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	//
 }
 
