@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	PORT         = ":2222"
-	HANDLER_PATH = "/"
+	Port        = ":2222"
+	HandlerPath = "/"
 )
 
 func init() {
@@ -116,7 +116,7 @@ func (l *launcher) launch() {
 		}
 	}
 
-	http.HandleFunc(HANDLER_PATH, l.exporter.ServeHTTP)
+	http.HandleFunc(HandlerPath, l.exporter.ServeHTTP)
 
 	go func() {
 		defer func() {
@@ -125,7 +125,7 @@ func (l *launcher) launch() {
 			}
 		}()
 
-		err := http.ListenAndServe(PORT, nil)
+		err := http.ListenAndServe(Port, nil)
 		if err != nil {
 			log.Error(fmt.Sprintf(errors.ErrorFailedToStartMetricServer.Error(), err.Error()))
 		}
