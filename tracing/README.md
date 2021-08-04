@@ -2,6 +2,9 @@
 
 Shared Go Lib for Eyewa's microservices.
 
+## How tracing works
+ https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1978564609/How+Tracing+Works
+
 ## tracing
 
 This package enables Open Telemetry as the global tracing provider. It provides an endpoint where all services using the 'EXPORTER_ENDPOINT' env variable can send their trace payloads to. A user of this package is able to view traces on Grafana Tempo once a trace has been exported.
