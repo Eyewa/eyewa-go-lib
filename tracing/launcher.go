@@ -65,7 +65,8 @@ func initConfig() (Config, error) {
 	return config, nil
 }
 
-// Launch launches a tracing environment and returns a
+// Launch launches a tracing environment that that enables
+// tracing on all instrumented golib packages and returns a
 // function to shutdown.
 func Launch() (ShutdownFunc, error) {
 	ctx := context.Background()
