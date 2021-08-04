@@ -4,8 +4,8 @@ Shared Go Lib for Eyewa's microservices.
 
 ## Docs
 
-[How tracing works](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1978564609/How+Tracing+Works)
-[Tracing RabbitMQ](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1880981528/RabbitMQ+Tracing)
+- [How tracing works](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1978564609/How+Tracing+Works)
+- [Tracing within the RabbitMQ Client](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1880981528/RabbitMQ+Tracing)
 
 ## tracing
 
