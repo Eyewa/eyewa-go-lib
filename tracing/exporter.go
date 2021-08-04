@@ -27,7 +27,6 @@ func newOtelExporter(ctx context.Context) (*otlp.Exporter, error) {
 	var blockingOpt otlpgrpc.Option
 	if config.TracingBlockExporter {
 		blockingOpt = otlpgrpc.WithDialOption(
-			grpc.WithTimeout(exporterTimeout),
 			grpc.WithBlock(),
 		)
 	} else {
