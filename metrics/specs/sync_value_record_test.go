@@ -1,14 +1,15 @@
 package specs
 
 import (
+	"net/http"
+	"sync"
+
 	"github.com/eyewa/eyewa-go-lib/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/common/expfmt"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"net/http"
-	"sync"
 )
 
 var _ = Describe("Given that metric launcher is launched", func() {
@@ -43,7 +44,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			// First metric, second record
 			valueRecorder.Record(secondRecordValue, attribute.Any("Name", "FirstMetric"))
 
-			res, err := http.Get(URL)
+			res, err := http.Get(ts.URL)
 			Expect(err).Should(BeNil())
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
 
@@ -82,7 +83,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			// Second metric, first record
 			valueRecorder.Record(firstRecordValue, attribute.Any("Name", "SecondMetric"))
 
-			res, err := http.Get(URL)
+			res, err := http.Get(ts.URL)
 			Expect(err).Should(BeNil())
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
 

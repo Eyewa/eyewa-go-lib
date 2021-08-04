@@ -3,11 +3,12 @@ package specs
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/common/expfmt"
 	"go.opentelemetry.io/otel/metric"
-	"net/http"
 )
 
 var _ = Describe("Given that metric launcher is launched", func() {
@@ -31,7 +32,7 @@ var _ = Describe("Given that metric launcher is launched", func() {
 			)
 			Expect(err).Should(BeNil())
 
-			res, err := http.Get(URL)
+			res, err := http.Get(ts.URL)
 			Expect(err).Should(BeNil())
 			Expect(res.StatusCode).Should(Equal(http.StatusOK))
 

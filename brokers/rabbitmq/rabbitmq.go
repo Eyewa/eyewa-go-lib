@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/eyewa/eyewa-go-lib/base"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -23,8 +25,9 @@ import (
 )
 
 var (
-	config        Config
-	exchangeTypes = map[string]string{
+	config          Config
+	standardMetrics *RabbitMQMetrics
+	exchangeTypes   = map[string]string{
 		amqp.ExchangeDirect:  amqp.ExchangeDirect,
 		amqp.ExchangeFanout:  amqp.ExchangeFanout,
 		amqp.ExchangeHeaders: amqp.ExchangeHeaders,
@@ -87,6 +90,9 @@ func (rmq *RMQClient) Connect() error {
 	if err != nil {
 		return err
 	}
+
+	// init metrics
+	standardMetrics = NewRabbitMQMetrics()
 
 	// if no queues are specified, back off.
 	if config.ConsumerQueueName == "" && config.PublisherQueueName == "" {
@@ -167,6 +173,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 		var event *base.EyewaEvent
 		for msg := range msgs {
+			started := time.Now()
 			// set amqp message span attributes.
 			spanOpts := []trace.SpanOption{
 				trace.WithAttributes(
@@ -187,16 +194,20 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			// start the span and and receive a new ctx containing the parent
 			ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Consume", spanOpts...)
 
+			go standardMetrics.ActiveConsumingEventCounter.Add(1)
+
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
+				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
 				span.RecordError(err)
 				_ = callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
+					go standardMetrics.NackFailureCounter.Add(1)
 					span.RecordError(err)
 					_ = callback(ctx, nil, err)
 				}
@@ -204,6 +215,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 				// publish message to DL
 				err := rmq.sendToDeadletterQueue(msg, errMsg)
 				if err != nil {
+					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 					span.RecordError(err)
 					_ = callback(ctx, nil, err)
 				}
@@ -228,8 +240,12 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 							zap.String("event", string(msg.Body)),
 							zap.Error(err))
 					}
+
+					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 				}
 			}
+			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
 			// manually end span since this is a
 			// long lived function and will never end.
 			span.End()
@@ -297,6 +313,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		// attempt to marshal event for publishing
 		eventJSON, err := json.Marshal(&event)
 		if err != nil {
+			go standardMetrics.MarshalEventFailureCounter.Add(1)
 			span.RecordError(err)
 			_ = callback(ctx, event, err)
 			return
@@ -308,6 +325,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		err = channel.Publish("", config.PublisherQueueName, false, false, *msg)
 
 		if err != nil {
+			go standardMetrics.PublishEventFailureCounter.Add(1, attribute.Any("event_name", event.Name))
 			span.RecordError(err)
 			err = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
 			if err != nil {
@@ -316,6 +334,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 			return
 		}
 
+		go standardMetrics.PublishedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 		// record the callback failing
 		err = callback(ctx, event, nil)
 		if err != nil {
@@ -461,7 +480,7 @@ func (rmq *RMQClient) CreateNewChannel(queue string) (*amqp.Channel, error) {
 // QueueInspect inspects a queue and returns no. of consumers + messages
 // currently unacked.
 func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
-	var inspect = make(map[string]int, 2)
+	inspect := make(map[string]int, 2)
 
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]

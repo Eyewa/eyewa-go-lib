@@ -2,17 +2,18 @@ package metrics
 
 import (
 	"context"
+
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/semconv"
 )
 
-// constructs a new Resource with attributes.
-func newResource(option ExportOption) (*resource.Resource, error) {
+// newResource constructs a new Resource with attributes.
+func newResource(option exportOption) (*resource.Resource, error) {
 	var attributes []attribute.KeyValue
 
 	attributes = append(attributes,
-		semconv.ServiceNameKey.String(option.ServiceName),
+		semconv.ServiceNameKey.String(option.serviceName),
 	)
 
 	// These detectors can't actually fail, ignoring the error.

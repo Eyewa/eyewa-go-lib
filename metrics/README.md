@@ -11,51 +11,24 @@ The Metrics package consists of the following:
 - A Metrics Exporter - is used for scrapping data for Prometheus
 - A Metrics Instrumentation - any instrumentation of choice to create metrics.
 
-## How to create a metric launcher
+## How to start metric server
+When you import metrics server it will start server immediately.
+Even if it is imported in several places it will be launched once.
+
 The following variables can be injected in order to use this pkg
 ```
 SERVICE_NAME=catalogconsumer-service // for serving metrics with service_name
 METRICS_COLLECTOR_INTERVAL=20s       // optional - default is 10s if var is not provided
 ```
 
-```go
-package demo
+Metrics package will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options).
 
-import (
-	"github.com/eyewa/eyewa-go-lib/errors"
-	"github.com/eyewa/eyewa-go-lib/log"
-	"github.com/eyewa/eyewa-go-lib/metrics"
-	"go.opentelemetry.io/otel/metric"
-)
+Enables host instrumentation. See also [Host Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview).
 
-func main() {
-	ml, err := metrics.NewLauncher()
-	if err != nil {
-		log.Error(errors.ErrorFailedToStartMetricServer.Error())
-	}
+Enables runtime instrumentation. See also [Runtime Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0#pkg-overview).
 
-	ml.SetMeterProvider().
-		EnableHostInstrumentation().
-		EnableRuntimeInstrumentation().
-		Launch()
-}
-```
-It will set the Exporter's Meter Provider globally. See also [Setting Global Option](https://opentelemetry.io/docs/go/getting-started/#setting-global-options)
-```go
-ml.SetMeterProvider()
-```
-Enable host instrumentation. See also [Host Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/host@v0.20.0#pkg-overview) 
-```go
-ml.EnableHostInstrumentation()
-```
-Enable runtime instrumentation. See also [Runtime Instrumentation Metrics](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/runtime@v0.20.0#pkg-overview)
-```go
-ml.EnableRuntimeInstrumentation()
-```
-`Launch` will start the Metrics Server as a goroutine on port `2222` in order to avoid blocking the main process.
-```go
-ml.Launch()
-```
+Metrics Server will be started as a goroutine on port `2222` in order to avoid blocking the main process.
+
 ## How to create an instrument
 ```go
     //Start to create meters 
