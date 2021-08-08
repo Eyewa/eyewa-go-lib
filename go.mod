@@ -3,6 +3,8 @@ module github.com/eyewa/eyewa-go-lib
 go 1.16
 
 require (
+	github.com/InVisionApp/go-health v2.1.0+incompatible // indirect
+	github.com/InVisionApp/go-logger v1.0.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/google/uuid v1.1.2
