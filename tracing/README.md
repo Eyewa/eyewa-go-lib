@@ -2,6 +2,11 @@
 
 Shared Go Lib for Eyewa's microservices.
 
+## Docs
+
+- [How tracing works](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1978564609/How+Tracing+Works)
+- [Tracing within the RabbitMQ Client](https://eyewadxb.atlassian.net/wiki/spaces/TECH/pages/1880981528/RabbitMQ+Tracing)
+
 ## tracing
 
 This package enables Open Telemetry as the global tracing provider. It provides an endpoint where all services using the 'EXPORTER_ENDPOINT' env variable can send their trace payloads to. A user of this package is able to view traces on Grafana Tempo once a trace has been exported.
@@ -21,7 +26,7 @@ This package enables Open Telemetry as the global tracing provider. It provides 
 
 ```go
 SERVICE_NAME // Name of the service/application. #Required
-TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required 
+TRACING_EXPORTER_ENDPOINT // The endpoint that spans get exported to. #Required
 TRACING_BLOCK_EXPORTER // Exporter initiates a blocking request to an endpoint | #Optional | bool
 TRACING_SECURE_EXPORTER // Exporter connects with TLS secure connection. | #Optional | bool
 HOSTNAME // The hostname of the deployment instance. | #Optional
@@ -66,7 +71,7 @@ func main() {
   log.Error(err.Error())
   return
  }
- 
+
 
  // setup the service grpc server as normal.
  port := os.Getenv("GRPC_SERVER_PORT")
