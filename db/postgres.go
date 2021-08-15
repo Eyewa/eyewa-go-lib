@@ -67,9 +67,9 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 		fmt.Println(err.Error())
 	})
 
-	client.gorm = db
-	client.gorm.DB().SetMaxOpenConns(1)
-	client.gorm.DB().SetMaxIdleConns(0)
+	client.Gorm = db
+	client.Gorm.DB().SetMaxOpenConns(1)
+	client.Gorm.DB().SetMaxIdleConns(0)
 
 	return &DBClient{
 		client,
@@ -78,7 +78,7 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 
 // CloseConnection closes a postgres connection
 func (client *PostgresClient) CloseConnection() error {
-	err := client.gorm.Close()
+	err := client.Gorm.Close()
 	if err != nil {
 		return err
 	}
