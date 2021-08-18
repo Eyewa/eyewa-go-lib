@@ -243,6 +243,13 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 				} else {
+					// nack message and remove from queue
+					err = msg.Nack(false, false)
+					if err != nil {
+						go standardMetrics.NackFailureCounter.Add(1)
+						span.RecordError(err)
+					}
+
 					// publish message to DL
 					err := rmq.sendToDeadletterQueue(msg, err)
 					if err != nil {
@@ -375,6 +382,13 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 
 					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 				} else {
+					// nack message and remove from queue
+					err = msg.Nack(false, false)
+					if err != nil {
+						go standardMetrics.NackFailureCounter.Add(1)
+						span.RecordError(err)
+					}
+
 					// publish message to DL
 					err := rmq.sendToDeadletterQueue(msg, err)
 					if err != nil {
