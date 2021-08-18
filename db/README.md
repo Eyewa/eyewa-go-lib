@@ -88,6 +88,46 @@ The following env variables can be injected in order to use this pkg:
 	}
 
 ```
+### Creating/Querying a database
+https://gorm.io/docs
+```go
 
+type User struct {
+  ID           uint
+  Name         string
+  Email        *string
+  Age          uint8
+  Birthday     *time.Time
+  MemberNumber sql.NullString
+  ActivatedAt  sql.NullTime
+  CreatedAt    time.Time
+  UpdatedAt    time.Time
+}
+
+// connect to DB
+	pClient := db.NewPostgresClientFromConfig(config.Config.DB)
+	_, err = pClient.OpenConnection()
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	// create a user
+	user := User{Name: "Jinzhu", Age: 18, Birthday: time.Now()}
+
+	result := pClient.Gorm.Create(&user) // pass pointer of data to Create
+
+	user.ID             // returns inserted data's primary key
+	result.Error        // returns error
+	result.RowsAffected // returns inserted records count
+
+
+	// query for user
+	result := db.First(&user)
+result.RowsAffected // returns count of records found
+result.Error        // returns error or nil
+
+
+```
 ### CRUD Operations
 TBD

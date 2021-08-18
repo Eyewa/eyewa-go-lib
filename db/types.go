@@ -35,19 +35,19 @@ type RDMS struct {
 
 // SQLite sqlite client definition
 type SQLiteClient struct {
-	gorm *gorm.DB
+	Gorm *gorm.DB
 	Path string `mapstructure:"db_path"`
 }
 
 // MySQL mysql client definition
 type MySQLClient struct {
-	gorm *gorm.DB
+	Gorm *gorm.DB
 	RDMS
 }
 
 // PostgresClient postgres client definition
 type PostgresClient struct {
-	gorm *gorm.DB
+	Gorm *gorm.DB
 	RDMS
 }
 

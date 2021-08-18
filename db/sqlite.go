@@ -39,7 +39,7 @@ func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 		fmt.Println(err.Error())
 	})
 
-	client.gorm = db
+	client.Gorm = db
 
 	return &DBClient{
 		client,
@@ -48,7 +48,7 @@ func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 
 // CloseConnection closes a sqlite connection
 func (client *SQLiteClient) CloseConnection() error {
-	err := client.gorm.Close()
+	err := client.Gorm.Close()
 	if err != nil {
 		return err
 	}
