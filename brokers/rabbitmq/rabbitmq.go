@@ -251,11 +251,10 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 					}
 
 					// publish message to DL
-					err := rmq.sendToDeadletterQueue(msg, err)
+					err = rmq.sendToDeadletterQueue(msg, err)
 					if err != nil {
 						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 						span.RecordError(err)
-						_ = callback(ctx, nil, err)
 					}
 				}
 			}
@@ -390,11 +389,10 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 					}
 
 					// publish message to DL
-					err := rmq.sendToDeadletterQueue(msg, err)
+					err = rmq.sendToDeadletterQueue(msg, err)
 					if err != nil {
 						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 						span.RecordError(err)
-						_ = callback(ctx, nil, err)
 					}
 				}
 			}
