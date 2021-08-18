@@ -31,6 +31,10 @@ func (sqs *SQSClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	//
 }
 
+func (sqs *SQSClient) ConsumeMagentoCatalog(queue string, callback base.MessageBrokerMagentoCatalogCallbackFunc) {
+	//
+}
+
 func (sqs *SQSClient) IsConnectionOpen() bool {
 	return false
 }
