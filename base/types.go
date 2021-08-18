@@ -23,8 +23,8 @@ type EyewaEvent struct {
 	CreatedAt string          `json:"created_at"` // time in RFC3339 format
 }
 
-// MagentoCatalogEvent a representation of a catalog event in Magento
-type MagentoCatalogEvent struct {
+// MagentoProductEvent a representation of a product event in Magento
+type MagentoProductEvent struct {
 	ID           string  `json:"id"`                         // uuid
 	Name         string  `json:"event"`                      // name of event - product.created, catalog.created etc
 	EventType    string  `json:"event_type"`                 // type of event's entity - Product, Order etc
