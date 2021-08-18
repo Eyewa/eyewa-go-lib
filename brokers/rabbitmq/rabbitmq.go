@@ -253,7 +253,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	}
 }
 
-// Consume consumes messages from a queue
+// ConsumeMagentoCatalog consumes a catalog event published by Magento
 func (rmq *RMQClient) ConsumeMagentoCatalog(queue string, callback base.MessageBrokerMagentoCatalogCallbackFunc) {
 	ctx := context.Background()
 	defer func() {
