@@ -57,9 +57,9 @@ type EyewaEventError struct {
 // so as to react to the state of events published/consumed - success/failure
 type MessageBrokerCallbackFunc func(ctx context.Context, event *EyewaEvent, err error) error
 
-// MessageBrokerMagentoCatalogCallbackFunc all broker clients should define this callback fn
-// so as to react to the state of magento catalog events published/consumed - success/failure
-type MessageBrokerMagentoCatalogCallbackFunc func(ctx context.Context, event *MagentoCatalogEvent, err error) error
+// MessageBrokerMagentoProductCallbackFunc all broker clients should define this callback fn
+// so as to react to the state of magento product events published/consumed - success/failure
+type MessageBrokerMagentoProductCallbackFunc func(ctx context.Context, event *MagentoProductEvent, err error) error
 
 // EyewaProduct definition of an eyewa Product
 type EyewaProduct struct {

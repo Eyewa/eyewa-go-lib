@@ -253,8 +253,8 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	}
 }
 
-// ConsumeMagentoCatalog consumes a catalog event published by Magento
-func (rmq *RMQClient) ConsumeMagentoCatalog(queue string, callback base.MessageBrokerMagentoCatalogCallbackFunc) {
+// ConsumeMagentoProductEvents consumes product events published by Magento
+func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) {
 	ctx := context.Background()
 	defer func() {
 		// reaching here means the connection meant to be long lived has died.
@@ -286,7 +286,7 @@ func (rmq *RMQClient) ConsumeMagentoCatalog(queue string, callback base.MessageB
 	rmq.mutex.RUnlock()
 
 	if exists && channel != nil {
-		log.Info(fmt.Sprintf("Listening to %s for new magento catalog messages...", queue))
+		log.Info(fmt.Sprintf("Listening to %s for new magento product messages...", queue))
 
 		// attempt to consume events from broker
 		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
@@ -295,7 +295,7 @@ func (rmq *RMQClient) ConsumeMagentoCatalog(queue string, callback base.MessageB
 			return
 		}
 
-		var event *base.MagentoCatalogEvent
+		var event *base.MagentoProductEvent
 		for msg := range msgs {
 			started := time.Now()
 			// set amqp message span attributes.

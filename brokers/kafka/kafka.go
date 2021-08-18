@@ -32,7 +32,7 @@ func (kafka *KafkaClient) Consume(queue string, callback base.MessageBrokerCallb
 	//
 }
 
-func (kafka *KafkaClient) ConsumeMagentoCatalog(queue string, callback base.MessageBrokerMagentoCatalogCallbackFunc) {
+func (kafka *KafkaClient) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) {
 	//
 }
 

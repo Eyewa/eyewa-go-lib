@@ -45,7 +45,7 @@ func (mock *ClientMock) Consume(queue string, callback base.MessageBrokerCallbac
 	mock.Called(queue, callback)
 }
 
-func (mock *ClientMock) ConsumeMagentoCatalog(queue string, callback base.MessageBrokerMagentoCatalogCallbackFunc) {
+func (mock *ClientMock) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) {
 	mock.Called(queue, callback)
 }
 
