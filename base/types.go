@@ -34,7 +34,7 @@ type MagentoCatalogEvent struct {
 	EntityID     int     `json:"entity_id"`                  // ID of the product/category
 	StoreID      int     `json:"store_id"`                   // ID of the store the product/category belongs to
 	EventSubType string  `json:"event_subtype"`              // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
-	Errors       []Error `json:"errors" binding:"omitempty"` // / a representation on an error. provides reasons when a message ends up back in the queue
+	Errors       []Error `json:"errors" binding:"omitempty"` // provides reasons why a message ended up in the deadletter queue for e.g
 }
 
 // Error a structural info about an error within the ecosystem
