@@ -253,6 +253,130 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	}
 }
 
+// Consume consumes messages from a queue
+func (rmq *RMQClient) ConsumeMagentoCatalog(queue string, callback base.MessageBrokerMagentoCatalogCallbackFunc) {
+	ctx := context.Background()
+	defer func() {
+		// reaching here means the connection meant to be long lived has died.
+		_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
+	}()
+
+	rmq.mutex.RLock()
+	channel, exists := rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	// check if channel exists for queue
+	// if not create it
+	if !exists && channel == nil {
+		channel, err := rmq.CreateNewChannel(config.ConsumerQueueName)
+		if err != nil {
+			_ = callback(ctx, nil, err)
+			return
+		}
+
+		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
+		if errQ != nil {
+			_ = callback(ctx, nil, errQ)
+			return
+		}
+	}
+
+	rmq.mutex.RLock()
+	channel, exists = rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	if exists && channel != nil {
+		log.Info(fmt.Sprintf("Listening to %s for new magento catalog messages...", queue))
+
+		// attempt to consume events from broker
+		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
+		if err != nil {
+			_ = callback(ctx, nil, fmt.Errorf(libErrs.ErrorConsumeFailure.Error(), queue, err))
+			return
+		}
+
+		var event *base.MagentoCatalogEvent
+		for msg := range msgs {
+			started := time.Now()
+			// set amqp message span attributes.
+			spanOpts := []trace.SpanOption{
+				trace.WithAttributes(
+					semconv.MessagingSystemKey.String(messagingSystem),
+					semconv.MessagingDestinationKindKeyQueue,
+					semconv.MessagingOperationReceive,
+					semconv.MessagingRabbitMQRoutingKeyKey.String(msg.RoutingKey)),
+				trace.WithSpanKind(trace.SpanKindConsumer),
+			}
+
+			// extract context from headers, if none, the
+			// context will use the Background context.
+			carrier := amqptracing.HeaderCarrier(msg.Headers)
+			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
+			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+			log.Debug(fmt.Sprintf("carrier after extract: %v", carrier.Keys()))
+
+			// start the span and and receive a new ctx containing the parent
+			ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Consume", spanOpts...)
+
+			go standardMetrics.ActiveConsumingEventCounter.Add(1)
+
+			// attempt to unmarshal event
+			err := json.Unmarshal(msg.Body, &event)
+			if err != nil {
+				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
+				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
+				span.RecordError(err)
+				_ = callback(ctx, nil, errMsg)
+
+				// nack message and remove from queue
+				err = msg.Nack(false, false)
+				if err != nil {
+					go standardMetrics.NackFailureCounter.Add(1)
+					span.RecordError(err)
+					_ = callback(ctx, nil, err)
+				}
+
+				// publish message to DL
+				err := rmq.sendToDeadletterQueue(msg, errMsg)
+				if err != nil {
+					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
+					span.RecordError(err)
+					_ = callback(ctx, nil, err)
+				}
+			} else {
+				// ONLY ack message once there is no error from callback.
+				if err := callback(ctx, event, nil); err == nil {
+					span.RecordError(err)
+					if err = msg.Ack(false); err != nil {
+						span.RecordError(err)
+						// nack message and push back to queue
+						err = msg.Nack(false, true)
+						if err != nil {
+							span.RecordError(err)
+							log.Error(libErrs.ErrorNackFailure.Error(),
+								zap.String("queue", queue),
+								zap.String("event", string(msg.Body)),
+								zap.Error(err))
+						}
+
+						log.Error(libErrs.ErrorAckFailure.Error(),
+							zap.String("queue", queue),
+							zap.String("event", string(msg.Body)),
+							zap.Error(err))
+					}
+
+					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
+				}
+			}
+			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+			// manually end span since this is a
+			// long lived function and will never end.
+			span.End()
+		}
+	}
+}
+
 // Publish publishes a message to a queue
 func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	defer wg.Done()
