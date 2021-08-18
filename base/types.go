@@ -25,15 +25,16 @@ type EyewaEvent struct {
 
 // MagentoCatalogEvent a representation of a catalog event in Magento
 type MagentoCatalogEvent struct {
-	ID           string `json:"id"`            // uuid
-	Name         string `json:"event"`         // name of event - product.created, catalog.created etc
-	EventType    string `json:"event_type"`    // type of event's entity - Product, Order etc
-	StoreCode    string `json:"store_code"`    // store code for store eyewa_kwd, eyewa_sasone etc
-	StoreLocale  string `json:"store_locale"`  // store locale for store sa-sone, kw-ar, sa-en etc
-	CreatedAt    string `json:"created_at"`    // time in RFC3339 format of when event ocurred
-	EntityID     string `json:"entity_id"`     // ID of the product/category
-	StoreID      string `json:"store_id"`      // ID of the store the product/category belongs to
-	EventSubType string `json:"event_subtype"` // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
+	ID           string  `json:"id"`                         // uuid
+	Name         string  `json:"event"`                      // name of event - product.created, catalog.created etc
+	EventType    string  `json:"event_type"`                 // type of event's entity - Product, Order etc
+	StoreCode    string  `json:"store_code"`                 // store code for store eyewa_kwd, eyewa_sasone etc
+	StoreLocale  string  `json:"store_locale"`               // store locale for store sa-sone, kw-ar, sa-en etc
+	CreatedAt    string  `json:"created_at"`                 // time in RFC3339 format of when event ocurred
+	EntityID     string  `json:"entity_id"`                  // ID of the product/category
+	StoreID      string  `json:"store_id"`                   // ID of the store the product/category belongs to
+	EventSubType string  `json:"event_subtype"`              // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
+	Errors       []Error `json:"errors" binding:"omitempty"` // / a representation on an error. provides reasons when a message ends up back in the queue
 }
 
 // Error a structural info about an error within the ecosystem
