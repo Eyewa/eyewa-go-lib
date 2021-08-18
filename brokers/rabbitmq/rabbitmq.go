@@ -242,6 +242,14 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 					}
 
 					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
+				} else {
+					// publish message to DL
+					err := rmq.sendToDeadletterQueue(msg, err)
+					if err != nil {
+						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
+						span.RecordError(err)
+						_ = callback(ctx, nil, err)
+					}
 				}
 			}
 			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
@@ -366,6 +374,14 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 					}
 
 					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
+				} else {
+					// publish message to DL
+					err := rmq.sendToDeadletterQueue(msg, err)
+					if err != nil {
+						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
+						span.RecordError(err)
+						_ = callback(ctx, nil, err)
+					}
 				}
 			}
 			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
