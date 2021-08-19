@@ -331,7 +331,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
-				log.Info("PRINTING ERROR", zap.Error(errMsg))
+
 				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
 				span.RecordError(errMsg)
 				log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errMsg.Error())
@@ -359,8 +359,32 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				// continue to the next message
 				continue
 			} else {
-				// ONLY ack message once there is no error from callback.
-				if err := callback(ctx, event); err == nil {
+				if err := callback(ctx, event); err != nil {
+					// Handle callback error here
+					// nack message and remove from queue
+					nackErr := msg.Nack(false, false)
+					if nackErr != nil {
+						go standardMetrics.NackFailureCounter.Add(1)
+						span.RecordError(err)
+						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
+					}
+
+					// publish message to DL
+					dlqErr := rmq.sendToDeadletterQueue(msg, err)
+					if dlqErr != nil {
+						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
+						span.RecordError(err)
+						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
+					}
+
+					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+					go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+					span.End()
+
+					// continue to the next message
+					continue
+				} else {
+					// ONLY ack message once there is no error from callback.
 					// callback successful but failed to ack
 					if err = msg.Ack(false); err != nil {
 						span.RecordError(err)
@@ -383,30 +407,6 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 
 					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
 					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
-					go standardMetrics.ActiveConsumingEventCounter.Add(-1)
-					span.End()
-
-					// continue to the next message
-					continue
-				} else {
-					// Handle callback error here
-					// nack message and remove from queue
-					err = msg.Nack(false, false)
-					if err != nil {
-						go standardMetrics.NackFailureCounter.Add(1)
-						span.RecordError(err)
-						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
-					}
-
-					// publish message to DL
-					err = rmq.sendToDeadletterQueue(msg, err)
-					if err != nil {
-						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
-						span.RecordError(err)
-						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
-					}
-
-					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
 					go standardMetrics.ActiveConsumingEventCounter.Add(-1)
 					span.End()
 
