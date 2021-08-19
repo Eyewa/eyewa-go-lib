@@ -333,12 +333,14 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
 				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
 				span.RecordError(errMsg)
+				log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errMsg.Error())
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
 					go standardMetrics.NackFailureCounter.Add(1)
 					span.RecordError(err)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
 				}
 
 				// publish message to DL
@@ -346,6 +348,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				if err != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 					span.RecordError(err)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
 				}
 
 				go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
@@ -360,6 +363,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 					// callback successful but failed to ack
 					if err = msg.Ack(false); err != nil {
 						span.RecordError(err)
+						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
 						// nack message and push back to queue
 						err = msg.Nack(false, true)
 						if err != nil {
@@ -390,6 +394,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 					if err != nil {
 						go standardMetrics.NackFailureCounter.Add(1)
 						span.RecordError(err)
+						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
 					}
 
 					// publish message to DL
@@ -397,6 +402,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 					if err != nil {
 						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 						span.RecordError(err)
+						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
 					}
 
 					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
