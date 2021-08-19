@@ -331,7 +331,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
-				fmt.Printf("PRINTING ERROR %v", errMsg)
+				log.Info("PRINTING ERROR", zap.Error(errMsg))
 				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
 				span.RecordError(errMsg)
 				log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errMsg.Error())
