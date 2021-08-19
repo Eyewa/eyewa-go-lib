@@ -49,7 +49,7 @@ type Consumer interface {
 	Connect() error
 	CloseConnection() error
 	Consume(queue string, callback base.MessageBrokerCallbackFunc)
-	ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc)
+	ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) error
 }
 
 // Publisher a contract any publisher should fulfil.

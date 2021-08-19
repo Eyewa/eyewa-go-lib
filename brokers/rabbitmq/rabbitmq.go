@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -268,13 +269,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 }
 
 // ConsumeMagentoProductEvents consumes product events published by Magento
-func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) {
-	ctx := context.Background()
-	defer func() {
-		// reaching here means the connection meant to be long lived has died.
-		_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
-	}()
-
+func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) error {
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
@@ -284,14 +279,12 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 	if !exists && channel == nil {
 		channel, err := rmq.CreateNewChannel(config.ConsumerQueueName)
 		if err != nil {
-			_ = callback(ctx, nil, err)
-			return
+			return err
 		}
 
 		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
 		if errQ != nil {
-			_ = callback(ctx, nil, errQ)
-			return
+			return errQ
 		}
 	}
 
@@ -305,11 +298,11 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 		// attempt to consume events from broker
 		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 		if err != nil {
-			_ = callback(ctx, nil, fmt.Errorf(libErrs.ErrorConsumeFailure.Error(), queue, err))
-			return
+			return fmt.Errorf(libErrs.ErrorConsumeFailure.Error(), queue, err)
 		}
 
 		var event *base.MagentoProductEvent
+		// handle a message
 		for msg := range msgs {
 			started := time.Now()
 			// set amqp message span attributes.
@@ -326,7 +319,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			// context will use the Background context.
 			carrier := amqptracing.HeaderCarrier(msg.Headers)
 			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
-			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+			ctx := otel.GetTextMapPropagator().Extract(context.Background(), carrier)
 			log.Debug(fmt.Sprintf("carrier after extract: %v", carrier.Keys()))
 
 			// start the span and and receive a new ctx containing the parent
@@ -339,15 +332,13 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			if err != nil {
 				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
 				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
-				span.RecordError(err)
-				_ = callback(ctx, nil, errMsg)
+				span.RecordError(errMsg)
 
 				// nack message and remove from queue
 				err = msg.Nack(false, false)
 				if err != nil {
 					go standardMetrics.NackFailureCounter.Add(1)
 					span.RecordError(err)
-					_ = callback(ctx, nil, err)
 				}
 
 				// publish message to DL
@@ -355,12 +346,18 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				if err != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 					span.RecordError(err)
-					_ = callback(ctx, nil, err)
 				}
+
+				go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+				go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+				span.End()
+
+				// continue to the next message
+				continue
 			} else {
 				// ONLY ack message once there is no error from callback.
-				if err := callback(ctx, event, nil); err == nil {
-					span.RecordError(err)
+				if err := callback(ctx, event); err == nil {
+					// callback successful but failed to ack
 					if err = msg.Ack(false); err != nil {
 						span.RecordError(err)
 						// nack message and push back to queue
@@ -379,8 +376,15 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 							zap.Error(err))
 					}
 
+					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
 					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
+					go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+					span.End()
+
+					// continue to the next message
+					continue
 				} else {
+					// Handle callback error here
 					// nack message and remove from queue
 					err = msg.Nack(false, false)
 					if err != nil {
@@ -394,15 +398,22 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 						span.RecordError(err)
 					}
+
+					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+					go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+					span.End()
+
+					// continue to the next message
+					continue
 				}
 			}
-			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
-			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
-			// manually end span since this is a
-			// long lived function and will never end.
-			span.End()
 		}
+	} else {
+		return errors.New("channel does not exist")
 	}
+
+	// reaching here means the connection meant to be long lived has died.
+	return libErrs.ErrorLostConnectionToMessageBroker
 }
 
 // Publish publishes a message to a queue
