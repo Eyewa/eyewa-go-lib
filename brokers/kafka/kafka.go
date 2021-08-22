@@ -32,6 +32,10 @@ func (kafka *KafkaClient) Consume(queue string, callback base.MessageBrokerCallb
 	//
 }
 
+func (kafka *KafkaClient) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) {
+	//
+}
+
 func (kafka *KafkaClient) IsConnectionOpen() bool {
 	return false
 }
