@@ -7,8 +7,8 @@ import (
 	"github.com/eyewa/eyewa-go-lib/base"
 )
 
-// ConnectFunc is the function that starts consuming on a broker.
-type ConsumeFunc func() error
+// ConnectFunc is the function that starts consuming from the given broker.
+type ConsumeFunc func(broker *MessageBrokerClient) error
 
 // BrokerType represents a type of broker - sqs, rmq etc.
 type BrokerType string
