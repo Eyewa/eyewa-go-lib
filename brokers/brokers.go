@@ -107,12 +107,10 @@ func getClient(brokerType BrokerType) MessageBroker {
 // Should it be lost for whatever reason, this func initiates the
 // attempt of re-gaining it so consumption can resume.
 func AlwaysReconnect(consume ConsumeFunc) {
-	go func() {
-		for {
-			broker, err := OpenConnection()
-			if err == nil {
-				consume(broker)
-			}
+	for {
+		broker, err := OpenConnection()
+		if err == nil {
+			consume(broker)
 		}
-	}()
+	}
 }
