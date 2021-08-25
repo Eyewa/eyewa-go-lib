@@ -100,7 +100,7 @@ func getClient(brokerType BrokerType) MessageBroker {
 	return nil
 }
 
-// ReConnectConsumer attempts to re-establish connection to
+// AlwaysReconnect attempts to re-establish connection to
 // a message broker using an exponential backoff.
 //
 // Consuming from a message broker should be a long lived connection
