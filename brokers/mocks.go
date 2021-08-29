@@ -45,8 +45,9 @@ func (mock *ClientMock) Consume(queue string, callback base.MessageBrokerCallbac
 	mock.Called(queue, callback)
 }
 
-func (mock *ClientMock) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) {
-	mock.Called(queue, callback)
+func (mock *ClientMock) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) error {
+	args := mock.Called(queue, callback)
+	return args.Error(0)
 }
 
 func (mock *ClientMock) IsConnectionOpen() bool {
