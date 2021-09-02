@@ -281,3 +281,8 @@ type SimplesCustomOptionValue struct {
 	Title        string `json:"title"`
 	SortOrder    int    `json:"sort_order"`
 }
+
+// TableName overrides the table name for ProductModel
+func (ProductModel) TableName() string {
+	return "products"
+}
