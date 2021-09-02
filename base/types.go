@@ -15,7 +15,7 @@ type EyewaEvent struct {
 	Name         string `json:"name"`                              // name of event - ProductUpdated, ProductDeleted etc
 	EventType    string `json:"event_type"`                        // type of event's entity - Product, Order etc
 	StoreLocale  string `json:"store_locale" binding:"omitempty"`  // store locale for store sa-sone, kw-ar, sa-en etc
-	EventSubType string `json:"event_subtype" binding:"omitempty"` // simple, configurable", // Would be empty for category events
+	EventSubType string `json:"event_subtype" binding:"omitempty"` // simple, configurable, // Would be empty for category events
 
 	// a representation on an error. provides reasons when a message ends up back
 	// in the queue
