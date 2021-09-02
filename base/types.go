@@ -11,9 +11,10 @@ type EyewaProductType string
 
 // EyewaEvent a base representation of an event fired/received
 type EyewaEvent struct {
-	ID        string `json:"id"`         // can be used for tracing
-	Name      string `json:"name"`       // name of event - ProductUpdated, ProductDeleted etc
-	EventType string `json:"event_type"` // type of event's entity - Product, Order etc
+	ID          string `json:"id"`                               // can be used for tracing
+	Name        string `json:"name"`                             // name of event - ProductUpdated, ProductDeleted etc
+	EventType   string `json:"event_type"`                       // type of event's entity - Product, Order etc
+	StoreLocale string `json:"store_locale" binding:"omitempty"` // store locale for store sa-sone, kw-ar, sa-en etc
 
 	// a representation on an error. provides reasons when a message ends up back
 	// in the queue
