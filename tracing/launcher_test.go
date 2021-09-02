@@ -126,25 +126,25 @@ func TestInvalidEnvConfig(t *testing.T) {
 	assert.NotZero(t, err)
 }
 
-func TestBlockingExporter(t *testing.T) {
-	teardown := setup()
-	defer teardown()
+// func TestBlockingExporter(t *testing.T) {
+// 	teardown := setup()
+// 	defer teardown()
 
-	os.Setenv("SERVICE_NAME", "testing")
-	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
-	os.Setenv("TRACING_BLOCK_EXPORTER", "true")
+// 	os.Setenv("SERVICE_NAME", "testing")
+// 	os.Setenv("TRACING_EXPORTER_ENDPOINT", "fake-endpoint.test")
+// 	os.Setenv("TRACING_BLOCK_EXPORTER", "true")
 
-	shutdown, err := Launch()
-	defer func() {
-		err = shutdown()
-		assert.Nil(t, err)
-		assert.NoError(t, err)
-	}()
+// 	shutdown, err := Launch()
+// 	defer func() {
+// 		err = shutdown()
+// 		assert.Nil(t, err)
+// 		assert.NoError(t, err)
+// 	}()
 
-	assert.Nil(t, err)
-	assert.NoError(t, err)
-	assert.Zero(t, err)
-}
+// 	assert.Nil(t, err)
+// 	assert.NoError(t, err)
+// 	assert.Zero(t, err)
+// }
 
 func TestSecureExporter(t *testing.T) {
 	teardown := setup()
