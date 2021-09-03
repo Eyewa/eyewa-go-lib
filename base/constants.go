@@ -2,10 +2,10 @@ package base
 
 // List of EyewaProduct types - based on Magento's
 const (
-	SimpleProduct       EyewaProductType = "simple"
-	ConfigurableProduct EyewaProductType = "configurable"
-	DownloadableProduct EyewaProductType = "downloadable"
-	VirtualProduct      EyewaProductType = "virtual"
-	BundledProduct      EyewaProductType = "bundled"
-	GroupedProduct      EyewaProductType = "grouped"
+	SimpleProductType       EyewaProductType = "simple"
+	ConfigurableProductType EyewaProductType = "configurable"
+	DownloadableProductType EyewaProductType = "downloadable"
+	VirtualProductType      EyewaProductType = "virtual"
+	BundledProductType      EyewaProductType = "bundled"
+	GroupedProductType      EyewaProductType = "grouped"
 )
