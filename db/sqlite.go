@@ -40,6 +40,7 @@ func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 	})
 
 	client.Gorm = db
+	client.Gorm.LogMode(false)
 
 	return &DBClient{
 		client,

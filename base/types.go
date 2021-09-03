@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// EyewaProductType
+// EyewaProductType type of product
 type EyewaProductType string
 
 // EyewaEvent a base representation of an event fired/received
@@ -28,15 +28,15 @@ type EyewaEvent struct {
 type MagentoProductEvent struct {
 	ID           string  `json:"id"`                         // uuid
 	Name         string  `json:"event"`                      // name of event - product.created, catalog.created etc
+	EntityID     int     `json:"entity_id"`                  // ID of the product in magento
 	EventType    string  `json:"event_type"`                 // type of event's entity - Product, Order etc
+	EventSubType string  `json:"event_subtype"`              // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
+	StoreID      int     `json:"store_id"`                   // ID of the store the product/category belongs to
 	StoreCode    string  `json:"store_code"`                 // store code for store eyewa_kwd, eyewa_sasone etc
 	StoreLocale  string  `json:"store_locale"`               // store locale for store sa-sone, kw-ar, sa-en etc
-	CreatedAt    string  `json:"created_at"`                 // time in RFC3339 format of when event ocurred
-	EntityID     int     `json:"entity_id"`                  // ID of the product in magento
 	WebsiteID    int     `json:"website_id"`                 // ID of website store is assigned to
-	StoreID      int     `json:"store_id"`                   // ID of the store the product/category belongs to
-	EventSubType string  `json:"event_subtype"`              // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
 	Errors       []Error `json:"errors" binding:"omitempty"` // provides reasons why a message ended up in the deadletter queue for e.g
+	CreatedAt    string  `json:"created_at"`                 // time in RFC3339 format of when event occurred
 }
 
 // Error a structural info about an error within the ecosystem

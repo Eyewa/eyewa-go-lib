@@ -70,6 +70,7 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 	client.Gorm = db
 	client.Gorm.DB().SetMaxOpenConns(1)
 	client.Gorm.DB().SetMaxIdleConns(0)
+	client.Gorm.LogMode(false)
 
 	return &DBClient{
 		client,

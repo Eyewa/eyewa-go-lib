@@ -31,11 +31,11 @@ type ProductModel struct {
 // ProductMeta these are fields internal to the service either
 // there for lookup or assists during a transformation process
 type ProductMeta struct {
-	ID        uint   `gorm:"primaryKey" json:"-"`
-	StoreID   int    `json:"store_id"`
-	StoreCode string `json:"store_code"`
-	ParentID  int    `json:"parent_id"`
-	ParentSKU string `json:"parent_sku"`
+	ID             uint   `gorm:"primaryKey" json:"-"`
+	StoreID        int    `sql:"unique_index:uix_pdt_store_entity"`
+	StoreCode      string `sql:"unique_index:uix_pdt_store_entity"`
+	EntityID       int    `sql:"unique_index:uix_pdt_store_entity"`
+	ParentEntityID int    `sql:"unique_index:uix_pdt_store_entity"`
 }
 
 // ConfigurableProduct magento's configurable product definition
