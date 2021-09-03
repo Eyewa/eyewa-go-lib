@@ -37,7 +37,7 @@ The following env variables can be injected in order to use this pkg:
 		"DB_USER":     "admin",
 		"DB_PORT":     "5432",
 		"DB_PASSWORD": "secret",
-		"DB_DATABASE": "catalogconsumer",
+		"DB_DATABASE": "productetl",
 		"DB_SSL_MODE": "disable",
 	}
 	for e, v := range vars {
@@ -56,7 +56,7 @@ The following env variables can be injected in order to use this pkg:
 	// connect to postgres
 	pCfg := Config{
 		Database: RDMS{
-			Name:     "catalogindexer",
+			Name:     "productetl",
 			Host:     "localhost",
 			User:     "admin",
 			Port:     "5432",
@@ -73,7 +73,7 @@ The following env variables can be injected in order to use this pkg:
 	// connect to mysql - can be any other db client like mongo/redis etc.
 	mCfg := Config{
 		Database: RDMS{
-			Name:     "catalogconsumer",
+			Name:     "productetl",
 			Host:     "localhost",
 			User:     "admin007",
 			Port:     "3306",
@@ -105,25 +105,25 @@ type User struct {
 }
 
 // connect to DB
-	pClient := db.NewPostgresClientFromConfig(config.Config.DB)
-	_, err = pClient.OpenConnection()
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
+pClient := db.NewPostgresClientFromConfig(config.Config.DB)
+_, err = pClient.OpenConnection()
+if err != nil {
+	log.Error(err.Error())
+	return
+}
 
-	// create a user
-	user := User{Name: "Jinzhu", Age: 18, Birthday: time.Now()}
+// create a user
+user := User{Name: "Jinzhu", Age: 18, Birthday: time.Now()}
 
-	result := pClient.Gorm.Create(&user) // pass pointer of data to Create
+result := pClient.Gorm.Create(&user) // pass pointer of data to Create
 
-	user.ID             // returns inserted data's primary key
-	result.Error        // returns error
-	result.RowsAffected // returns inserted records count
+user.ID             // returns inserted data's primary key
+result.Error        // returns error
+result.RowsAffected // returns inserted records count
 
 
-	// query for user
-	result := db.First(&user)
+// query for user
+result := db.First(&user)
 result.RowsAffected // returns count of records found
 result.Error        // returns error or nil
 

@@ -3,6 +3,8 @@ package base
 import (
 	"encoding/json"
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 // ProductModel product information saved to storage
@@ -21,7 +23,7 @@ type ProductModel struct {
 	// The data contained here is a typical Magento Product marshalled as a
 	// JSON blob and conforms to Magento's GraphQL expected data response.
 	// i.e either ConfigurableProduct or SimpleProduct as a JSON blob
-	Data json.RawMessage `json:"data"`
+	Data datatypes.JSON `json:"data"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -32,10 +34,10 @@ type ProductModel struct {
 // there for lookup or assists during a transformation process
 type ProductMeta struct {
 	ID             uint   `gorm:"primaryKey" json:"-"`
-	StoreID        int    `sql:"unique_index:uix_pdt_store_entity"`
-	StoreCode      string `sql:"unique_index:uix_pdt_store_entity"`
-	EntityID       int    `sql:"unique_index:uix_pdt_store_entity"`
-	ParentEntityID int    `sql:"unique_index:uix_pdt_store_entity"`
+	StoreID        int    `gorm:"index:uix_pdt_store_entity, unique"`
+	StoreCode      string `gorm:"index:uix_pdt_store_entity, unique"`
+	EntityID       int    `gorm:"index:uix_pdt_store_entity, unique"`
+	ParentEntityID int    `gorm:"index:uix_pdt_store_entity, unique"`
 }
 
 // ConfigurableProduct magento's configurable product definition

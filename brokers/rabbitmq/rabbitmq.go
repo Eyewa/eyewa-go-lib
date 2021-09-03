@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/semconv"
 
 	"github.com/eyewa/eyewa-go-lib/base"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
@@ -20,7 +21,6 @@ import (
 	"github.com/ory/viper"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/semconv"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )

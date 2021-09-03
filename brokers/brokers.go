@@ -111,9 +111,8 @@ func AlwaysReconnect(consume ConsumeFunc) {
 		for {
 			broker, err := OpenConnection()
 			if err == nil {
-				consume(broker)
+				_ = consume(broker)
 			}
 		}
 	}()
-
 }

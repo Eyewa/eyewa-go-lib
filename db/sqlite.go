@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // NewSQLiteClient creates a new sqlite client
@@ -31,7 +32,8 @@ func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 	)
 
 	connect := func() error {
-		db, err = gorm.Open("sqlite3", client.Path)
+		db, err = gorm.Open(sqlite.Open(client.Path), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent)})
 		return err
 	}
 
@@ -40,7 +42,6 @@ func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 	})
 
 	client.Gorm = db
-	client.Gorm.LogMode(false)
 
 	return &DBClient{
 		client,
@@ -49,7 +50,12 @@ func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 
 // CloseConnection closes a sqlite connection
 func (client *SQLiteClient) CloseConnection() error {
-	err := client.Gorm.Close()
+	sql, err := client.Gorm.DB()
+	if err != nil {
+		return err
+	}
+
+	err = sql.Close()
 	if err != nil {
 		return err
 	}
