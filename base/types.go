@@ -203,13 +203,3 @@ type EyewaProductOptions struct {
 type ProductMediaAssets struct {
 	Assets json.RawMessage `json:"assets"`
 }
-
-// ProductReview definition of a product review
-type ProductReview struct {
-	Store     EyewaStore `json:"store"`      // store review was published
-	Title     string     `json:"title"`      // review title
-	Review    string     `json:"review"`     // review details
-	Author    string     `json:"author"`     // review author
-	Rating    int        `json:"rating"`     // review rating
-	CreatedAt string     `json:"created_at"` // review created ts in RFC3339 format
-}
