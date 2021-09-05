@@ -19,4 +19,4 @@ import (
 )
 ```
 
-This can then be reachable on: `http://locahost:9111/debug/pprof`.
+This can then be reachable on: `http://127.0.0.1:9111/debug/pprof`.

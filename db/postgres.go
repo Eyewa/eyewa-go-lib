@@ -66,11 +66,17 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 	}
 
 	_ = backoff.RetryNotify(connect, backoff.NewExponentialBackOff(), func(err error, duration time.Duration) {
-		fmt.Println(err.Error())
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	})
 
 	client.Gorm = db
-	sql, _ := client.Gorm.DB()
+	sql, err := client.Gorm.DB()
+	if err != nil {
+		return nil, err
+	}
+
 	sql.SetMaxOpenConns(1)
 	sql.SetMaxIdleConns(0)
 
