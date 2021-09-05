@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // NewPostgresClient creates a new postgres client
@@ -59,17 +60,25 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 	}
 
 	connect := func() error {
-		db, err = gorm.Open("postgres", connStr)
+		db, err = gorm.Open(postgres.Open(connStr), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent)})
 		return err
 	}
 
 	_ = backoff.RetryNotify(connect, backoff.NewExponentialBackOff(), func(err error, duration time.Duration) {
-		fmt.Println(err.Error())
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	})
 
 	client.Gorm = db
-	client.Gorm.DB().SetMaxOpenConns(1)
-	client.Gorm.DB().SetMaxIdleConns(0)
+	sql, err := client.Gorm.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	sql.SetMaxOpenConns(1)
+	sql.SetMaxIdleConns(0)
 
 	return &DBClient{
 		client,
@@ -78,7 +87,12 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 
 // CloseConnection closes a postgres connection
 func (client *PostgresClient) CloseConnection() error {
-	err := client.Gorm.Close()
+	sql, err := client.Gorm.DB()
+	if err != nil {
+		return err
+	}
+
+	err = sql.Close()
 	if err != nil {
 		return err
 	}

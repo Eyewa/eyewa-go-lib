@@ -3,6 +3,8 @@ package base
 import (
 	"encoding/json"
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 // ProductModel product information saved to storage
@@ -21,7 +23,7 @@ type ProductModel struct {
 	// The data contained here is a typical Magento Product marshalled as a
 	// JSON blob and conforms to Magento's GraphQL expected data response.
 	// i.e either ConfigurableProduct or SimpleProduct as a JSON blob
-	Data json.RawMessage `json:"data"`
+	Data datatypes.JSON `json:"data"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -31,11 +33,11 @@ type ProductModel struct {
 // ProductMeta these are fields internal to the service either
 // there for lookup or assists during a transformation process
 type ProductMeta struct {
-	ID        uint   `gorm:"primaryKey" json:"-"`
-	StoreID   int    `json:"store_id"`
-	StoreCode string `json:"store_code"`
-	ParentID  int    `json:"parent_id"`
-	ParentSKU string `json:"parent_sku"`
+	ID             uint   `gorm:"primaryKey" json:"-"`
+	StoreID        int    `gorm:"index:uix_pdt_store_entity, unique"`
+	StoreCode      string `gorm:"index:uix_pdt_store_entity, unique"`
+	EntityID       int    `gorm:"index:uix_pdt_store_entity, unique"`
+	ParentEntityID int    `gorm:"index:uix_pdt_store_entity, unique"`
 }
 
 // ConfigurableProduct magento's configurable product definition
@@ -280,4 +282,9 @@ type SimplesCustomOptionValue struct {
 	OptionTypeID int    `json:"option_type_id"`
 	Title        string `json:"title"`
 	SortOrder    int    `json:"sort_order"`
+}
+
+// TableName overrides the table name for ProductModel
+func (ProductModel) TableName() string {
+	return "products"
 }

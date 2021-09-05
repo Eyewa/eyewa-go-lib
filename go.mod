@@ -6,7 +6,6 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/google/uuid v1.1.2
-	github.com/jinzhu/gorm v1.9.16
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
@@ -27,4 +26,9 @@ require (
 	go.opentelemetry.io/otel/trace v0.20.0
 	go.uber.org/zap v1.13.0
 	google.golang.org/grpc v1.38.0
+	gorm.io/datatypes v1.0.1
+	gorm.io/driver/mysql v1.1.2
+	gorm.io/driver/postgres v1.1.0
+	gorm.io/driver/sqlite v1.1.4
+	gorm.io/gorm v1.21.14
 )

@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // NewMySQLClient create a new mysql client
@@ -52,17 +53,25 @@ func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 		client.Name)
 
 	connect := func() error {
-		db, err = gorm.Open("mysql", connStr)
+		db, err = gorm.Open(mysql.Open(connStr), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent)})
 		return err
 	}
 
 	_ = backoff.RetryNotify(connect, backoff.NewExponentialBackOff(), func(err error, duration time.Duration) {
-		fmt.Println(err.Error())
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	})
 
 	client.Gorm = db
-	client.Gorm.DB().SetMaxOpenConns(1)
-	client.Gorm.DB().SetMaxIdleConns(0)
+	sql, err := client.Gorm.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	sql.SetMaxOpenConns(1)
+	sql.SetMaxIdleConns(0)
 
 	return &DBClient{
 		client,
@@ -71,7 +80,12 @@ func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 
 // CloseConnection closes a mysql connection
 func (client *MySQLClient) CloseConnection() error {
-	err := client.Gorm.Close()
+	sql, err := client.Gorm.DB()
+	if err != nil {
+		return err
+	}
+
+	err = sql.Close()
 	if err != nil {
 		return err
 	}
