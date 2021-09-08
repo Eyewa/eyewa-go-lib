@@ -3,7 +3,6 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -34,9 +33,10 @@ var (
 		amqp.ExchangeHeaders: amqp.ExchangeHeaders,
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
 	}
-	defaultPrefetchCount = 5
-	tracerName           = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
-	messagingSystem      = "RabbitMQ"
+	defaultPrefetchCount              = 5
+	tracerName                        = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
+	messagingSystem                   = "RabbitMQ"
+	maxRetryErrorsBeforeDeadlettering = 5
 )
 
 func initConfig() (Config, string, error) {
@@ -55,6 +55,7 @@ func initConfig() (Config, string, error) {
 		"QUEUE_PREFETCH_COUNT",
 		"RABBITMQ_PUBLISHER_EXCHANGE_TYPE",
 		"RABBITMQ_CONSUMER_EXCHANGE_TYPE",
+		"MESSAGE_BROKER",
 	}
 
 	for _, v := range envVars {
@@ -143,8 +144,9 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	rmq.mutex.RUnlock()
 
 	// check if channel exists for queue
-	// if not create it
+	// if not create/re-recreate it
 	if !exists && channel == nil {
+		log.Debug(fmt.Sprintf("%s channel doesn't exist. Recreating...", queue))
 		channel, err := rmq.CreateNewChannel(config.ConsumerQueueName)
 		if err != nil {
 			_ = callback(ctx, nil, err)
@@ -162,7 +164,12 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 	channel, exists = rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
-	if exists && channel != nil {
+	if !exists {
+		_ = callback(ctx, nil, libErrs.ErrorChannelDoesNotExist)
+		return
+	}
+
+	if channel != nil {
 		log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
 
 		// attempt to consume events from broker
@@ -173,12 +180,15 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 		}
 
 		var event *base.EyewaEvent
+
+		// handle incoming messages
 		for msg := range msgs {
 			started := time.Now()
+
 			// set amqp message span attributes.
 			spanOpts := []trace.SpanOption{
 				trace.WithAttributes(
-					semconv.MessagingSystemKey.String(messagingSystem),
+					semconv.MessagingSystemKey.String(strings.ToUpper(config.MessageBroker)),
 					semconv.MessagingDestinationKindKeyQueue,
 					semconv.MessagingOperationReceive,
 					semconv.MessagingRabbitMQRoutingKeyKey.String(msg.RoutingKey)),
@@ -186,9 +196,10 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			}
 
 			// extract context from headers, if none, the
-			// context will use the Background context.
+			// context will use the background context.
 			carrier := amqptracing.HeaderCarrier(msg.Headers)
 			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
+
 			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
 			log.Debug(fmt.Sprintf("carrier after extract: %v", carrier.Keys()))
 
@@ -200,91 +211,106 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
-				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
-				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
+				var unErrEvent unmarshalledEyewaEvent
+				unErrEvent.queue = queue
+				unErrEvent.msg = msg
+				unErrEvent.event = event
+				unErrEvent.span = span
+				unErrEvent.started = started
+				unErrEvent.callback = callback
+				unErrEvent.err = err
+
+				rmq.handleUnmarshalledEyewaEventErr(ctx, unErrEvent)
+
+				// continue to the next message
+				continue
+			}
+
+			// nack if callback/service yields an error for whatever reason
+			if err := callback(ctx, event, nil); err != nil {
 				span.RecordError(err)
-				_ = callback(ctx, nil, errMsg)
 
 				// nack message and remove from queue
-				err = msg.Nack(false, false)
-				if err != nil {
+				if errNack := msg.Nack(false, false); errNack != nil {
 					go standardMetrics.NackFailureCounter.Add(1)
-					span.RecordError(err)
-					_ = callback(ctx, nil, err)
+					span.RecordError(errNack)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errNack.Error())
 				}
 
 				// publish message to DL
-				err := rmq.sendToDeadletterQueue(msg, errMsg)
-				if err != nil {
+				if errDL := rmq.sendToDeadletterQueue(msg, err); errDL != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
-					span.RecordError(err)
-					_ = callback(ctx, nil, err)
+					span.RecordError(errDL)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errDL.Error())
 				}
-			} else {
-				// ONLY ack message once there is no error from callback.
-				if err := callback(ctx, event, nil); err == nil {
-					span.RecordError(err)
-					if err = msg.Ack(false); err != nil {
-						span.RecordError(err)
-						// nack message and push back to queue
-						err = msg.Nack(false, true)
-						if err != nil {
-							span.RecordError(err)
-							log.Error(libErrs.ErrorNackFailure.Error(),
-								zap.String("queue", queue),
-								zap.String("event", string(msg.Body)),
-								zap.Error(err))
-						}
 
-						log.Error(libErrs.ErrorAckFailure.Error(),
-							zap.String("queue", queue),
-							zap.String("event", string(msg.Body)),
-							zap.Error(err))
-					}
+				go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+				go standardMetrics.ActiveConsumingEventCounter.Add(-1)
 
-					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
-				} else {
-					// nack message and remove from queue
-					err = msg.Nack(false, false)
-					if err != nil {
-						go standardMetrics.NackFailureCounter.Add(1)
-						span.RecordError(err)
-					}
-
-					// publish message to DL
-					err = rmq.sendToDeadletterQueue(msg, err)
-					if err != nil {
-						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
-						span.RecordError(err)
-					}
-				}
+				// continue to the next message
+				span.End()
+				continue
 			}
+
+			// ack message
+			if err := msg.Ack(false); err != nil {
+				span.RecordError(err)
+				log.ErrorWithTraceID(span.SpanContext().TraceID().String(),
+					err.Error(),
+					zap.String("queue", queue),
+					zap.String("event", string(msg.Body)))
+
+				// nack message and return to queue
+				if err := msg.Nack(false, true); err != nil {
+					go standardMetrics.NackFailureCounter.Add(1)
+					span.RecordError(err)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(),
+						err.Error(),
+						zap.String("queue", queue),
+						zap.String("event", string(msg.Body)))
+				}
+
+				// continue to the next message
+				span.End()
+				continue
+			}
+
+			log.Debug("Consumed successfully.", zap.Any("event", event))
+
 			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+			go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
-			// manually end span since this is a
-			// long lived function and will never end.
 			span.End()
 		}
 	}
 }
 
-// ConsumeMagentoProductEvents consumes product events published by Magento
-func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) error {
+// Consume consumes messages from a queue
+func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc) {
+	ctx := context.Background()
+	defer func() {
+		// reaching here means the connection meant to be long lived has died.
+		_ = callback(ctx, nil, libErrs.ErrorLostConnectionToMessageBroker)
+	}()
+
 	rmq.mutex.RLock()
 	channel, exists := rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
 	// check if channel exists for queue
-	// if not create it
+	// if not create/re-recreate it
 	if !exists && channel == nil {
+		log.Debug(fmt.Sprintf("%s channel doesn't exist. Recreating...", queue))
 		channel, err := rmq.CreateNewChannel(config.ConsumerQueueName)
 		if err != nil {
-			return err
+			_ = callback(ctx, nil, err)
+			return
 		}
 
 		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
 		if errQ != nil {
-			return errQ
+			_ = callback(ctx, nil, errQ)
+			return
 		}
 	}
 
@@ -292,23 +318,31 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 	channel, exists = rmq.channels[queue]
 	rmq.mutex.RUnlock()
 
-	if exists && channel != nil {
-		log.Info(fmt.Sprintf("Listening to %s for new magento product messages...", queue))
+	if !exists {
+		_ = callback(ctx, nil, libErrs.ErrorChannelDoesNotExist)
+		return
+	}
+
+	if channel != nil {
+		log.Info(fmt.Sprintf("Listening to %s for new messages...", queue))
 
 		// attempt to consume events from broker
 		msgs, err := channel.Consume(queue, getNameForChannel(queue), false, false, false, false, nil)
 		if err != nil {
-			return fmt.Errorf(libErrs.ErrorConsumeFailure.Error(), queue, err)
+			_ = callback(ctx, nil, fmt.Errorf(libErrs.ErrorConsumeFailure.Error(), queue, err))
+			return
 		}
 
 		var event *base.MagentoProductEvent
-		// handle a message
+
+		// handle incoming messages
 		for msg := range msgs {
 			started := time.Now()
+
 			// set amqp message span attributes.
 			spanOpts := []trace.SpanOption{
 				trace.WithAttributes(
-					semconv.MessagingSystemKey.String(messagingSystem),
+					semconv.MessagingSystemKey.String(strings.ToUpper(config.MessageBroker)),
 					semconv.MessagingDestinationKindKeyQueue,
 					semconv.MessagingOperationReceive,
 					semconv.MessagingRabbitMQRoutingKeyKey.String(msg.RoutingKey)),
@@ -316,111 +350,92 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			}
 
 			// extract context from headers, if none, the
-			// context will use the Background context.
+			// context will use the background context.
 			carrier := amqptracing.HeaderCarrier(msg.Headers)
 			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
-			ctx := otel.GetTextMapPropagator().Extract(context.Background(), carrier)
+
+			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
 			log.Debug(fmt.Sprintf("carrier after extract: %v", carrier.Keys()))
 
 			// start the span and and receive a new ctx containing the parent
-			ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Consume", spanOpts...)
+			ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.ConsumeMagentoProductEvents", spanOpts...)
 
 			go standardMetrics.ActiveConsumingEventCounter.Add(1)
 
 			// attempt to unmarshal event
-			err := json.Unmarshal(msg.Body, &event)
-			if err != nil {
-				errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), queue, err)
+			if err := json.Unmarshal(msg.Body, &event); err != nil {
+				var unErrEvent unmarshalledMagentoEvent
+				unErrEvent.queue = queue
+				unErrEvent.msg = msg
+				unErrEvent.event = event
+				unErrEvent.span = span
+				unErrEvent.started = started
+				unErrEvent.callback = callback
+				unErrEvent.err = err
 
-				go standardMetrics.UnmarshalEventFailureCounter.Add(1)
-				span.RecordError(errMsg)
-				log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errMsg.Error())
+				rmq.handleUnmarshalledMagentoEventErr(ctx, unErrEvent)
+
+				// continue to the next message
+				continue
+			}
+
+			// nack if callback/service yields an error for whatever reason
+			if err := callback(ctx, event, nil); err != nil {
+				span.RecordError(err)
 
 				// nack message and remove from queue
-				err = msg.Nack(false, false)
-				if err != nil {
+				if errNack := msg.Nack(false, false); errNack != nil {
 					go standardMetrics.NackFailureCounter.Add(1)
-					span.RecordError(err)
-					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
+					span.RecordError(errNack)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errNack.Error())
 				}
 
 				// publish message to DL
-				err := rmq.sendToDeadletterQueue(msg, errMsg)
-				if err != nil {
+				if errDL := rmq.sendToDeadletterQueue(msg, err); errDL != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
-					span.RecordError(err)
-					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
+					span.RecordError(errDL)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errDL.Error())
 				}
 
 				go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
 				go standardMetrics.ActiveConsumingEventCounter.Add(-1)
-				span.End()
 
 				// continue to the next message
+				span.End()
 				continue
-			} else {
-				if err := callback(ctx, event); err != nil {
-					// Handle callback error here
-					// nack message and remove from queue
-					nackErr := msg.Nack(false, false)
-					if nackErr != nil {
-						go standardMetrics.NackFailureCounter.Add(1)
-						span.RecordError(err)
-						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
-					}
-
-					// publish message to DL
-					dlqErr := rmq.sendToDeadletterQueue(msg, err)
-					if dlqErr != nil {
-						go standardMetrics.DeadletterPublishFailureCounter.Add(1)
-						span.RecordError(err)
-						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
-					}
-
-					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
-					go standardMetrics.ActiveConsumingEventCounter.Add(-1)
-					span.End()
-
-					// continue to the next message
-					continue
-				} else {
-					// ONLY ack message once there is no error from callback.
-					// callback successful but failed to ack
-					if err = msg.Ack(false); err != nil {
-						span.RecordError(err)
-						log.ErrorWithTraceID(span.SpanContext().TraceID().String(), err.Error())
-						// nack message and push back to queue
-						err = msg.Nack(false, true)
-						if err != nil {
-							span.RecordError(err)
-							log.Error(libErrs.ErrorNackFailure.Error(),
-								zap.String("queue", queue),
-								zap.String("event", string(msg.Body)),
-								zap.Error(err))
-						}
-
-						log.Error(libErrs.ErrorAckFailure.Error(),
-							zap.String("queue", queue),
-							zap.String("event", string(msg.Body)),
-							zap.Error(err))
-					}
-
-					go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
-					go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
-					go standardMetrics.ActiveConsumingEventCounter.Add(-1)
-					span.End()
-
-					// continue to the next message
-					continue
-				}
 			}
-		}
-	} else {
-		return errors.New("channel does not exist")
-	}
 
-	// reaching here means the connection meant to be long lived has died.
-	return libErrs.ErrorLostConnectionToMessageBroker
+			// ack message
+			if err := msg.Ack(false); err != nil {
+				span.RecordError(err)
+				log.ErrorWithTraceID(span.SpanContext().TraceID().String(),
+					err.Error(),
+					zap.String("queue", queue),
+					zap.String("event", string(msg.Body)))
+
+				// nack message and return to queue
+				if err := msg.Nack(false, true); err != nil {
+					go standardMetrics.NackFailureCounter.Add(1)
+					span.RecordError(err)
+					log.ErrorWithTraceID(span.SpanContext().TraceID().String(),
+						err.Error(),
+						zap.String("queue", queue),
+						zap.String("event", string(msg.Body)))
+				}
+
+				// continue to the next message
+				span.End()
+				continue
+			}
+
+			log.Debug("Consumed successfully.", zap.Any("event", event))
+
+			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
+			go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
+			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+			span.End()
+		}
+	}
 }
 
 // Publish publishes a message to a queue
@@ -462,7 +477,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		// set amqp message span attributes.
 		spanOpts := []trace.SpanOption{
 			trace.WithAttributes(
-				semconv.MessagingSystemKey.String(messagingSystem),
+				semconv.MessagingSystemKey.String(strings.ToUpper(config.MessageBroker)),
 				semconv.MessagingDestinationKindKeyQueue,
 				semconv.MessagingRabbitMQRoutingKeyKey.String(config.PublisherQueueName)),
 			trace.WithSpanKind(trace.SpanKindProducer),
@@ -472,9 +487,9 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		// context will use the Background context.
 		carrier := amqptracing.HeaderCarrier(msg.Headers)
 
-		log.Debug(fmt.Sprintf("Injecting trace context into rabbitmq Table headers"), zap.Any("headers", carrier.Keys()))
+		log.Debug("Injecting trace context into rabbitmq Table headers", zap.Any("headers", carrier.Keys()))
 		otel.GetTextMapPropagator().Inject(ctx, carrier)
-		log.Debug(fmt.Sprintf("Trace context injected into rabbitmq Table headers"), zap.Any("headers", carrier.Keys()))
+		log.Debug("Trace context injected into rabbitmq Table headers", zap.Any("headers", carrier.Keys()))
 
 		// start the span and and receive a new ctx containing the parent
 		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Publish", spanOpts...)
@@ -505,6 +520,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		}
 
 		go standardMetrics.PublishedEventCounter.Add(1, attribute.Any("event_name", event.Name))
+
 		// record the callback failing
 		err = callback(ctx, event, nil)
 		if err != nil {
@@ -755,4 +771,56 @@ func (rmq *RMQClient) ConnectionListener() {
 // IsConnectionOpen gets the connection status to RMQ
 func (rmq *RMQClient) IsConnectionOpen() bool {
 	return !rmq.connection.IsClosed()
+}
+
+func (rmq *RMQClient) handleUnmarshalledMagentoEventErr(ctx context.Context, errEvent unmarshalledMagentoEvent) {
+	errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), errEvent.queue, errEvent.err)
+
+	go standardMetrics.UnmarshalEventFailureCounter.Add(1)
+	errEvent.span.RecordError(errEvent.err)
+	_ = errEvent.callback(ctx, nil, errMsg)
+
+	// nack message and remove from queue
+	if err := errEvent.msg.Nack(false, false); err != nil {
+		go standardMetrics.NackFailureCounter.Add(1)
+		errEvent.span.RecordError(err)
+		_ = errEvent.callback(ctx, nil, err)
+	}
+
+	// publish message to DL
+	if err := rmq.sendToDeadletterQueue(errEvent.msg, errMsg); err != nil {
+		go standardMetrics.DeadletterPublishFailureCounter.Add(1)
+		errEvent.span.RecordError(err)
+		_ = errEvent.callback(ctx, nil, err)
+	}
+
+	go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(errEvent.started).Milliseconds()))
+	go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+	errEvent.span.End()
+}
+
+func (rmq *RMQClient) handleUnmarshalledEyewaEventErr(ctx context.Context, errEvent unmarshalledEyewaEvent) {
+	errMsg := fmt.Errorf(libErrs.ErrorEventUnmarshalFailure.Error(), errEvent.queue, errEvent.err)
+
+	go standardMetrics.UnmarshalEventFailureCounter.Add(1)
+	errEvent.span.RecordError(errEvent.err)
+	_ = errEvent.callback(ctx, nil, errMsg)
+
+	// nack message and remove from queue
+	if err := errEvent.msg.Nack(false, false); err != nil {
+		go standardMetrics.NackFailureCounter.Add(1)
+		errEvent.span.RecordError(err)
+		_ = errEvent.callback(ctx, nil, err)
+	}
+
+	// publish message to DL
+	if err := rmq.sendToDeadletterQueue(errEvent.msg, errMsg); err != nil {
+		go standardMetrics.DeadletterPublishFailureCounter.Add(1)
+		errEvent.span.RecordError(err)
+		_ = errEvent.callback(ctx, nil, err)
+	}
+
+	go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(errEvent.started).Milliseconds()))
+	go standardMetrics.ActiveConsumingEventCounter.Add(-1)
+	errEvent.span.End()
 }

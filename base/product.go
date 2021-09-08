@@ -245,13 +245,13 @@ type ProductPriceAmount struct {
 
 // ProductMediaGalleryEntry product media gallery definition
 type ProductMediaGalleryEntry struct {
-	ID           int    `json:"id"`
-	Label        string `json:"label"`
-	Position     int    `json:"position"`
-	File         string `json:"file"`
-	Disabled     bool   `json:"disabled"`
-	MediaType    string `json:"media_type"`
-	VideoContent string `json:"video_content"`
+	ID           int          `json:"id"`
+	Label        string       `json:"label"`
+	Position     int          `json:"position"`
+	File         string       `json:"file"`
+	Disabled     bool         `json:"disabled"`
+	MediaType    string       `json:"media_type"`
+	VideoContent ProductVideo `json:"video_content"`
 }
 
 // ProductImage a product image definition
@@ -282,6 +282,16 @@ type SimplesCustomOptionValue struct {
 	OptionTypeID int    `json:"option_type_id"`
 	Title        string `json:"title"`
 	SortOrder    int    `json:"sort_order"`
+}
+
+// ProductVideo a product's video content
+type ProductVideo struct {
+	MediaType   string `json:"media_type"`
+	Description string `json:"video_description"`
+	MetaData    string `json:"video_metadata"`
+	Provider    string `json:"video_provider"`
+	Title       string `json:"video_title"`
+	URL         string `json:"video_url"`
 }
 
 // TableName overrides the table name for ProductModel

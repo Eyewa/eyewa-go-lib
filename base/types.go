@@ -61,7 +61,7 @@ type MessageBrokerCallbackFunc func(ctx context.Context, event *EyewaEvent, err 
 
 // MessageBrokerMagentoProductCallbackFunc all broker clients should define this callback fn
 // so as to react to the state of magento product events published/consumed - success/failure
-type MessageBrokerMagentoProductCallbackFunc func(ctx context.Context, event *MagentoProductEvent) error
+type MessageBrokerMagentoProductCallbackFunc func(ctx context.Context, event *MagentoProductEvent, err error) error
 
 // EyewaProduct definition of an eyewa Product
 type EyewaProduct struct {
