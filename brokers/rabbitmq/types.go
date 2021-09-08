@@ -2,12 +2,17 @@ package rabbitmq
 
 import (
 	"sync"
+	"time"
 
+	"github.com/eyewa/eyewa-go-lib/base"
 	"github.com/streadway/amqp"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Config for all RabbitMQ env vars
 type Config struct {
+	MessageBroker string `mapstructure:"message_broker"`
+
 	// RMQ credentials
 	Server   string `mapstructure:"rabbitmq_server"`
 	AmqpPort string `mapstructure:"rabbitmq_amqp_port"`
@@ -39,4 +44,24 @@ type RMQClient struct {
 
 	// Map of channels for all queues
 	channels map[string]*amqp.Channel
+}
+
+type unmarshalledEyewaEvent struct {
+	unmarshalledCommon
+	event    *base.EyewaEvent
+	callback base.MessageBrokerCallbackFunc
+}
+
+type unmarshalledMagentoEvent struct {
+	unmarshalledCommon
+	event    *base.MagentoProductEvent
+	callback base.MessageBrokerMagentoProductCallbackFunc
+}
+
+type unmarshalledCommon struct {
+	queue   string
+	msg     amqp.Delivery
+	span    trace.Span
+	started time.Time
+	err     error
 }

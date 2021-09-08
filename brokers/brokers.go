@@ -106,12 +106,20 @@ func getClient(brokerType BrokerType) MessageBroker {
 // Consuming from a message broker should be a long lived connection
 // Should it be lost for whatever reason, this func initiates the
 // attempt of re-gaining it so consumption can resume.
-func AlwaysReconnect(consume ConsumeFunc) {
+//
+// If for any reason connection is lost, the errCh is used to communicate
+// with the callback on such an event. This ALSO has to be a goroutine
+// so it is non-blocking as this is merely a retry strategy.
+func AlwaysReconnect(errCh chan error, callback ConsumerCallbackFunc) {
 	go func() {
 		for {
-			broker, err := OpenConnection()
-			if err == nil {
-				_ = consume(broker)
+			for err := range errCh {
+				if err != nil {
+					broker, err = OpenConnection()
+					if err == nil {
+						callback(broker, errCh)
+					}
+				}
 			}
 		}
 	}()
