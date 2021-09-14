@@ -8,7 +8,7 @@ import (
 	"github.com/eyewa/eyewa-go-lib/base"
 )
 
-func createProductRecord() base.ProductModel {
+func GenerateProductRecord() base.ProductModel {
 	subtype := GenerateEventSubType()
 	product := GenerateProduct(subtype)
 
