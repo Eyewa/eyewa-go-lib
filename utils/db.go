@@ -17,11 +17,10 @@ func GenerateProductRecord() base.ProductModel {
 
 	return base.ProductModel{
 		ProductMeta: base.ProductMeta{
-			ID:             uint(rand.Int()),
-			StoreID:        1,
+			StoreID:        rand.Intn(4) + 1,
 			StoreCode:      "eyewa",
-			EntityID:       rand.Int(),
-			ParentEntityID: rand.Int(),
+			EntityID:       int(rand.Int31()),
+			ParentEntityID: int(rand.Int31()),
 		},
 		Data:      data,
 		CreatedAt: time.Now(),
