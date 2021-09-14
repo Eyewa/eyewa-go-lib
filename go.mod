@@ -6,6 +6,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/google/uuid v1.1.2
+	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
