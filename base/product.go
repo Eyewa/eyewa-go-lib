@@ -221,7 +221,7 @@ type ProductReviews struct {
 // ProductVote product vote definition
 type ProductVote struct {
 	Label      string `json:"label"`
-	Percentage string `json:"percentage"`
+	Percentage int    `json:"percentage"`
 }
 
 // ProductPrice product pricing definition
@@ -245,13 +245,13 @@ type ProductPriceAmount struct {
 
 // ProductMediaGalleryEntry product media gallery definition
 type ProductMediaGalleryEntry struct {
-	ID           int          `json:"id"`
-	Label        string       `json:"label"`
-	Position     int          `json:"position"`
-	File         string       `json:"file"`
-	Disabled     bool         `json:"disabled"`
-	MediaType    string       `json:"media_type"`
-	VideoContent ProductVideo `json:"video_content"`
+	ID           int           `json:"id"`
+	Label        *string       `json:"label"`
+	Position     int           `json:"position"`
+	File         string        `json:"file"`
+	Disabled     bool          `json:"disabled"`
+	MediaType    string        `json:"media_type"`
+	VideoContent *ProductVideo `json:"video_content"`
 }
 
 // ProductImage a product image definition
@@ -276,22 +276,22 @@ type SimplesCustomOption struct {
 
 // SimplesCustomOptionValue product option values for product options
 type SimplesCustomOptionValue struct {
-	Price        int    `json:"price"`
-	PriceType    string `json:"price_type"`
-	SKU          string `json:"sku"`
-	OptionTypeID int    `json:"option_type_id"`
-	Title        string `json:"title"`
-	SortOrder    int    `json:"sort_order"`
+	Price        int     `json:"price"`
+	PriceType    string  `json:"price_type"`
+	SKU          *string `json:"sku"`
+	OptionTypeID int     `json:"option_type_id"`
+	Title        string  `json:"title"`
+	SortOrder    int     `json:"sort_order"`
 }
 
 // ProductVideo a product's video content
 type ProductVideo struct {
-	MediaType   string `json:"media_type"`
-	Description string `json:"video_description"`
-	MetaData    string `json:"video_metadata"`
-	Provider    string `json:"video_provider"`
-	Title       string `json:"video_title"`
-	URL         string `json:"video_url"`
+	MediaType   *string `json:"media_type,omitempty"`
+	Description *string `json:"video_description,omitempty"`
+	MetaData    *string `json:"video_metadata,omitempty"`
+	Provider    *string `json:"video_provider,omitempty"`
+	Title       *string `json:"video_title,omitempty"`
+	URL         *string `json:"video_url,omitempty"`
 }
 
 // TableName overrides the table name for ProductModel
