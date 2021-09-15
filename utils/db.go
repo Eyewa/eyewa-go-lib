@@ -18,7 +18,7 @@ func GenerateProductRecord() base.ProductModel {
 			EntityID:       int(rand.Int31()),
 			ParentEntityID: int(rand.Int31()),
 		},
-		Data:      data,
+		Data:      product,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
