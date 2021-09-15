@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"math/rand"
 	"strings"
 	"time"
@@ -48,6 +49,7 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		HTML: name,
 	}
 
+	sp := []byte(`{"update": true}`)
 	return base.GeneralProduct{
 		EntityID:         rand.Int(),
 		TypeID:           string(productType),
@@ -67,7 +69,7 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		ShortDescription: description,
 		SmallImage:       image,
 		Rating:           rand.Intn(101),
-		SolutionProduct:  []byte(`{"update":true}`),
+		SolutionProduct:  (*json.RawMessage)(&sp),
 		ProductReviews: base.ProductReviews{
 			TotalCount: rand.Intn(101),
 		},
