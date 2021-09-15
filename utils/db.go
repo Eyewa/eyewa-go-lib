@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"math/rand"
 	"time"
 
@@ -11,9 +10,6 @@ import (
 func GenerateProductRecord() base.ProductModel {
 	subtype := GenerateEventSubType()
 	product := GenerateProduct(subtype)
-
-	data, err := json.Marshal(product)
-	logError(err)
 
 	return base.ProductModel{
 		ProductMeta: base.ProductMeta{
