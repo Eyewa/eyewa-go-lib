@@ -294,6 +294,17 @@ type ProductVideo struct {
 	URL         *string `json:"video_url,omitempty"`
 }
 
+// SolutionProduct solution product for a product
+// This definition gets marshalled into GeneralProduct.SolutionProduct
+// as a json.RawMessage.
+type SolutionProduct struct {
+	Price int    `json:"price"`
+	ID    int    `json:"id"`
+	SKU   string `json:"sku"`
+	Name  string `json:"name"`
+	Image string `json:"image"`
+}
+
 // TableName overrides the table name for ProductModel
 func (ProductModel) TableName() string {
 	return "products"
