@@ -122,9 +122,10 @@ type ConfigurableSimpleProduct struct {
 	StockStatus     string       `json:"stock_status"`
 	MgsBrand        string       `json:"mgs_brand"`
 	URLKey          string       `json:"url_key"`
-	VirtualTryon    int          `json:"virtual_tryon"`
-	SpecialFromDate string       `json:"special_from_date"`
-	SpecialToDate   string       `json:"special_to_date"`
+	VirtualTryon    *int         `json:"virtual_tryon"`
+	SpecialPrice    *float64     `json:"special_price"`
+	SpecialFromDate *string      `json:"special_from_date"`
+	SpecialToDate   *string      `json:"special_to_date"`
 	Price           ProductPrice `json:"price"`
 }
 
@@ -136,14 +137,14 @@ type GeneralProduct struct {
 	Name                string                     `json:"name"`
 	URLKey              string                     `json:"url_key"`
 	StoreID             int                        `json:"store_id"`
-	ParentID            int                        `json:"parent_id"`
-	ParentSKU           string                     `json:"parent_sku"`
+	ParentID            *int                       `json:"parent_id"`
+	ParentSKU           *string                    `json:"parent_sku"`
 	StoreCode           string                     `json:"store_code"`
 	AttributeSetID      int                        `json:"attribute_set_id"`
 	AttributeSetName    string                     `json:"attribute_name"`
 	MgsBrand            string                     `json:"mgs_brand"`
 	ContactLensSize     int                        `json:"contact_lens_size"`
-	LensPackage         string                     `json:"lens_package"`
+	LensPackage         *string                    `json:"lens_package"`
 	StockStatus         string                     `json:"stock_status"`
 	Description         ProductDescriptionHTML     `json:"description"`
 	ShortDescription    ProductDescriptionHTML     `json:"short_description"`
@@ -155,10 +156,11 @@ type GeneralProduct struct {
 	MetaKeyword         string                     `json:"meta_keyword"`
 	MetaTitle           string                     `json:"meta_title"`
 	OptionLabels        json.RawMessage            `json:"option_labels"`
-	VirtualTryon        int                        `json:"virtual_tryon"`
+	VirtualTryon        *int                       `json:"virtual_tryon"`
 	Categories          []ProductCategory          `json:"categories"`
-	SpecialFromDate     string                     `json:"special_from_date"`
-	SpecialToDate       string                     `json:"special_to_date"`
+	SpecialPrice        *float64                   `json:"special_price"`
+	SpecialFromDate     *string                    `json:"special_from_date"`
+	SpecialToDate       *string                    `json:"special_to_date"`
 	Price               ProductPrice               `json:"price"`
 	MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
 	Image               ProductImage               `json:"image"`
