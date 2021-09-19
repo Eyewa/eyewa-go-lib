@@ -43,9 +43,8 @@ type ProductMeta struct {
 // ConfigurableProduct magento's configurable product definition
 type ConfigurableProduct struct {
 	GeneralProduct
-	Variants []struct {
-		Product ConfigurableSimpleProduct `json:"product"`
-	} `json:"variants"`
+	Variants       []ConfigurableSimpleProduct `json:"variants"`
+	JSONConfigData JSONConfigData              `json:"jsonConfigData"`
 }
 
 // SimpleProduct magento's simple product definition
@@ -115,18 +114,19 @@ type ConfigurableSimpleProduct struct {
 		Label      string `json:"label"`
 		ValueIndex int    `json:"value_index"`
 	} `json:"attributes"`
-	EntityID        int          `json:"id"`
-	TypeID          string       `json:"type_id"`
-	SKU             string       `json:"sku"`
-	Name            string       `json:"name"`
-	StockStatus     string       `json:"stock_status"`
-	MgsBrand        string       `json:"mgs_brand"`
-	URLKey          string       `json:"url_key"`
-	VirtualTryon    *int         `json:"virtual_tryon"`
-	SpecialPrice    *float64     `json:"special_price"`
-	SpecialFromDate *string      `json:"special_from_date"`
-	SpecialToDate   *string      `json:"special_to_date"`
-	Price           ProductPrice `json:"price"`
+	Product struct {
+		EntityID            int                        `json:"id"`
+		TypeID              string                     `json:"type_id"`
+		SKU                 string                     `json:"sku"`
+		Name                string                     `json:"name"`
+		StockStatus         string                     `json:"stock_status"`
+		URLKey              string                     `json:"url_key"`
+		SpecialPrice        *float64                   `json:"special_price"`
+		SpecialFromDate     *string                    `json:"special_from_date"`
+		SpecialToDate       *string                    `json:"special_to_date"`
+		Price               ProductPrice               `json:"price"`
+		MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
+	} `json:"product"`
 }
 
 // GeneralProduct a typical definition of a product common to both configurables or simples.
@@ -306,6 +306,12 @@ type SolutionProduct struct {
 	SKU   string `json:"sku"`
 	Name  string `json:"name"`
 	Image string `json:"image"`
+}
+
+type JSONConfigData struct {
+	ChildProducts   json.RawMessage `json:"ChildProducts"`
+	SuperAttributes json.RawMessage `json:"SuperAttributes"`
+	PriceFormat     json.RawMessage `json:"PriceFormat"`
 }
 
 // TableName overrides the table name for ProductModel
