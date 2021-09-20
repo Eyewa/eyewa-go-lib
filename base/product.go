@@ -109,12 +109,15 @@ type SimpleProduct struct {
 //     ]
 // }
 type ConfigurableSimpleProduct struct {
-	Attributes []struct {
-		Code       string `json:"code"`
-		Label      string `json:"label"`
-		ValueIndex int    `json:"value_index"`
-	} `json:"attributes"`
-	Product SimpleVariant `json:"product"`
+	Attributes []ConfigurableVariantAttribute `json:"attributes"`
+	Product    SimpleVariant                  `json:"product"`
+}
+
+// ConfigurableVariantAttribute attributes data for configurable variants
+type ConfigurableVariantAttribute struct {
+	Code       string `json:"code"`
+	Label      string `json:"label"`
+	ValueIndex int    `json:"value_index"`
 }
 
 // SimpleVariant definition for a variant under a configurable data
