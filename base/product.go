@@ -37,7 +37,7 @@ type ProductMeta struct {
 	StoreID        int    `gorm:"index:uix_pdt_store_entity, unique"`
 	StoreCode      string `gorm:"index:uix_pdt_store_entity, unique"`
 	EntityID       int    `gorm:"index:uix_pdt_store_entity, unique"`
-	ParentEntityID int    `gorm:"index:uix_pdt_store_entity, unique"`
+	ParentEntityID int    `gorm:"index:uix_pdt_store_entity, unique"` // if null means product is a configurable pdt otherwise a simple
 }
 
 // ConfigurableProduct magento's configurable product definition
@@ -114,19 +114,22 @@ type ConfigurableSimpleProduct struct {
 		Label      string `json:"label"`
 		ValueIndex int    `json:"value_index"`
 	} `json:"attributes"`
-	Product struct {
-		EntityID            int                        `json:"id"`
-		TypeID              string                     `json:"type_id"`
-		SKU                 string                     `json:"sku"`
-		Name                string                     `json:"name"`
-		StockStatus         string                     `json:"stock_status"`
-		URLKey              string                     `json:"url_key"`
-		SpecialPrice        *float64                   `json:"special_price"`
-		SpecialFromDate     *string                    `json:"special_from_date"`
-		SpecialToDate       *string                    `json:"special_to_date"`
-		Price               ProductPrice               `json:"price"`
-		MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
-	} `json:"product"`
+	Product SimpleVariant `json:"product"`
+}
+
+// SimpleVariant definition for a variant under a configurable data
+type SimpleVariant struct {
+	EntityID            int                        `json:"id"`
+	TypeID              string                     `json:"type_id"`
+	SKU                 string                     `json:"sku"`
+	Name                string                     `json:"name"`
+	StockStatus         string                     `json:"stock_status"`
+	URLKey              string                     `json:"url_key"`
+	SpecialPrice        *int                       `json:"special_price"`
+	SpecialFromDate     *string                    `json:"special_from_date"`
+	SpecialToDate       *string                    `json:"special_to_date"`
+	Price               ProductPrice               `json:"price"`
+	MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
 }
 
 // GeneralProduct a typical definition of a product common to both configurables or simples.
