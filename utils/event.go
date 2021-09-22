@@ -17,7 +17,7 @@ const (
 	ProductUpdated   string = "ProductUpdated"
 )
 
-func GenerateEyewaEvent() *base.EyewaEvent {
+func GenerateRandomProductEvent() *base.EyewaEvent {
 	eventSubType := GenerateEventSubType()
 
 	product := GenerateProduct(eventSubType)
@@ -29,6 +29,34 @@ func GenerateEyewaEvent() *base.EyewaEvent {
 		EventType:    ProductEventType,
 		EventSubType: string(eventSubType),
 		StoreLocale:  GenerateStoreLocale(),
+		Payload:      product,
+		CreatedAt:    time.Now().Format(time.RFC3339),
+	}
+}
+
+func GenerateConfigurableProductEvent() *base.EyewaEvent {
+	product := GenerateProduct(base.ConfigurableProductType)
+
+	return &base.EyewaEvent{
+		ID:           uuid.NewString(),
+		Name:         GenerateEventName(),
+		EventType:    ProductEventType,
+		StoreLocale:  GenerateStoreLocale(),
+		EventSubType: string(base.ConfigurableProductType),
+		Payload:      product,
+		CreatedAt:    time.Now().Format(time.RFC3339),
+	}
+}
+
+func GenerateSimpleProductEvent() *base.EyewaEvent {
+	product := GenerateProduct(base.SimpleProductType)
+
+	return &base.EyewaEvent{
+		ID:           uuid.NewString(),
+		Name:         GenerateEventName(),
+		EventType:    ProductEventType,
+		StoreLocale:  GenerateStoreLocale(),
+		EventSubType: string(base.SimpleProductType),
 		Payload:      product,
 		CreatedAt:    time.Now().Format(time.RFC3339),
 	}
