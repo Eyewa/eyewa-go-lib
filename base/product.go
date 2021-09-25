@@ -128,7 +128,7 @@ type SimpleVariant struct {
 	Name                string                     `json:"name"`
 	StockStatus         string                     `json:"stock_status"`
 	URLKey              string                     `json:"url_key"`
-	SpecialPrice        *int                       `json:"special_price"`
+	SpecialPrice        *float64                   `json:"special_price"`
 	SpecialFromDate     *string                    `json:"special_from_date"`
 	SpecialToDate       *string                    `json:"special_to_date"`
 	Price               ProductPrice               `json:"price"`
@@ -156,7 +156,7 @@ type GeneralProduct struct {
 	ShortDescription    ProductDescriptionHTML     `json:"short_description"`
 	SmallImage          ProductImage               `json:"small_image"`
 	Rating              int                        `json:"rating"`
-	SolutionProduct     *json.RawMessage           `json:"solution_product"`
+	SolutionProduct     *string                    `json:"solution_product"` // stringified json.RawMessage
 	ProductReviews      ProductReviews             `json:"productReviews"`
 	MetaDescription     string                     `json:"meta_description"`
 	MetaKeyword         string                     `json:"meta_keyword"`
@@ -248,8 +248,8 @@ type ProductPrice struct {
 
 // ProductPriceAmount price amount definition
 type ProductPriceAmount struct {
-	Currency string `json:"currency"`
-	Value    int    `json:"value"`
+	Currency string  `json:"currency"`
+	Value    float64 `json:"value"`
 }
 
 // ProductMediaGalleryEntry product media gallery definition
@@ -285,7 +285,7 @@ type SimplesCustomOption struct {
 
 // SimplesCustomOptionValue product option values for product options
 type SimplesCustomOptionValue struct {
-	Price        int     `json:"price"`
+	Price        float64 `json:"price"`
 	PriceType    string  `json:"price_type"`
 	SKU          *string `json:"sku"`
 	OptionTypeID int     `json:"option_type_id"`
@@ -307,7 +307,7 @@ type ProductVideo struct {
 // This definition gets marshalled into GeneralProduct.SolutionProduct
 // as a json.RawMessage.
 type SolutionProduct struct {
-	Price int    `json:"price"`
+	Price string `json:"price"` // price with currency symbol
 	ID    int    `json:"id"`
 	SKU   string `json:"sku"`
 	Name  string `json:"name"`
