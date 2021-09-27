@@ -20,18 +20,10 @@ func GenerateSimpleProduct() base.SimpleProduct {
 func GenerateConfigurableProduct() base.ConfigurableProduct {
 	return base.ConfigurableProduct{
 		GeneralProduct: GenerateGeneralProduct(base.ConfigurableProductType),
-		Variants: []struct {
-			Product base.ConfigurableSimpleProduct `json:"product"`
-		}{
-			{
-				Product: GenerateConfigurableSimpleProduct(),
-			},
-			{
-				Product: GenerateConfigurableSimpleProduct(),
-			},
-			{
-				Product: GenerateConfigurableSimpleProduct(),
-			},
+		Variants: []base.ConfigurableSimpleProduct{
+			GenerateConfigurableSimpleProduct(),
+			GenerateConfigurableSimpleProduct(),
+			GenerateConfigurableSimpleProduct(),
 		},
 	}
 }
@@ -48,6 +40,7 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		HTML: name,
 	}
 
+	sp := string([]byte(`{"update": true}`))
 	return base.GeneralProduct{
 		EntityID:         rand.Int(),
 		TypeID:           string(productType),
@@ -55,19 +48,19 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		Name:             name,
 		URLKey:           "/static-url",
 		StoreID:          rand.Int(),
-		ParentID:         rand.Int(),
-		ParentSKU:        uuid.NewString(),
+		ParentID:         ConvertIntToPointer(rand.Int()),
+		ParentSKU:        ConvertStringToPointer(uuid.NewString()),
 		StoreCode:        "ae",
 		AttributeSetID:   GenerateAttributeSetID(),
 		MgsBrand:         GenerateBrand(),
 		ContactLensSize:  rand.Int(),
-		LensPackage:      "box",
+		LensPackage:      ConvertStringToPointer("box"),
 		StockStatus:      GenerateStockStatus(),
 		Description:      description,
 		ShortDescription: description,
 		SmallImage:       image,
 		Rating:           rand.Intn(101),
-		SolutionProduct:  []byte(`{"update":true}`),
+		SolutionProduct:  (*string)(&sp),
 		ProductReviews: base.ProductReviews{
 			TotalCount: rand.Intn(101),
 		},
@@ -75,10 +68,10 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		MetaKeyword:         name,
 		MetaTitle:           name,
 		OptionLabels:        GenerateOptionLabels(),
-		VirtualTryon:        rand.Intn(1),
+		VirtualTryon:        ConvertIntToPointer(rand.Intn(1)),
 		Categories:          GenerateCategories(),
-		SpecialFromDate:     "N/A",
-		SpecialToDate:       "N/A",
+		SpecialFromDate:     ConvertStringToPointer("N/A"),
+		SpecialToDate:       ConvertStringToPointer("N/A"),
 		Price:               GeneratePrice(),
 		MediaGalleryEntries: []base.ProductMediaGalleryEntry{},
 		Image:               image,
@@ -89,22 +82,18 @@ func GenerateConfigurableSimpleProduct() base.ConfigurableSimpleProduct {
 	name := GenerateName()
 
 	return base.ConfigurableSimpleProduct{
-		Attributes: []struct {
-			Code       string `json:"code"`
-			Label      string `json:"label"`
-			ValueIndex int    `json:"value_index"`
-		}{},
-		EntityID:        rand.Int(),
-		TypeID:          string(base.ConfigurableProductType),
-		SKU:             uuid.NewString(),
-		Name:            name,
-		StockStatus:     GenerateStockStatus(),
-		MgsBrand:        GenerateBrand(),
-		URLKey:          "/variant-url-key",
-		VirtualTryon:    rand.Intn(2),
-		SpecialFromDate: "N/A",
-		SpecialToDate:   "N/A",
-		Price:           GeneratePrice(),
+		Attributes: []base.ConfigurableVariantAttribute{},
+		Product: base.SimpleVariant{
+			EntityID:        rand.Int(),
+			TypeID:          string(base.ConfigurableProductType),
+			SKU:             uuid.NewString(),
+			Name:            name,
+			StockStatus:     GenerateStockStatus(),
+			URLKey:          "/variant-url-key",
+			SpecialFromDate: ConvertStringToPointer("N/A"),
+			SpecialToDate:   ConvertStringToPointer("N/A"),
+			Price:           GeneratePrice(),
+		},
 	}
 }
 
@@ -179,7 +168,7 @@ func GeneratePrice() base.ProductPrice {
 	currencies := []string{"USD", "UAE"}
 	currency := currencies[rand.Intn(len(currencies))]
 
-	amount := rand.Intn(100) + 50
+	amount := rand.Float64() + 50
 
 	return base.ProductPrice{
 		MaximalPrice: struct {
