@@ -20,7 +20,7 @@ const (
 func GenerateRandomProductEvent() *base.EyewaEvent {
 	eventSubType := GenerateEventSubType()
 
-	product := GenerateProduct(eventSubType)
+	product := GenerateProductPayload(eventSubType)
 
 	// sample event
 	return &base.EyewaEvent{
@@ -35,7 +35,7 @@ func GenerateRandomProductEvent() *base.EyewaEvent {
 }
 
 func GenerateConfigurableProductEvent() *base.EyewaEvent {
-	product := GenerateProduct(base.ConfigurableProductType)
+	product := GenerateProductPayload(base.ConfigurableProductType)
 
 	return &base.EyewaEvent{
 		ID:           uuid.NewString(),
@@ -49,7 +49,7 @@ func GenerateConfigurableProductEvent() *base.EyewaEvent {
 }
 
 func GenerateSimpleProductEvent() *base.EyewaEvent {
-	product := GenerateProduct(base.SimpleProductType)
+	product := GenerateProductPayload(base.SimpleProductType)
 
 	return &base.EyewaEvent{
 		ID:           uuid.NewString(),
@@ -72,7 +72,7 @@ func GenerateEventSubType() base.EyewaProductType {
 	return subTypes[rand.Intn(len(subTypes))]
 }
 
-func GenerateProduct(eventSubType base.EyewaProductType) []byte {
+func GenerateProductPayload(eventSubType base.EyewaProductType) []byte {
 	switch eventSubType {
 	case base.SimpleProductType:
 		simpleProduct := GenerateSimpleProduct()

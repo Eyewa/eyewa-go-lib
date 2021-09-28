@@ -9,7 +9,7 @@ import (
 
 func GenerateProductRecord() base.ProductModel {
 	subtype := GenerateEventSubType()
-	product := GenerateProduct(subtype)
+	product := GenerateProductPayload(subtype)
 
 	return base.ProductModel{
 		ProductMeta: base.ProductMeta{
