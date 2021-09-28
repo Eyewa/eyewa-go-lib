@@ -53,7 +53,9 @@ func (*MessageBrokerClient) connect() (*MessageBrokerClient, error) {
 
 		bkoff := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), broker.MaxConnectionRetries)
 		err := backoff.RetryNotify(connect, bkoff, func(err error, duration time.Duration) {
-			fmt.Println(err.Error())
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 		})
 		if err != nil {
 			return nil, err
