@@ -17,10 +17,10 @@ const (
 	ProductUpdated   string = "ProductUpdated"
 )
 
-func GenerateEyewaEvent() *base.EyewaEvent {
+func GenerateRandomProductEvent() *base.EyewaEvent {
 	eventSubType := GenerateEventSubType()
 
-	product := GenerateProduct(eventSubType)
+	product := GenerateProductPayload(eventSubType)
 
 	// sample event
 	return &base.EyewaEvent{
@@ -29,6 +29,34 @@ func GenerateEyewaEvent() *base.EyewaEvent {
 		EventType:    ProductEventType,
 		EventSubType: string(eventSubType),
 		StoreLocale:  GenerateStoreLocale(),
+		Payload:      product,
+		CreatedAt:    time.Now().Format(time.RFC3339),
+	}
+}
+
+func GenerateConfigurableProductEvent() *base.EyewaEvent {
+	product := GenerateProductPayload(base.ConfigurableProductType)
+
+	return &base.EyewaEvent{
+		ID:           uuid.NewString(),
+		Name:         GenerateEventName(),
+		EventType:    ProductEventType,
+		StoreLocale:  GenerateStoreLocale(),
+		EventSubType: string(base.ConfigurableProductType),
+		Payload:      product,
+		CreatedAt:    time.Now().Format(time.RFC3339),
+	}
+}
+
+func GenerateSimpleProductEvent() *base.EyewaEvent {
+	product := GenerateProductPayload(base.SimpleProductType)
+
+	return &base.EyewaEvent{
+		ID:           uuid.NewString(),
+		Name:         GenerateEventName(),
+		EventType:    ProductEventType,
+		StoreLocale:  GenerateStoreLocale(),
+		EventSubType: string(base.SimpleProductType),
 		Payload:      product,
 		CreatedAt:    time.Now().Format(time.RFC3339),
 	}
@@ -44,7 +72,7 @@ func GenerateEventSubType() base.EyewaProductType {
 	return subTypes[rand.Intn(len(subTypes))]
 }
 
-func GenerateProduct(eventSubType base.EyewaProductType) []byte {
+func GenerateProductPayload(eventSubType base.EyewaProductType) []byte {
 	switch eventSubType {
 	case base.SimpleProductType:
 		simpleProduct := GenerateSimpleProduct()
