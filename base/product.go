@@ -317,7 +317,6 @@ type SolutionProduct struct {
 type JSONConfigData struct {
 	ChildProducts   json.RawMessage `json:"ChildProducts"`
 	SuperAttributes json.RawMessage `json:"SuperAttributes"`
-	PriceFormat     json.RawMessage `json:"PriceFormat"`
 }
 
 // TableName overrides the table name for ProductModel
