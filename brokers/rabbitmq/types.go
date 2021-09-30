@@ -27,6 +27,8 @@ type Config struct {
 	PublisherQueueName string `mapstructure:"publisher_queue_name"`
 	ConsumerQueueName  string `mapstructure:"consumer_queue_name"`
 
+	ConsumerExchange string `mapstructure:"rabbitmq_consumer_exchange"`
+
 	// Exchanges to bind consumer + publisher queues to
 	PublisherExchangeType string `mapstructure:"rabbitmq_publisher_exchange_type"`
 	ConsumerExchangeType  string `mapstructure:"rabbitmq_consumer_exchange_type"`
