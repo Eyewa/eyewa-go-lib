@@ -143,8 +143,8 @@ type GeneralProduct struct {
 	Name                string                     `json:"name"`
 	URLKey              string                     `json:"url_key"`
 	StoreID             int                        `json:"store_id"`
-	ParentID            *int                       `json:"parent_id"`
-	ParentSKU           *string                    `json:"parent_sku"`
+	ParentIDs           *[]int                     `json:"parent_ids"`
+	ParentSKUs          *[]string                  `json:"parent_skus"`
 	StoreCode           string                     `json:"store_code"`
 	AttributeSetID      int                        `json:"attribute_set_id"`
 	AttributeSetName    string                     `json:"attribute_name"`
