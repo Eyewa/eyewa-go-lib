@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
 
+	"github.com/cenkalti/backoff"
 	"github.com/eyewa/eyewa-go-lib/base"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -35,10 +36,11 @@ var (
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
 		Bind:                 Bind,
 	}
-	defaultPrefetchCount              = 5
-	tracerName                        = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
-	messagingSystem                   = "RabbitMQ"
-	maxRetryErrorsBeforeDeadlettering = 5
+	defaultPrefetchCount                     = 5
+	tracerName                               = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
+	messagingSystem                          = "RabbitMQ"
+	maxRetryErrorsBeforeDeadlettering        = 5
+	maxConnectionRetries              uint64 = 100
 )
 
 func initConfig() (Config, string, error) {
@@ -578,7 +580,7 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, e
 	}
 
 	// bind them together
-	err = channel.QueueBind(queue, queue, exchName, false, nil)
+	err = rmq.tryToBindQueueToExchange(channel, queue, exchName)
 	if err != nil {
 		return fmt.Errorf(libErrs.ErrorExchangeBindFailure.Error(), q.Name, err)
 	}
@@ -830,4 +832,17 @@ func (rmq *RMQClient) handleUnmarshalledEyewaEventErr(ctx context.Context, errEv
 	go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(errEvent.started).Milliseconds()))
 	go standardMetrics.ActiveConsumingEventCounter.Add(-1)
 	errEvent.span.End()
+}
+
+func (rmq *RMQClient) tryToBindQueueToExchange(channel *amqp.Channel, queue, exchName string) error {
+	bind := func() error {
+		return channel.QueueBind(queue, queue, exchName, false, nil)
+	}
+
+	bkoff := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxConnectionRetries)
+	return backoff.RetryNotify(bind, bkoff, func(err error, duration time.Duration) {
+		if err != nil {
+			log.Error("Got error while notifying binding retries", zap.Error(err))
+		}
+	})
 }
