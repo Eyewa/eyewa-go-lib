@@ -842,7 +842,7 @@ func (rmq *RMQClient) tryToBindQueueToExchange(channel *amqp.Channel, queue, exc
 	bkoff := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxConnectionRetries)
 	return backoff.RetryNotify(bind, bkoff, func(err error, duration time.Duration) {
 		if err != nil {
-			log.Error("Got error while notifying binding retries", zap.Error(err))
+			log.Error(fmt.Sprintf("Failed to bind queue(%s) to exchange(%s)", queue, exchName), zap.Error(err))
 		}
 	})
 }
