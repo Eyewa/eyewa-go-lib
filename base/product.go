@@ -37,7 +37,7 @@ type ProductMeta struct {
 	StoreID         int             `gorm:"index:uix_pdt_store_entity, unique"`
 	StoreCode       string          `gorm:"index:uix_pdt_store_entity, unique"`
 	EntityID        int             `gorm:"index:uix_pdt_store_entity, unique"`
-	ParentEntityIDs *datatypes.JSON `gorm:"index:uix_pdt_store_entity, unique"` // if simple, list of configurables it is assigned to
+	ParentEntityIDs *datatypes.JSON // if simple, list of configurables it is assigned to
 }
 
 // ConfigurableProduct magento's configurable product definition
