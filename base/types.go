@@ -11,15 +11,15 @@ type EyewaProductType string
 
 // EyewaEvent a base representation of an event fired/received
 type EyewaEvent struct {
-	ID           string `json:"id"`                                // can be used for tracing
-	Name         string `json:"name"`                              // name of event - ProductUpdated, ProductDeleted etc
-	EventType    string `json:"event_type"`                        // type of event's entity - Product, Order etc
-	StoreLocale  string `json:"store_locale" binding:"omitempty"`  // store locale for store sa-sone, kw-ar, sa-en etc
-	EventSubType string `json:"event_subtype" binding:"omitempty"` // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
+	ID           string `json:"id"`                      // can be used for tracing
+	Name         string `json:"name"`                    // name of event - ProductUpdated, ProductDeleted etc
+	EventType    string `json:"event_type"`              // type of event's entity - Product, Order etc
+	StoreLocale  string `json:"store_locale,omitempty"`  // store locale for store sa-sone, kw-ar, sa-en etc
+	EventSubType string `json:"event_subtype,omitempty"` // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
 
 	// a representation on an error. provides reasons when a message ends up back
 	// in the queue
-	Errors []Error `json:"errors" binding:"omitempty"`
+	Errors []Error `json:"errors,omitempty"`
 
 	Payload   json.RawMessage `json:"payload"`    // actual event payload
 	CreatedAt string          `json:"created_at"` // time in RFC3339 format
@@ -27,17 +27,17 @@ type EyewaEvent struct {
 
 // MagentoProductEvent a representation of a product event in Magento
 type MagentoProductEvent struct {
-	ID           string  `json:"id"`                         // uuid
-	Name         string  `json:"event"`                      // name of event - product.created, catalog.created etc
-	EntityID     int     `json:"entity_id"`                  // ID of the product in magento
-	EventType    string  `json:"event_type"`                 // type of event's entity - Product, Order etc
-	EventSubType string  `json:"event_subtype"`              // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
-	StoreID      int     `json:"store_id"`                   // ID of the store the product/category belongs to
-	StoreCode    string  `json:"store_code"`                 // store code for store eyewa_kwd, eyewa_sasone etc
-	StoreLocale  string  `json:"store_locale"`               // store locale for store sa-sone, kw-ar, sa-en etc
-	WebsiteID    int     `json:"website_id"`                 // ID of website store is assigned to
-	Errors       []Error `json:"errors" binding:"omitempty"` // provides reasons why a message ended up in the deadletter queue for e.g
-	CreatedAt    string  `json:"created_at"`                 // time in RFC3339 format of when event occurred
+	ID           string  `json:"id"`               // uuid
+	Name         string  `json:"event"`            // name of event - product.created, catalog.created etc
+	EntityID     int     `json:"entity_id"`        // ID of the product in magento
+	EventType    string  `json:"event_type"`       // type of event's entity - Product, Order etc
+	EventSubType string  `json:"event_subtype"`    // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
+	StoreID      int     `json:"store_id"`         // ID of the store the product/category belongs to
+	StoreCode    string  `json:"store_code"`       // store code for store eyewa_kwd, eyewa_sasone etc
+	StoreLocale  string  `json:"store_locale"`     // store locale for store sa-sone, kw-ar, sa-en etc
+	WebsiteID    int     `json:"website_id"`       // ID of website store is assigned to
+	Errors       []Error `json:"errors,omitempty"` // provides reasons why a message ended up in the deadletter queue for e.g
+	CreatedAt    string  `json:"created_at"`       // time in RFC3339 format of when event occurred
 }
 
 // Error a structural info about an error within the ecosystem
