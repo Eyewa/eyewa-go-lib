@@ -28,7 +28,7 @@ import (
 var (
 	config          Config
 	standardMetrics *RabbitMQMetrics
-	Bind            = "bind"
+	exchangeBind            = "bind"
 	exchangeTypes   = map[string]string{
 		amqp.ExchangeDirect:  amqp.ExchangeDirect,
 		amqp.ExchangeFanout:  amqp.ExchangeFanout,
