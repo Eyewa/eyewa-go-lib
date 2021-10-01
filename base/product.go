@@ -33,12 +33,11 @@ type ProductModel struct {
 // ProductMeta these are fields internal to the service either
 // there for lookup or assists during a transformation process
 type ProductMeta struct {
-	ID              uint   `gorm:"primaryKey" json:"-"`
-	StoreID         int    `gorm:"index:uix_pdt_store_entity, unique"`
-	StoreCode       string `gorm:"index:uix_pdt_store_entity, unique"`
-	EntityID        int    `gorm:"index:uix_pdt_store_entity, unique"`
-	ParentEntityIDs *[]int `gorm:"index:uix_pdt_store_entity, unique"`
-	ParentEntityID  int    `gorm:"index:uix_pdt_store_entity, unique"` // if null means product is a configurable pdt otherwise a simple
+	ID              uint            `gorm:"primaryKey" json:"-"`
+	StoreID         int             `gorm:"index:uix_pdt_store_entity, unique"`
+	StoreCode       string          `gorm:"index:uix_pdt_store_entity, unique"`
+	EntityID        int             `gorm:"index:uix_pdt_store_entity, unique"`
+	ParentEntityIDs *datatypes.JSON `gorm:"index:uix_pdt_store_entity, unique"` // if simple, list of configurables it is assigned to
 }
 
 // ConfigurableProduct magento's configurable product definition
