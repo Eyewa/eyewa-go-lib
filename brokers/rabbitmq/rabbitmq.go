@@ -559,7 +559,7 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, e
 
 	exchType := exchangeTypes[exchangeType]
 	exchName := ""
-	if exchType == Bind {
+	if exchType == exchangeBind {
 		exchName = exchangeName
 	} else if exchType != "" {
 		exchName = fmt.Sprintf("%s.%s", queue, exchType)
@@ -572,7 +572,7 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, e
 	}
 
 	// declare exchange if there is no binding in exchangeType
-	if exchType != Bind {
+	if exchType != exchangeBind {
 		err = channel.ExchangeDeclare(exchName, exchType, true, false, false, false, nil)
 		if err != nil {
 			return fmt.Errorf(libErrs.ErrorExchangeDeclareFailure.Error(), q.Name, err)
