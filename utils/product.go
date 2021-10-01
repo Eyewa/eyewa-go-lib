@@ -41,8 +41,6 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 	}
 
 	sp := string([]byte(`{"update": true}`))
-	parentIDs := []int{rand.Int()}
-	parentSKUs := []string{uuid.NewString()}
 	return base.GeneralProduct{
 		EntityID:         rand.Int(),
 		TypeID:           string(productType),
@@ -50,8 +48,8 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		Name:             name,
 		URLKey:           "/static-url",
 		StoreID:          rand.Int(),
-		ParentIDs:        &parentIDs,
-		ParentSKUs:       &parentSKUs,
+		ParentIDs:        &[]int{rand.Int()},
+		ParentSKUs:       &[]string{uuid.NewString()},
 		StoreCode:        "ae",
 		AttributeSetID:   GenerateAttributeSetID(),
 		MgsBrand:         GenerateBrand(),

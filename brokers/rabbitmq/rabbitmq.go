@@ -28,13 +28,13 @@ import (
 var (
 	config          Config
 	standardMetrics *RabbitMQMetrics
-	exchangeBind            = "bind"
+	exchangeBind    = "bind"
 	exchangeTypes   = map[string]string{
 		amqp.ExchangeDirect:  amqp.ExchangeDirect,
 		amqp.ExchangeFanout:  amqp.ExchangeFanout,
 		amqp.ExchangeHeaders: amqp.ExchangeHeaders,
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
-		exchangeBind:   exchangeBind,
+		exchangeBind:         exchangeBind,
 	}
 	defaultPrefetchCount                     = 5
 	tracerName                               = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
