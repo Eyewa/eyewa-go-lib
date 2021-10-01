@@ -40,7 +40,8 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		HTML: name,
 	}
 
-	sp := string([]byte(`{"update": true}`))
+	sp := "[{\"price\":\"AED 40.00\",\"id\":\"12916\",\"sku\":\"solmltp-opt-free-090\",\"name\":\"Opti-Free Pure Moist Solution 90 ml\",\"image\":\"https:\\/\\/cdn.eyewa.com\\/media\\/prescription\\/options\\/images\\/default\\/opti-free-puremoist-90ml_1.png\"}]"
+
 	return base.GeneralProduct{
 		EntityID:         rand.Int(),
 		TypeID:           string(productType),
@@ -60,7 +61,7 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		ShortDescription: description,
 		SmallImage:       image,
 		Rating:           rand.Intn(101),
-		SolutionProduct:  (*string)(&sp),
+		SolutionProduct:  ConvertStringToPointer(sp),
 		ProductReviews: base.ProductReviews{
 			TotalCount: rand.Intn(101),
 		},
