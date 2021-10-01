@@ -34,7 +34,7 @@ var (
 		amqp.ExchangeFanout:  amqp.ExchangeFanout,
 		amqp.ExchangeHeaders: amqp.ExchangeHeaders,
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
-		Bind:                 Bind,
+		exchangeBind:   exchangeBind,
 	}
 	defaultPrefetchCount                     = 5
 	tracerName                               = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
