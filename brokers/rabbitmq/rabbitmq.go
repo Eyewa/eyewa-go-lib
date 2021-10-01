@@ -433,8 +433,6 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				continue
 			}
 
-			log.Debug("Consumed successfully.", zap.Any("event", event))
-
 			go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(started).Milliseconds()))
 			go standardMetrics.ConsumedEventCounter.Add(1, attribute.Any("event_name", event.Name))
 			go standardMetrics.ActiveConsumingEventCounter.Add(-1)
