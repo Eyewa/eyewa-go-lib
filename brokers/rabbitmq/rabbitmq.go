@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
 
+	"github.com/cenkalti/backoff"
 	"github.com/eyewa/eyewa-go-lib/base"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -27,16 +28,19 @@ import (
 var (
 	config          Config
 	standardMetrics *RabbitMQMetrics
+	exchangeBind    = "bind"
 	exchangeTypes   = map[string]string{
 		amqp.ExchangeDirect:  amqp.ExchangeDirect,
 		amqp.ExchangeFanout:  amqp.ExchangeFanout,
 		amqp.ExchangeHeaders: amqp.ExchangeHeaders,
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
+		exchangeBind:         exchangeBind,
 	}
-	defaultPrefetchCount              = 5
-	tracerName                        = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
-	messagingSystem                   = "RabbitMQ"
-	maxRetryErrorsBeforeDeadlettering = 5
+	defaultPrefetchCount                     = 5
+	tracerName                               = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
+	messagingSystem                          = "RabbitMQ"
+	maxRetryErrorsBeforeDeadlettering        = 5
+	maxConnectionRetries              uint64 = 100
 )
 
 func initConfig() (Config, string, error) {
@@ -53,6 +57,7 @@ func initConfig() (Config, string, error) {
 		"PUBLISHER_QUEUE_NAME",
 		"CONSUMER_QUEUE_NAME",
 		"QUEUE_PREFETCH_COUNT",
+		"RABBITMQ_CONSUMER_EXCHANGE",
 		"RABBITMQ_PUBLISHER_EXCHANGE_TYPE",
 		"RABBITMQ_CONSUMER_EXCHANGE_TYPE",
 		"MESSAGE_BROKER",
@@ -153,7 +158,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			return
 		}
 
-		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
+		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType, config.ConsumerExchange)
 		if errQ != nil {
 			_ = callback(ctx, nil, errQ)
 			return
@@ -307,7 +312,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			return
 		}
 
-		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType)
+		errQ := rmq.declareQueue(channel, config.ConsumerQueueName, config.ConsumerExchangeType, config.ConsumerExchange)
 		if errQ != nil {
 			_ = callback(ctx, nil, errQ)
 			return
@@ -454,7 +459,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 			return
 		}
 
-		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType)
+		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType, config.ConsumerExchange)
 		if errQ != nil {
 			_ = callback(ctx, event, errQ)
 			return
@@ -543,7 +548,7 @@ func (rmq *RMQClient) CloseConnection() error {
 	return nil
 }
 
-func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType string) error {
+func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, exchangeName string) error {
 	var err error
 
 	if channel == nil {
@@ -554,7 +559,9 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 
 	exchType := exchangeTypes[exchangeType]
 	exchName := ""
-	if exchType != "" {
+	if exchType == Bind {
+		exchName = exchangeName
+	} else if exchType != "" {
 		exchName = fmt.Sprintf("%s.%s", queue, exchType)
 	}
 
@@ -564,14 +571,16 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType st
 		return fmt.Errorf(libErrs.ErrorQueueDeclareFailure.Error(), q.Name, err)
 	}
 
-	// declare exchange
-	err = channel.ExchangeDeclare(exchName, exchType, true, false, false, false, nil)
-	if err != nil {
-		return fmt.Errorf(libErrs.ErrorExchangeDeclareFailure.Error(), q.Name, err)
+	// declare exchange if there is no binding in exchangeType
+	if exchType != Bind {
+		err = channel.ExchangeDeclare(exchName, exchType, true, false, false, false, nil)
+		if err != nil {
+			return fmt.Errorf(libErrs.ErrorExchangeDeclareFailure.Error(), q.Name, err)
+		}
 	}
 
 	// bind them together
-	err = channel.QueueBind(queue, queue, exchName, false, nil)
+	err = rmq.tryToBindQueueToExchange(channel, queue, exchName)
 	if err != nil {
 		return fmt.Errorf(libErrs.ErrorExchangeBindFailure.Error(), q.Name, err)
 	}
@@ -602,7 +611,7 @@ func (rmq *RMQClient) createConsumerChannel() error {
 			return err
 		}
 
-		if err := rmq.declareQueue(conCh, config.ConsumerQueueName, config.ConsumerExchangeType); err != nil {
+		if err := rmq.declareQueue(conCh, config.ConsumerQueueName, config.ConsumerExchangeType, config.ConsumerExchange); err != nil {
 			return err
 		}
 
@@ -635,7 +644,7 @@ func (rmq *RMQClient) createPublisherChannel() error {
 			return err
 		}
 
-		if err := rmq.declareQueue(pubCh, config.PublisherQueueName, config.PublisherExchangeType); err != nil {
+		if err := rmq.declareQueue(pubCh, config.PublisherQueueName, config.PublisherExchangeType, config.ConsumerExchange); err != nil {
 			return err
 		}
 
@@ -701,7 +710,7 @@ func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 			return err
 		}
 
-		errQ := rmq.declareQueue(channel, deadletterQ, amqp.ExchangeDirect)
+		errQ := rmq.declareQueue(channel, deadletterQ, amqp.ExchangeDirect, config.ConsumerExchange)
 		if errQ != nil {
 			return errQ
 		}
@@ -823,4 +832,17 @@ func (rmq *RMQClient) handleUnmarshalledEyewaEventErr(ctx context.Context, errEv
 	go standardMetrics.ConsumedEventLatencyRecorder.Record(float64(time.Since(errEvent.started).Milliseconds()))
 	go standardMetrics.ActiveConsumingEventCounter.Add(-1)
 	errEvent.span.End()
+}
+
+func (rmq *RMQClient) tryToBindQueueToExchange(channel *amqp.Channel, queue, exchName string) error {
+	bind := func() error {
+		return channel.QueueBind(queue, queue, exchName, false, nil)
+	}
+
+	bkoff := backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxConnectionRetries)
+	return backoff.RetryNotify(bind, bkoff, func(err error, duration time.Duration) {
+		if err != nil {
+			log.Error(fmt.Sprintf("Failed to bind queue(%s) to exchange(%s)", queue, exchName), zap.Error(err))
+		}
+	})
 }
