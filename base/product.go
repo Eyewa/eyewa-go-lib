@@ -157,7 +157,7 @@ type GeneralProduct struct {
 	SmallImage          ProductImage               `json:"small_image"`
 	Rating              int                        `json:"rating"`
 	SolutionProduct     *string                    `json:"solution_product"` // stringified json.RawMessage
-	ProductReviews      ProductReviews             `json:"productReviews"`
+	ProductReviews      *string                    `json:"productReviews"`   // stringified ProductReviews
 	MetaDescription     string                     `json:"meta_description"`
 	MetaKeyword         string                     `json:"meta_keyword"`
 	MetaTitle           string                     `json:"meta_title"`
