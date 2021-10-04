@@ -33,10 +33,11 @@ type ProductModel struct {
 // ProductMeta these are fields internal to the service either
 // there for lookup or assists during a transformation process
 type ProductMeta struct {
-	ID              uint            `gorm:"primaryKey" json:"-"`
-	StoreID         int             `gorm:"index:uix_pdt_store_entity, unique"`
-	StoreCode       string          `gorm:"index:uix_pdt_store_entity, unique"`
-	EntityID        int             `gorm:"index:uix_pdt_store_entity, unique"`
+	ID              uint   `gorm:"primaryKey" json:"-"`
+	StoreID         int    `gorm:"index:uix_pdt_store_entity, unique"`
+	StoreCode       string `gorm:"index:uix_pdt_store_entity, unique"`
+	EntityID        int    `gorm:"index:uix_pdt_store_entity, unique"`
+	TypeID          string
 	ParentEntityIDs *datatypes.JSON // if simple, list of configurables it is assigned to
 }
 
