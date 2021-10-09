@@ -40,8 +40,39 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		HTML: name,
 	}
 
-	sp := "[{\"price\":\"AED 40.00\",\"id\":\"12916\",\"sku\":\"solmltp-opt-free-090\",\"name\":\"Opti-Free Pure Moist Solution 90 ml\",\"image\":\"https:\\/\\/cdn.eyewa.com\\/media\\/prescription\\/options\\/images\\/default\\/opti-free-puremoist-90ml_1.png\"}]"
-	pr := "{\"total_count\":2,\"reviews\":[{\"title\":\"reviewsummary\",\"detail\":\"Comfortable \",\"nickname\":\"Ahmed mohmead\",\"date\":\"07\\/01\\/20\",\"vote\":[{\"label\":\"Rating\",\"percentage\":\"100\"}]},{\"title\":\"reviewsummary\",\"detail\":\"very comfortable, i reccommand them \",\"nickname\":\"Samy\",\"date\":\"04\\/08\\/19\",\"vote\":[{\"label\":\"Rating\",\"percentage\":\"100\"}]}]}"
+	sp := `	[{
+		"price": "AED 40.00",
+		"id": "12916",
+		"sku": "solmltp-opt-free-090",
+		"name": "Opti-Free Pure Moist Solution 90 ml",
+		"image": "https://cdn.eyewa.com/media/prescription/options/images/default/opti-free-puremoist-90ml_1.png"
+	}]`
+
+	pr := `{
+		"total_count": 2,
+		"reviews": [
+			{
+				"title": "reviewsummary",
+				"detail": "Comfortable ",
+				"nickname": "Ahmed mohmead",
+				"date": "07/01/20",
+				"vote": [{
+					"label": "Rating",
+					"percentage": 100
+				}]
+			}, 
+			{
+				"title": "reviewsummary",
+				"detail": "very comfortable, i reccommand them ",
+				"nickname": "Samy",
+				"date": "04/08/19",
+				"vote": [{
+					"label": "Rating",
+					"percentage": 100
+				}]
+			}
+		]
+	}`
 
 	return base.GeneralProduct{
 		EntityID:            rand.Int(),
