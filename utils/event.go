@@ -13,8 +13,8 @@ import (
 
 const (
 	ProductEventType string = "Product"
-	ProductCreated   string = "ProductCreated"
-	ProductUpdated   string = "ProductUpdated"
+	ProductCreated   string = "product.created"
+	ProductUpdated   string = "product.updated"
 )
 
 func GenerateRandomProductEvent() *base.EyewaEvent {
