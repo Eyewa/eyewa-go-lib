@@ -51,6 +51,7 @@ func initConfig() (Config, string, error) {
 		"SERVICE_NAME",
 		"HOSTNAME",
 		"RABBITMQ_SERVER",
+		"RABBITMQ_SECURED",
 		"RABBITMQ_AMQP_PORT",
 		"RABBITMQ_USERNAME",
 		"RABBITMQ_PASSWORD",
@@ -63,6 +64,8 @@ func initConfig() (Config, string, error) {
 		"MESSAGE_BROKER",
 	}
 
+	viper.SetDefault("RABBITMQ_SECURED", "")
+
 	for _, v := range envVars {
 		if err := viper.BindEnv(v); err != nil {
 			return config, "", err
@@ -72,8 +75,16 @@ func initConfig() (Config, string, error) {
 		return config, "", err
 	}
 
-	return config, fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password,
-		config.Server, config.AmqpPort), nil
+	connStr := fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password,
+		config.Server, config.AmqpPort)
+
+	secured, _ := strconv.ParseBool(viper.Get("RABBITMQ_SECURED").(string))
+	if secured {
+		connStr = fmt.Sprintf("amqps://%s:%s@%s:%s/", config.Username, config.Password,
+			config.Server, config.AmqpPort)
+	}
+
+	return config, connStr, nil
 }
 
 // NewRMQClient new rmq client
