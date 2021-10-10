@@ -25,7 +25,49 @@ func TestConnectionConfig(t *testing.T) {
 	assert.NotZero(t, cfg)
 	assert.Nil(t, err)
 	assert.True(t, true)
-	assert.Equal(t, str, fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password, config.Server, config.AmqpPort))
+	assert.Equal(t, fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password, config.Server, config.AmqpPort), str)
+
+	os.Clearenv()
+}
+
+func TestSecuredConnectionConfig(t *testing.T) {
+	vars := map[string]string{
+		"RABBITMQ_SERVER":    "localhost",
+		"RABBITMQ_AMQP_PORT": "11111",
+		"RABBITMQ_USERNAME":  "bleh",
+		"RABBITMQ_PASSWORD":  "blah",
+		"RABBITMQ_SECURED":   "true",
+	}
+	for e, v := range vars {
+		os.Setenv(e, v)
+	}
+
+	cfg, str, err := initConfig()
+	assert.NotZero(t, cfg)
+	assert.Nil(t, err)
+	assert.True(t, true)
+	assert.Equal(t, fmt.Sprintf("amqps://%s:%s@%s:%s/", config.Username, config.Password, config.Server, config.AmqpPort), str)
+
+	os.Clearenv()
+}
+
+func TestUnSecuredConnectionConfig(t *testing.T) {
+	vars := map[string]string{
+		"RABBITMQ_SERVER":    "localhost",
+		"RABBITMQ_AMQP_PORT": "11111",
+		"RABBITMQ_USERNAME":  "bleh",
+		"RABBITMQ_PASSWORD":  "blah",
+		"RABBITMQ_SECURED":   "false",
+	}
+	for e, v := range vars {
+		os.Setenv(e, v)
+	}
+
+	cfg, str, err := initConfig()
+	assert.NotZero(t, cfg)
+	assert.Nil(t, err)
+	assert.True(t, true)
+	assert.Equal(t, fmt.Sprintf("amqp://%s:%s@%s:%s/", config.Username, config.Password, config.Server, config.AmqpPort), str)
 
 	os.Clearenv()
 }
@@ -35,7 +77,6 @@ func TestConnectionConfigNotSet(t *testing.T) {
 	cfg, _, err := initConfig()
 	assert.Zero(t, cfg)
 	assert.Nil(t, err)
-	assert.True(t, true)
 }
 
 func TestConnect(t *testing.T) {

@@ -16,6 +16,9 @@ The following variables should be injected in order to use this pkg
 // optional - used to identify what service is connected in RMQ's Admin UI.
 "SERVICE_NAME"
 
+// optional - if not set `amqp` will be used as protocol. if true `amqps`
+"RABBITMQ_SECURED"
+
 // required - RMQ credentials
 "RABBITMQ_SERVER"
 "RABBITMQ_AMQP_PORT"

@@ -18,6 +18,7 @@ type Config struct {
 	AmqpPort string `mapstructure:"rabbitmq_amqp_port"`
 	Username string `mapstructure:"rabbitmq_username"`
 	Password string `mapstructure:"rabbitmq_password"`
+	Secured  string `mapstructure:"rabbitmq_secured"`
 
 	// No. of messsages RMQ should send to a consumer
 	// https://www.cloudamqp.com/blog/how-to-optimize-the-rabbitmq-prefetch-count.html
