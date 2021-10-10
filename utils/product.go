@@ -198,7 +198,7 @@ func GeneratePrice() base.ProductPrice {
 	}
 }
 
-func GenerateOptionLabels() []byte {
+func GenerateOptionLabels() *string {
 	optionLabels := []string{
 		`{"age":"Adult","bridge_size":"17 mm","frame_material":"Metal","frame_reference":"CK8043-015-52","frame_shape":"Square","frame_size":"Narrow (\u003c 131 mm)","frame_type":"Rimless","frame_width":"121 mm","lens_size":"52 mm","mgs_brand":"Calvin Klein","sku_location":"WD","temple_length":"140 mm","type":"Glasses"}`,
 		`{"contact_lens_replacement":"3 months","contact_lens_size":"Pack of 2 lenses","contact_lens_type":"Color Contact Lenses","contact_lens_use":"Beauty","contact_lenses_brand":"Layala","diameter":"14.2 mm","mgs_brand":"Layala","sku_location":"EW","water_content":"38%"}`,
@@ -206,5 +206,5 @@ func GenerateOptionLabels() []byte {
 
 	labels := optionLabels[rand.Intn(len(optionLabels))]
 
-	return []byte(labels)
+	return &labels
 }
