@@ -198,7 +198,7 @@ func GeneratePrice() base.ProductPrice {
 	}
 }
 
-func GenerateOptionLabels() []byte {
+func GenerateOptionLabels() *string {
 	optionLabels := []string{
 		"{\"age\":{\"id\":8329,\"label\":\"للكبار\",\"attribute_label\":\"Age\"},\"bridge_size\":{\"id\":1080,\"label\":\"19 mm\",\"attribute_label\":\"Bridge Size\"},\"frame_color\":{\"id\":2073,\"label\":\"بني\",\"attribute_label\":\"Frame Color\"},\"frame_finish\":{\"id\":8292,\"label\":\"لامع\",\"attribute_label\":\"Frame Finish\"},\"frame_material\":{\"id\":339,\"label\":\"بلاستيك\",\"attribute_label\":\"Frame Material\"},\"frame_reference\":{\"id\":564,\"label\":\"CK8559-236-54\",\"attribute_label\":\"Frame Reference\"},\"frame_shape\":{\"id\":344,\"label\":\"مربع\",\"attribute_label\":\"Frame Shape\"},\"frame_size\":{\"id\":348,\"label\":\"صغير (\\u003c 131 مم)\",\"attribute_label\":\"Frame Size\"},\"frame_type\":{\"id\":351,\"label\":\"إطار كامل\",\"attribute_label\":\"Frame Type\"},\"frame_width\":{\"id\":1102,\"label\":\"127 mm\",\"attribute_label\":\"Frame Width\"},\"gender\":{\"id\":355,\"label\":\"نساء\",\"attribute_label\":\"Gender\"},\"lens_size\":{\"id\":1055,\"label\":\"54 mm\",\"attribute_label\":\"Lens Size\"},\"mgs_brand\":{\"id\":7,\"label\":\"كالفن كلاين\",\"attribute_label\":\"Brand\"},\"sku_location\":{\"id\":1043,\"label\":\"WD\",\"attribute_label\":\"sku_location\"},\"temple_length\":{\"id\":1094,\"label\":\"140 mm\",\"attribute_label\":\"Temple Length\"},\"type\":{\"id\":357,\"label\":\"نظارات طبية\",\"attribute_label\":\"Type\"}}",
 		"{\"age\":{\"id\":8329,\"label\":\"للكبار\",\"attribute_label\":\"Age\"},\"bridge_size\":{\"id\":1078,\"label\":\"17 mm\",\"attribute_label\":\"Bridge Size\"},\"frame_color\":{\"id\":2072,\"label\":\"أزرق\",\"attribute_label\":\"Frame Color\"},\"frame_material\":{\"id\":338,\"label\":\"معدن\",\"attribute_label\":\"Frame Material\"},\"frame_reference\":{\"id\":715,\"label\":\"L2223-424-56\",\"attribute_label\":\"Frame Reference\"},\"frame_shape\":{\"id\":344,\"label\":\"مربع\",\"attribute_label\":\"Frame Shape\"},\"frame_size\":{\"id\":348,\"label\":\"صغير (\\u003c 131 مم)\",\"attribute_label\":\"Frame Size\"},\"frame_type\":{\"id\":351,\"label\":\"إطار كامل\",\"attribute_label\":\"Frame Type\"},\"frame_width\":{\"id\":1106,\"label\":\"131 mm\",\"attribute_label\":\"Frame Width\"},\"gender\":{\"id\":355,\"label\":\"نساء\",\"attribute_label\":\"Gender\"},\"lens_size\":{\"id\":1057,\"label\":\"56 mm\",\"attribute_label\":\"Lens Size\"},\"mgs_brand\":{\"id\":10,\"label\":\"لاكوست\",\"attribute_label\":\"Brand\"},\"sku_location\":{\"id\":1043,\"label\":\"WD\",\"attribute_label\":\"sku_location\"},\"temple_length\":{\"id\":1097,\"label\":\"145 mm\",\"attribute_label\":\"Temple Length\"},\"type\":{\"id\":357,\"label\":\"نظارات طبية\",\"attribute_label\":\"Type\"}}",
@@ -206,5 +206,5 @@ func GenerateOptionLabels() []byte {
 
 	labels := optionLabels[rand.Intn(len(optionLabels))]
 
-	return []byte(labels)
+	return &labels
 }

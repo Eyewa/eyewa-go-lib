@@ -162,7 +162,7 @@ type GeneralProduct struct {
 	MetaDescription     string                     `json:"meta_description"`
 	MetaKeyword         string                     `json:"meta_keyword"`
 	MetaTitle           string                     `json:"meta_title"`
-	OptionLabels        json.RawMessage            `json:"option_labels"`
+	OptionLabels        *string                    `json:"option_labels"` // stringified OptionLabels
 	VirtualTryon        *int                       `json:"virtual_tryon"`
 	Categories          []ProductCategory          `json:"categories"`
 	SpecialPrice        *float64                   `json:"special_price"`
