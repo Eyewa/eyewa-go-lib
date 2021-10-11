@@ -175,9 +175,10 @@ type GeneralProduct struct {
 
 // ProductCategory product category definition
 type ProductCategory struct {
-	Name   string `json:"name"`
-	ID     int    `json:"id"`
-	URLKey string `json:"url_key"`
+	Name     string `json:"name"`
+	ID       int    `json:"id"`
+	URLKey   string `json:"url_key"`
+	Position int    `json:"position"`
 }
 
 // ProductReview product review info
