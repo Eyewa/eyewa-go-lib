@@ -148,7 +148,7 @@ type GeneralProduct struct {
 	ParentSKUs          *[]string                  `json:"parent_skus"`
 	StoreCode           string                     `json:"store_code"`
 	AttributeSetID      int                        `json:"attribute_set_id"`
-	AttributeSetName    string                     `json:"attribute_name"`
+	AttributeSetName    string                     `json:"attribute_set_name"`
 	MgsBrand            string                     `json:"mgs_brand"`
 	ContactLensSize     int                        `json:"contact_lens_size"`
 	LensPackage         *string                    `json:"lens_package"`
