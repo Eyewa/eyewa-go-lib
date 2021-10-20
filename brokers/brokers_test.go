@@ -14,7 +14,7 @@ func TestConnect(t *testing.T) {
 	var err error
 
 	sqsMock := new(ClientMock)
-	broker = &MessageBrokerClient{SQS, sqsMock, 1}
+	broker = &MessageBrokerClient{RabbitMQ, sqsMock, 1}
 	sqsMock.On("Connect").Return(nil)
 	broker, err = broker.connect()
 	assert.Nil(t, err)
@@ -25,7 +25,7 @@ func TestConnectFail(t *testing.T) {
 	var err error
 
 	sqsMock := new(ClientMock)
-	broker = &MessageBrokerClient{SQS, sqsMock, 1}
+	broker = &MessageBrokerClient{RabbitMQ, sqsMock, 1}
 	sqsMock.On("Connect").Return(errors.New("bleh"))
 	broker, err = broker.connect()
 	assert.EqualError(t, err, "bleh")
@@ -66,12 +66,6 @@ func TestGetClient(t *testing.T) {
 	client = getClient(RabbitMQ)
 	assert.NotZero(t, client)
 
-	client = getClient(SQS)
-	assert.NotZero(t, client)
-
-	client = getClient(Kafka)
-	assert.NotZero(t, client)
-
 	client = getClient(Mock)
 	assert.NotZero(t, client)
 }
@@ -82,14 +76,6 @@ func TestNewConsumerClient(t *testing.T) {
 	client = NewConsumerClient(RabbitMQ)
 	assert.NotNil(t, client.Client)
 	assert.Equal(t, RabbitMQ, client.Type)
-
-	client = NewConsumerClient(SQS)
-	assert.NotNil(t, client.Client)
-	assert.Equal(t, SQS, client.Type)
-
-	client = NewConsumerClient(Kafka)
-	assert.NotNil(t, client.Client)
-	assert.Equal(t, Kafka, client.Type)
 
 	client = NewConsumerClient(Mock)
 	assert.NotNil(t, client.Client)
@@ -107,14 +93,6 @@ func TestNewPublisherClient(t *testing.T) {
 	pub = NewPublisherClient(RabbitMQ)
 	assert.NotNil(t, pub.Client)
 	assert.Equal(t, RabbitMQ, pub.Type)
-
-	pub = NewPublisherClient(SQS)
-	assert.NotNil(t, pub.Client)
-	assert.Equal(t, SQS, pub.Type)
-
-	pub = NewPublisherClient(Kafka)
-	assert.NotNil(t, pub.Client)
-	assert.Equal(t, Kafka, pub.Type)
 
 	pub = NewPublisherClient(Mock)
 	assert.NotNil(t, pub.Client)

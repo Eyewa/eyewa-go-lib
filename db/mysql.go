@@ -70,8 +70,7 @@ func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 		return nil, err
 	}
 
-	sql.SetMaxOpenConns(1)
-	sql.SetMaxIdleConns(0)
+	sql.SetMaxOpenConns(20)
 
 	return &DBClient{
 		client,

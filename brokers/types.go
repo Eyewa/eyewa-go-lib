@@ -60,4 +60,5 @@ type Publisher interface {
 	Connect() error
 	CloseConnection() error
 	Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup)
+	PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup)
 }

@@ -41,6 +41,10 @@ func (mock *ClientMock) Publish(ctx context.Context, queue string, event *base.E
 	mock.Called(ctx, queue, event, callback, wg)
 }
 
+func (mock *ClientMock) PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
+	mock.Called(ctx, queue, event, callback, wg)
+}
+
 func (mock *ClientMock) Consume(queue string, callback base.MessageBrokerCallbackFunc) {
 	mock.Called(queue, callback)
 }
