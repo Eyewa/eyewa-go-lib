@@ -12,9 +12,11 @@ import (
 )
 
 const (
-	ProductEventType string = "Product"
-	ProductCreated   string = "product.created"
-	ProductUpdated   string = "product.updated"
+	ProductEventType                string = "Product"
+	ProductCreated                  string = "product.created"
+	ProductUpdated                  string = "product.updated"
+	SimpleProductEventSubType       string = "product-" + string(base.SimpleProductType)
+	ConfigurableProductEventSubType string = "product-" + string(base.ConfigurableProductType)
 )
 
 func GenerateRandomProductEvent() *base.EyewaEvent {
@@ -42,7 +44,7 @@ func GenerateConfigurableProductEvent() *base.EyewaEvent {
 		Name:         GenerateEventName(),
 		EventType:    ProductEventType,
 		StoreLocale:  GenerateStoreLocale(),
-		EventSubType: string(base.ConfigurableProductType),
+		EventSubType: ConfigurableProductEventSubType,
 		Payload:      product,
 		CreatedAt:    time.Now().Format(time.RFC3339),
 	}
@@ -56,7 +58,7 @@ func GenerateSimpleProductEvent() *base.EyewaEvent {
 		Name:         GenerateEventName(),
 		EventType:    ProductEventType,
 		StoreLocale:  GenerateStoreLocale(),
-		EventSubType: string(base.SimpleProductType),
+		EventSubType: SimpleProductEventSubType,
 		Payload:      product,
 		CreatedAt:    time.Now().Format(time.RFC3339),
 	}
@@ -68,7 +70,10 @@ func GenerateEventName() string {
 }
 
 func GenerateEventSubType() base.EyewaProductType {
-	subTypes := []base.EyewaProductType{base.SimpleProductType, base.ConfigurableProductType}
+	subTypes := []base.EyewaProductType{
+		base.EyewaProductType(SimpleProductEventSubType),
+		base.EyewaProductType(ConfigurableProductEventSubType),
+	}
 	return subTypes[rand.Intn(len(subTypes))]
 }
 

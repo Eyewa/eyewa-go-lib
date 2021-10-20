@@ -141,18 +141,16 @@ func GenerateStoreLocale() string {
 }
 
 func GenerateCategories() []base.ProductCategory {
-	categories := map[int]string{0: "woman", 1: "man", 2: "child", 3: "sunglass", 4: "lens"}
+	categories := []string{"woman", "man", "child", "sunglass", "lens"}
 	productCategories := make([]base.ProductCategory, 0)
 
-	count := rand.Intn(5) + 1
-	for i := 1; i < count; i++ {
-		index := rand.Intn(len(categories))
-		category := categories[index]
+	for index, category := range categories {
 		productCategories = append(productCategories, base.ProductCategory{
-			Name: category,
+			Name:     category,
+			ID:       index,
+			URLKey:   category,
+			Position: index,
 		})
-
-		delete(categories, index)
 	}
 
 	return productCategories
