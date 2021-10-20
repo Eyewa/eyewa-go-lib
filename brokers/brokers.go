@@ -7,9 +7,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/eyewa/eyewa-go-lib/brokers/kafka"
 	"github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
-	"github.com/eyewa/eyewa-go-lib/brokers/sqs"
 	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 )
 
@@ -33,10 +31,6 @@ func OpenConnection() (*MessageBrokerClient, error) {
 	switch strings.ToLower(os.Getenv("MESSAGE_BROKER")) {
 	case string(RabbitMQ):
 		broker = &MessageBrokerClient{RabbitMQ, new(rabbitmq.RMQClient), maxConnectionRetries}
-	case string(SQS):
-		broker = &MessageBrokerClient{SQS, new(sqs.SQSClient), maxConnectionRetries}
-	case string(Kafka):
-		broker = &MessageBrokerClient{Kafka, new(kafka.KafkaClient), maxConnectionRetries}
 	default:
 		broker = new(MessageBrokerClient)
 	}
@@ -90,8 +84,6 @@ func NewPublisherClient(brokerType BrokerType) *MessageBrokerPublisherClient {
 func getClient(brokerType BrokerType) MessageBroker {
 	clientMap := map[BrokerType]MessageBroker{
 		RabbitMQ: rabbitmq.NewRMQClient(),
-		SQS:      sqs.NewSQSClient(),
-		Kafka:    kafka.NewKafkaClient(),
 		Mock:     NewMockClient(),
 	}
 

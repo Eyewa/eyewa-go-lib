@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"context"
 	"sync"
 
 	"github.com/eyewa/eyewa-go-lib/base"
@@ -26,6 +27,10 @@ func (mock *RMQClientMock) Connect() error {
 }
 
 func (mock *RMQClientMock) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+	_ = mock.Called()
+}
+
+func (mock *RMQClientMock) PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
 	_ = mock.Called()
 }
 

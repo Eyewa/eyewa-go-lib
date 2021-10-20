@@ -483,9 +483,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 
 		msg := &amqp.Publishing{
 			ContentType:  "application/json",
-			Body:         []byte(""),
 			DeliveryMode: amqp.Persistent,
-			Headers:      amqp.Table{},
 		}
 
 		// set amqp message span attributes.
@@ -522,7 +520,94 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 
 		// attempt to publish event
 		err = channel.Publish("", config.PublisherQueueName, false, false, *msg)
+		if err != nil {
+			go standardMetrics.PublishEventFailureCounter.Add(1, attribute.Any("event_name", event.Name))
+			span.RecordError(err)
+			err = callback(ctx, event, libErrs.ErrorFailedToPublishEvent)
+			if err != nil {
+				span.RecordError(err)
+			}
+			return
+		}
 
+		go standardMetrics.PublishedEventCounter.Add(1, attribute.Any("event_name", event.Name))
+
+		// record the callback failing
+		err = callback(ctx, event, nil)
+		if err != nil {
+			span.RecordError(err)
+		}
+	}
+}
+
+// PublishMagentoEvent publishes a message to a queue
+func (rmq *RMQClient) PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	rmq.mutex.RLock()
+	channel, exists := rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	// determine if channel exists for queue
+	if !exists && channel == nil {
+		channel, err := rmq.CreateNewChannel(config.PublisherQueueName)
+		if err != nil {
+			_ = callback(ctx, event, err)
+			return
+		}
+
+		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType, config.ConsumerExchange)
+		if errQ != nil {
+			_ = callback(ctx, event, errQ)
+			return
+		}
+	}
+
+	rmq.mutex.RLock()
+	channel, exists = rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	if exists && channel != nil {
+
+		msg := &amqp.Publishing{
+			ContentType:  "application/json",
+			DeliveryMode: amqp.Persistent,
+		}
+
+		// set amqp message span attributes.
+		spanOpts := []trace.SpanOption{
+			trace.WithAttributes(
+				semconv.MessagingSystemKey.String(strings.ToUpper(config.MessageBroker)),
+				semconv.MessagingDestinationKindKeyQueue,
+				semconv.MessagingRabbitMQRoutingKeyKey.String(config.PublisherQueueName)),
+			trace.WithSpanKind(trace.SpanKindProducer),
+		}
+
+		// inject context into headers, if none, the
+		// context will use the Background context.
+		carrier := amqptracing.HeaderCarrier(msg.Headers)
+
+		log.Debug("Injecting trace context into rabbitmq Table headers", zap.Any("headers", carrier.Keys()))
+		otel.GetTextMapPropagator().Inject(ctx, carrier)
+		log.Debug("Trace context injected into rabbitmq Table headers", zap.Any("headers", carrier.Keys()))
+
+		// start the span and and receive a new ctx containing the parent
+		ctx, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.Publish", spanOpts...)
+		defer span.End()
+
+		// attempt to marshal event for publishing
+		eventJSON, err := json.Marshal(&event)
+		if err != nil {
+			go standardMetrics.MarshalEventFailureCounter.Add(1)
+			span.RecordError(err)
+			_ = callback(ctx, event, err)
+			return
+		}
+
+		msg.Body = eventJSON
+
+		// attempt to publish event
+		err = channel.Publish("", config.PublisherQueueName, false, false, *msg)
 		if err != nil {
 			go standardMetrics.PublishEventFailureCounter.Add(1, attribute.Any("event_name", event.Name))
 			span.RecordError(err)
