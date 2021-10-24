@@ -518,8 +518,16 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 
 		msg.Body = eventJSON
 
-		// attempt to publish event
-		err = channel.Publish("", config.PublisherQueueName, false, false, *msg)
+		// attempt to publish event, if publisher exchange type is fanout
+		// push it to fanout instead of queue. Otherwise push it to queue.
+		var exchange, key string
+		if config.PublisherExchangeType != amqp.ExchangeFanout {
+			key = config.PublisherQueueName
+		} else {
+			exchange = fmt.Sprintf("%s.%s", config.PublisherQueueName, amqp.ExchangeFanout)
+		}
+
+		err = channel.Publish(exchange, key, false, false, *msg)
 		if err != nil {
 			go standardMetrics.PublishEventFailureCounter.Add(1, attribute.Any("event_name", event.Name))
 			span.RecordError(err)
@@ -659,24 +667,28 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, e
 		exchName = fmt.Sprintf("%s.%s", queue, exchType)
 	}
 
-	// declare queue
-	q, err := channel.QueueDeclare(queue, true, false, false, false, nil)
-	if err != nil {
-		return fmt.Errorf(libErrs.ErrorQueueDeclareFailure.Error(), q.Name, err)
+	// declare queue if exhange type is not fanout
+	if exchType != amqp.ExchangeFanout {
+		q, err := channel.QueueDeclare(queue, true, false, false, false, nil)
+		if err != nil {
+			return fmt.Errorf(libErrs.ErrorQueueDeclareFailure.Error(), q.Name, err)
+		}
 	}
 
 	// declare exchange if there is no binding in exchangeType
 	if exchType != exchangeBind {
-		err = channel.ExchangeDeclare(exchName, exchType, true, false, false, false, nil)
+		err := channel.ExchangeDeclare(exchName, exchType, true, false, false, false, nil)
 		if err != nil {
-			return fmt.Errorf(libErrs.ErrorExchangeDeclareFailure.Error(), q.Name, err)
+			return fmt.Errorf(libErrs.ErrorExchangeDeclareFailure.Error(), queue, err)
 		}
 	}
 
-	// bind them together
-	err = rmq.tryToBindQueueToExchange(channel, queue, exchName)
-	if err != nil {
-		return fmt.Errorf(libErrs.ErrorExchangeBindFailure.Error(), q.Name, err)
+	// bind them together if exhange type is not fanout
+	if exchType != amqp.ExchangeFanout {
+		err := rmq.tryToBindQueueToExchange(channel, queue, exchName)
+		if err != nil {
+			return fmt.Errorf(libErrs.ErrorExchangeBindFailure.Error(), queue, err)
+		}
 	}
 
 	return nil
