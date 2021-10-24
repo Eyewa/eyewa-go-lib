@@ -468,12 +468,10 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 			return
 		}
 
-		if config.PublisherExchangeType != "fanout" {
-			errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType, config.ConsumerExchange)
-			if errQ != nil {
-				_ = callback(ctx, event, errQ)
-				return
-			}
+		errQ := rmq.declareQueue(channel, config.PublisherQueueName, config.PublisherExchangeType, config.ConsumerExchange)
+		if errQ != nil {
+			_ = callback(ctx, event, errQ)
+			return
 		}
 	}
 
