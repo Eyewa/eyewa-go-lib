@@ -521,10 +521,10 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		// attempt to publish event, if publisher exchange type is fanout
 		// push it to fanout instead of queue. Otherwise push it to queue.
 		var exchange, key string
-		if config.PublisherExchangeType != "fanout" {
+		if config.PublisherExchangeType != amqp.ExchangeFanout {
 			key = config.PublisherQueueName
 		} else {
-			exchange = config.PublisherQueueName + ".fanout"
+			exchange = fmt.Sprintf("%s.%s", config.PublisherQueueName, amqp.ExchangeFanout)
 		}
 
 		err = channel.Publish(exchange, key, false, false, *msg)
