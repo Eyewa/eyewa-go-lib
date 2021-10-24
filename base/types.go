@@ -12,9 +12,9 @@ type EyewaProductType string
 // EyewaEvent a base representation of an event fired/received
 type EyewaEvent struct {
 	ID           string `json:"id"`                      // can be used for tracing
-	Name         string `json:"name"`                    // name of event - ProductUpdated, ProductDeleted etc
+	Name         string `json:"name"`                    // name of event - product.created, product.updated etc
 	EventType    string `json:"event_type"`              // type of event's entity - Product, Order etc
-	StoreLocale  string `json:"store_locale,omitempty"`  // store locale for store sa-sone, kw-ar, sa-en etc
+	StoreCode    string `json:"store_code,omitempty"`    // store locale for store sa-sone, kw-ar, sa-en etc
 	EventSubType string `json:"event_subtype,omitempty"` // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
 
 	// a representation on an error. provides reasons when a message ends up back
@@ -33,8 +33,7 @@ type MagentoProductEvent struct {
 	EventType    string  `json:"event_type"`       // type of event's entity - Product, Order etc
 	EventSubType string  `json:"event_subtype"`    // product-simple/product-simple-custom/product-configurable", // Would be empty for category events
 	StoreID      int     `json:"store_id"`         // ID of the store the product/category belongs to
-	StoreCode    string  `json:"store_code"`       // store code for store eyewa_kwd, eyewa_sasone etc
-	StoreLocale  string  `json:"store_locale"`     // store locale for store sa-sone, kw-ar, sa-en etc
+	StoreCode    string  `json:"store_code"`       // store code for store ae-en, qa-ar etc
 	WebsiteID    int     `json:"website_id"`       // ID of website store is assigned to
 	Errors       []Error `json:"errors,omitempty"` // provides reasons why a message ended up in the deadletter queue for e.g
 	CreatedAt    string  `json:"created_at"`       // time in RFC3339 format of when event occurred

@@ -134,7 +134,7 @@ func RandomType() string {
 	return types[rand.Intn(len(types))]
 }
 
-func GenerateStoreLocale() string {
+func GenerateStoreCode() string {
 	var locale = []string{"ae-ar", "ae-en"}
 
 	return locale[rand.Intn(len(locale))]
