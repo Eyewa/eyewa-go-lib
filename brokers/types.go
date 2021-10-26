@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/eyewa/eyewa-go-lib/base"
+	"github.com/streadway/amqp"
 )
 
 // ConnectFunc is the function that starts consuming from the given broker.
@@ -52,6 +53,7 @@ type Consumer interface {
 	Connect() error
 	CloseConnection() error
 	Consume(queue string, callback base.MessageBrokerCallbackFunc)
+	SendToDeadletterQueue(amqp.Delivery, error) error
 	ConsumeMagentoProductEvents(queue string, callback base.MessageBrokerMagentoProductCallbackFunc)
 }
 

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/eyewa/eyewa-go-lib/base"
+	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -56,4 +57,9 @@ func (mock *ClientMock) ConsumeMagentoProductEvents(queue string, callback base.
 func (mock *ClientMock) IsConnectionOpen() bool {
 	args := mock.Called()
 	return args.Bool(0)
+}
+
+func (mock *ClientMock) SendToDeadletterQueue(msg amqp.Delivery, err error) error {
+	args := mock.Called(msg, err)
+	return args.Error(0)
 }

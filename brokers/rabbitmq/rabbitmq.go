@@ -254,7 +254,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 				}
 
 				// publish message to DL
-				if errDL := rmq.sendToDeadletterQueue(msg, err); errDL != nil {
+				if errDL := rmq.SendToDeadletterQueue(msg, err); errDL != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 					span.RecordError(errDL)
 					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errDL.Error())
@@ -407,7 +407,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				}
 
 				// publish message to DL
-				if errDL := rmq.sendToDeadletterQueue(msg, err); errDL != nil {
+				if errDL := rmq.SendToDeadletterQueue(msg, err); errDL != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 					span.RecordError(errDL)
 					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errDL.Error())
@@ -802,7 +802,7 @@ func (rmq *RMQClient) QueueInspect(queue string) (map[string]int, error) {
 	return nil, fmt.Errorf(libErrs.ErrorQueueInspectMissingQueueFailure.Error(), queue)
 }
 
-func (rmq *RMQClient) sendToDeadletterQueue(msg amqp.Delivery, eventErr error) error {
+func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) error {
 	deadletterQ := fmt.Sprintf("%s-%s", "deadletter", config.ConsumerQueueName)
 
 	rmq.mutex.RLock()
@@ -903,7 +903,7 @@ func (rmq *RMQClient) handleUnmarshalledMagentoEventErr(ctx context.Context, err
 	}
 
 	// publish message to DL
-	if err := rmq.sendToDeadletterQueue(errEvent.msg, errMsg); err != nil {
+	if err := rmq.SendToDeadletterQueue(errEvent.msg, errMsg); err != nil {
 		go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 		errEvent.span.RecordError(err)
 		_ = errEvent.callback(ctx, nil, err)
@@ -929,7 +929,7 @@ func (rmq *RMQClient) handleUnmarshalledEyewaEventErr(ctx context.Context, errEv
 	}
 
 	// publish message to DL
-	if err := rmq.sendToDeadletterQueue(errEvent.msg, errMsg); err != nil {
+	if err := rmq.SendToDeadletterQueue(errEvent.msg, errMsg); err != nil {
 		go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 		errEvent.span.RecordError(err)
 		_ = errEvent.callback(ctx, nil, err)
