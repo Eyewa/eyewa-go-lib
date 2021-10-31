@@ -61,6 +61,7 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		Description:         description,
 		ShortDescription:    description,
 		SmallImage:          image,
+		ThumbnailImage:      image,
 		Rating:              rand.Intn(101),
 		SolutionProduct:     ConvertStringToPointer(sp),
 		ProductReviews:      ConvertStringToPointer(pr),
