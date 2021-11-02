@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/eyewa/eyewa-go-lib/errors"
 	"github.com/eyewa/eyewa-go-lib/log"
@@ -18,8 +17,7 @@ import (
 )
 
 var (
-	config          Config
-	exporterTimeout = 4 * time.Second
+	config Config
 )
 
 // intitialises and verifies the validity of a configuration.

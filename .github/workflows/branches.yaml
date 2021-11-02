@@ -1,4 +1,4 @@
-name: (Feature) Pre Build Checks
+name: Tests & Linting
 on:
   push:
     branches:
