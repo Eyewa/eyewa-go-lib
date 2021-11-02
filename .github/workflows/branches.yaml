@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - '**'
+env:
+  GOPRIVATE: github.com/eyewa/eyewa-go-lib
+  GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
 jobs:
   test:
@@ -31,6 +34,10 @@ jobs:
         os: [dev]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Private Go library auth
+        run:  git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
