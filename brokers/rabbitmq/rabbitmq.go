@@ -36,11 +36,9 @@ var (
 		amqp.ExchangeTopic:   amqp.ExchangeTopic,
 		exchangeBind:         exchangeBind,
 	}
-	defaultPrefetchCount                     = 5
-	tracerName                               = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
-	messagingSystem                          = "RabbitMQ"
-	maxRetryErrorsBeforeDeadlettering        = 5
-	maxConnectionRetries              uint64 = 100
+	defaultPrefetchCount        = 5
+	tracerName                  = "github.com/eyewa/eyewa-go-lib/brokers/rabbitmq"
+	maxConnectionRetries uint64 = 100
 )
 
 func initConfig() (Config, string, error) {
@@ -227,14 +225,17 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 			// attempt to unmarshal event
 			err := json.Unmarshal(msg.Body, &event)
 			if err != nil {
-				var unErrEvent unmarshalledEyewaEvent
-				unErrEvent.queue = queue
-				unErrEvent.msg = msg
-				unErrEvent.event = event
-				unErrEvent.span = span
-				unErrEvent.started = started
-				unErrEvent.callback = callback
-				unErrEvent.err = err
+				unErrEvent := unmarshalledEyewaEvent{
+					unmarshalledCommon{
+						queue:   queue,
+						msg:     msg,
+						span:    span,
+						started: started,
+						err:     err,
+					},
+					event,
+					callback,
+				}
 
 				rmq.handleUnmarshalledEyewaEventErr(ctx, unErrEvent)
 
@@ -380,14 +381,17 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 
 			// attempt to unmarshal event
 			if err := json.Unmarshal(msg.Body, &event); err != nil {
-				var unErrEvent unmarshalledMagentoEvent
-				unErrEvent.queue = queue
-				unErrEvent.msg = msg
-				unErrEvent.event = event
-				unErrEvent.span = span
-				unErrEvent.started = started
-				unErrEvent.callback = callback
-				unErrEvent.err = err
+				unErrEvent := unmarshalledMagentoEvent{
+					unmarshalledCommon{
+						queue:   queue,
+						msg:     msg,
+						span:    span,
+						started: started,
+						err:     err,
+					},
+					event,
+					callback,
+				}
 
 				rmq.handleUnmarshalledMagentoEventErr(ctx, unErrEvent)
 
