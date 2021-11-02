@@ -1,3 +1,5 @@
+[![Tests & Linting](https://github.com/Eyewa/eyewa-go-lib/actions/workflows/branches.yaml/badge.svg)](https://github.com/Eyewa/eyewa-go-lib/actions/workflows/branches.yaml)
+
 # eyewa-go-lib
 Shared Go Lib for Eyewa's microservices
 
