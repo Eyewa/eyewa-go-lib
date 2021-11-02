@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+func (*SQLiteClient) migrateDB() error {
+	return nil
+}
+
 // NewSQLiteClient creates a new sqlite client
 func NewSQLiteClient() *SQLiteClient {
 	return &SQLiteClient{

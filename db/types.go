@@ -19,8 +19,7 @@ type DatabaseDriver interface {
 	OpenConnection() (*DBClient, error)
 	CloseConnection() error
 
-	// TODO: CRUD funcs
-	// TODO: DB Migration
+	migrateDB() error
 }
 
 // RDMS definition for general RDMS
