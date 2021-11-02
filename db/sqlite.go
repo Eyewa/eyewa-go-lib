@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+func (*SQLiteClient) migrateDB() error {
+	return nil
+}
+
 // NewSQLiteClient creates a new sqlite client
 func NewSQLiteClient() *SQLiteClient {
 	return &SQLiteClient{
@@ -59,14 +63,16 @@ func (client *SQLiteClient) OpenConnection() (*DBClient, error) {
 
 // CloseConnection closes a sqlite connection
 func (client *SQLiteClient) CloseConnection() error {
-	sql, err := client.Gorm.DB()
-	if err != nil {
-		return err
-	}
+	if client.Gorm != nil {
+		sql, err := client.Gorm.DB()
+		if err != nil {
+			return err
+		}
 
-	err = sql.Close()
-	if err != nil {
-		return err
+		err = sql.Close()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

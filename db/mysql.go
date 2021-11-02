@@ -10,6 +10,39 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+func (client *MySQLClient) migrateDB() error {
+	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=True&loc=Local",
+		client.User,
+		client.Password,
+		client.Host,
+		client.Port,
+		"information_schema")
+
+	// connect to the information_schema db - just to be able to run the create db statement
+	db, err := gorm.Open(mysql.Open(connStr), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent)})
+	if err != nil {
+		return err
+	}
+
+	// check if db exists (if not create it)
+	rs := db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s`;", client.Name))
+	if rs.Error != nil {
+		return rs.Error
+	}
+
+	// close db connection
+	sql, err := db.DB()
+	defer func() {
+		_ = sql.Close()
+	}()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // NewMySQLClient create a new mysql client
 func NewMySQLClient() *MySQLClient {
 	return &MySQLClient{
@@ -40,6 +73,11 @@ func NewMySQLClientFromConfig(config Config) *MySQLClient {
 
 // OpenConnection opens connection to mysql
 func (client *MySQLClient) OpenConnection() (*DBClient, error) {
+	// migrate db if not exists
+	if err := client.migrateDB(); err != nil {
+		return nil, err
+	}
+
 	var (
 		db  *gorm.DB
 		err error
@@ -79,14 +117,16 @@ func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 
 // CloseConnection closes a mysql connection
 func (client *MySQLClient) CloseConnection() error {
-	sql, err := client.Gorm.DB()
-	if err != nil {
-		return err
-	}
+	if client.Gorm != nil {
+		sql, err := client.Gorm.DB()
+		if err != nil {
+			return err
+		}
 
-	err = sql.Close()
-	if err != nil {
-		return err
+		err = sql.Close()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
