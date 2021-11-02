@@ -3,7 +3,6 @@ package tracing
 import (
 	"os"
 	"testing"
-	"time"
 
 	"github.com/eyewa/eyewa-go-lib/log"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +13,6 @@ func setup() func() {
 	os.Setenv("LOG_LEVEL", "info")
 	log.SetLogLevel()
 	config = Config{}
-	exporterTimeout = 100 * time.Millisecond
 	return func() {
 		os.Clearenv()
 	}
