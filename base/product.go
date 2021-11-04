@@ -179,6 +179,7 @@ type ProductCategory struct {
 	Name     string `json:"name"`
 	ID       int    `json:"id"`
 	URLKey   string `json:"url_key"`
+	URLPath  string `json:"url_path"`
 	Position int    `json:"position"`
 }
 
