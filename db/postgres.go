@@ -126,6 +126,8 @@ func (client *PostgresClient) OpenConnection() (*DBClient, error) {
 		return nil, err
 	}
 
+	sql.SetMaxIdleConns(5)
+	sql.SetConnMaxIdleTime(30 * time.Minute)
 	sql.SetMaxOpenConns(20)
 
 	return &DBClient{
