@@ -1,7 +1,6 @@
 package base
 
 import (
-	"encoding/json"
 	"time"
 
 	"gorm.io/datatypes"
@@ -319,8 +318,8 @@ type SolutionProduct struct {
 }
 
 type JSONConfigData struct {
-	ChildProducts   json.RawMessage `json:"ChildProducts"`
-	SuperAttributes json.RawMessage `json:"SuperAttributes"`
+	ChildProducts   *string `json:"ChildProducts"`   // stringifies json.RawMessage
+	SuperAttributes *string `json:"SuperAttributes"` // stringifies json.RawMessage
 }
 
 // TableName overrides the table name for ProductModel
