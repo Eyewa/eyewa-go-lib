@@ -126,6 +126,9 @@ type SimpleVariant struct {
 	TypeID              string                     `json:"type_id"`
 	SKU                 string                     `json:"sku"`
 	Name                string                     `json:"name"`
+	SmallImage          ProductImage               `json:"small_image"`
+	ThumbnailImage      ProductImage               `json:"thumbnail_image"`
+	Image               ProductImage               `json:"image"`
 	StockStatus         string                     `json:"stock_status"`
 	URLKey              string                     `json:"url_key"`
 	SpecialPrice        *float64                   `json:"special_price"`
@@ -318,8 +321,8 @@ type SolutionProduct struct {
 }
 
 type JSONConfigData struct {
-	ChildProducts   *string `json:"ChildProducts"`   // stringifies json.RawMessage
-	SuperAttributes *string `json:"SuperAttributes"` // stringifies json.RawMessage
+	ChildProducts   *string `json:"ChildProducts"`   // stringified json.RawMessage
+	SuperAttributes *string `json:"SuperAttributes"` // stringified json.RawMessage
 }
 
 // TableName overrides the table name for ProductModel
