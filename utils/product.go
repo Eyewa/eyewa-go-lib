@@ -29,7 +29,7 @@ func GenerateConfigurableProduct() base.ConfigurableProduct {
 	}
 }
 
-func GenerateJSONConfigData() base.JSONConfigData {
+func GenerateJSONConfigData(variants []base.ConfigurableSimpleProduct) base.JSONConfigData {
 	childProducts := new(string)
 	*childProducts = `[{
 		"contact_lens_size": "422",
@@ -39,7 +39,7 @@ func GenerateJSONConfigData() base.JSONConfigData {
 		"name": "أكيوفيو أوسايس هيدرا كلير بلس - عبوة من 12",
 		"price": "315.0000",
 		"qty": "0.0000",
-		"sku": "clstbiw-acu-oasy-p12-sn0375",
+		"sku": "` + variants[0].Product.SKU + `",
 		"small_image": "https://cdn.eyewa.com/195x195/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
 		"special_price": "265.0000",
 		"sphere": "2700",
@@ -56,7 +56,7 @@ func GenerateJSONConfigData() base.JSONConfigData {
 		"name": "أكيوفيو أوسايس هيدرا كلير بلس - عبوة من 12",
 		"price": "315.0000",
 		"qty": "0.0000",
-		"sku": "clstbiw-acu-oasy-p12-sn0425",
+		"sku": "` + variants[1].Product.SKU + `",
 		"small_image": "https://cdn.eyewa.com/195x195/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
 		"special_price": "265.0000",
 		"sphere": "2702",
