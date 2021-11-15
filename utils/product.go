@@ -18,14 +18,15 @@ func GenerateSimpleProduct() base.SimpleProduct {
 }
 
 func GenerateConfigurableProduct() base.ConfigurableProduct {
+	variants := []base.ConfigurableSimpleProduct{
+		GenerateConfigurableSimpleProduct(),
+		GenerateConfigurableSimpleProduct(),
+		GenerateConfigurableSimpleProduct(),
+	}
 	return base.ConfigurableProduct{
 		GeneralProduct: GenerateGeneralProduct(base.ConfigurableProductType),
-		Variants: []base.ConfigurableSimpleProduct{
-			GenerateConfigurableSimpleProduct(),
-			GenerateConfigurableSimpleProduct(),
-			GenerateConfigurableSimpleProduct(),
-		},
-		JSONConfigData: GenerateJSONConfigData(),
+		Variants:       variants,
+		JSONConfigData: GenerateJSONConfigData(variants),
 	}
 }
 
