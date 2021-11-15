@@ -31,7 +31,7 @@ func GenerateConfigurableProduct() base.ConfigurableProduct {
 
 func GenerateJSONConfigData() base.JSONConfigData {
 	childProducts := new(string)
-	*childProducts = `{
+	*childProducts = `[{
 		"contact_lens_size": "422",
 		"contact_lens_size_value": "Pack of 12 lenses",
 		"entity_id": "35628",
