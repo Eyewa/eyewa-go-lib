@@ -18,13 +18,74 @@ func GenerateSimpleProduct() base.SimpleProduct {
 }
 
 func GenerateConfigurableProduct() base.ConfigurableProduct {
+	variants := []base.ConfigurableSimpleProduct{
+		GenerateConfigurableSimpleProduct(),
+		GenerateConfigurableSimpleProduct(),
+		GenerateConfigurableSimpleProduct(),
+	}
 	return base.ConfigurableProduct{
 		GeneralProduct: GenerateGeneralProduct(base.ConfigurableProductType),
-		Variants: []base.ConfigurableSimpleProduct{
-			GenerateConfigurableSimpleProduct(),
-			GenerateConfigurableSimpleProduct(),
-			GenerateConfigurableSimpleProduct(),
+		Variants:       variants,
+		JSONConfigData: GenerateJSONConfigData(variants),
+	}
+}
+
+func GenerateJSONConfigData(variants []base.ConfigurableSimpleProduct) base.JSONConfigData {
+	childProducts := new(string)
+	*childProducts = `[{
+		"contact_lens_size": "422",
+		"contact_lens_size_value": "Pack of 12 lenses",
+		"entity_id": "35628",
+		"image": "https://cdn.eyewa.com/600x600/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
+		"name": "أكيوفيو أوسايس هيدرا كلير بلس - عبوة من 12",
+		"price": "315.0000",
+		"qty": "0.0000",
+		"sku": "` + variants[0].Product.SKU + `",
+		"small_image": "https://cdn.eyewa.com/195x195/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
+		"special_price": "265.0000",
+		"sphere": "2700",
+		"sphere_value": "-3.75",
+		"stock_status": "1",
+		"thumbnail": "https://cdn.eyewa.com/80x80/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
+		"visibility": "1"
+	  },
+	  {
+		"contact_lens_size": "422",
+		"contact_lens_size_value": "Pack of 12 lenses",
+		"entity_id": "35630",
+		"image": "https://cdn.eyewa.com/600x600/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
+		"name": "أكيوفيو أوسايس هيدرا كلير بلس - عبوة من 12",
+		"price": "315.0000",
+		"qty": "0.0000",
+		"sku": "` + variants[1].Product.SKU + `",
+		"small_image": "https://cdn.eyewa.com/195x195/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
+		"special_price": "265.0000",
+		"sphere": "2702",
+		"sphere_value": "-4.25",
+		"stock_status": "1",
+		"thumbnail": "https://cdn.eyewa.com/80x80/media/catalog/product/placeholder/default/eyewa-placeholder-555.jpg",
+		"visibility": "4"
+	  }]`
+
+	superAttributes := new(string)
+	*superAttributes = `{
+		"198": {
+		  "id": 198,
+		  "code": "contact_lens_size",
+		  "swatch": null,
+		  "label": "حجم العبوة"
 		},
+		"214": {
+		  "id": 214,
+		  "code": "sphere",
+		  "swatch": null,
+		  "label": "درجة قصر النظر"
+		}
+	  }`
+
+	return base.JSONConfigData{
+		ChildProducts:   childProducts,
+		SuperAttributes: superAttributes,
 	}
 }
 
@@ -113,7 +174,8 @@ func GenerateName() string {
 }
 
 func GenerateBrand() string {
-	var brands = []string{"30Sundays", "Artlife", "Babamio", "BlackOut",
+	brands := []string{
+		"30Sundays", "Artlife", "Babamio", "BlackOut",
 		"Calvin Klein Jeans", "Carrera", "Charlie Max", "CHPO", "Fendi",
 		"Lacoste", "Le Specs", "McQ", "MinkPink", "Mr. Wonderful",
 		"MVMT", "Polaroid", "Pride", "Quay", "Ray-Ban", "ROAV",
@@ -124,19 +186,19 @@ func GenerateBrand() string {
 }
 
 func GenerateStockStatus() string {
-	var status = []string{"IN_STOCK", "OUT_OF_STOCK"}
+	status := []string{"IN_STOCK", "OUT_OF_STOCK"}
 
 	return status[rand.Intn(len(status))]
 }
 
 func RandomType() string {
-	var types = []string{"simple", "configurable", "virtual", "downloadable"}
+	types := []string{"simple", "configurable", "virtual", "downloadable"}
 
 	return types[rand.Intn(len(types))]
 }
 
 func GenerateStoreCode() string {
-	var locale = []string{"ae-ar", "ae-en"}
+	locale := []string{"ae-ar", "ae-en"}
 
 	return locale[rand.Intn(len(locale))]
 }
