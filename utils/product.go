@@ -25,6 +25,7 @@ func GenerateConfigurableProduct() base.ConfigurableProduct {
 			GenerateConfigurableSimpleProduct(),
 			GenerateConfigurableSimpleProduct(),
 		},
+		JSONConfigData: GenerateJSONConfigData(),
 	}
 }
 
