@@ -109,7 +109,7 @@ func (client *MySQLClient) OpenConnection() (*DBClient, error) {
 	}
 
 	sql.SetMaxIdleConns(50)
-	sql.SetConnMaxIdleTime(3 * time.Minute)
+	sql.SetConnMaxIdleTime(1 * time.Hour)
 	sql.SetConnMaxLifetime(1 * time.Hour)
 	sql.SetMaxOpenConns(50)
 

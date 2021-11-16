@@ -136,6 +136,7 @@ type SimpleVariant struct {
 	SpecialToDate       *string                    `json:"special_to_date"`
 	Price               ProductPrice               `json:"price"`
 	MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
+	OptionLabels        *string                    `json:"option_labels"` // stringified OptionLabels
 }
 
 // GeneralProduct a typical definition of a product common to both configurables or simples.
