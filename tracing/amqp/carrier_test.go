@@ -9,13 +9,13 @@ import (
 func TestPublishingHeaderCarrierGet(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  HeaderCarrier
+		carrier  *HeaderCarrier
 		key      string
 		expected string
 	}{
 		{
 			name: "header exists",
-			carrier: HeaderCarrier{
+			carrier: &HeaderCarrier{
 				data: map[string]string{
 					"foo": "bar",
 				},
@@ -25,7 +25,7 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 		},
 		{
 			name:     "header does not exists",
-			carrier:  HeaderCarrier{},
+			carrier:  &HeaderCarrier{},
 			key:      "foo",
 			expected: "",
 		},
@@ -63,12 +63,12 @@ func TestPublishingCarrierSet(t *testing.T) {
 func TestPublishingHeaderCarrierKeys(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  HeaderCarrier
+		carrier  *HeaderCarrier
 		expected []string
 	}{
 		{
 			name: "one header",
-			carrier: HeaderCarrier{
+			carrier: &HeaderCarrier{
 				data: map[string]string{
 					"foo": "bar1",
 				},
@@ -77,12 +77,12 @@ func TestPublishingHeaderCarrierKeys(t *testing.T) {
 		},
 		{
 			name:     "no headers",
-			carrier:  HeaderCarrier{},
+			carrier:  &HeaderCarrier{},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: HeaderCarrier{
+			carrier: &HeaderCarrier{
 				data: map[string]string{
 					"foo":   "bar1",
 					"abc":   "test",
