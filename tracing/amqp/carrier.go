@@ -1,33 +1,29 @@
 package amqp
 
-import (
-	"fmt"
-
-	"go.opentelemetry.io/otel/propagation"
-)
-
-var _ propagation.TextMapCarrier = (*HeaderCarrier)(nil)
-
 // Get returns the value associated with the passed key.
-func (hc HeaderCarrier) Get(key string) string {
-	val := hc[key]
-	if val != nil {
-		// convert to string
-		return fmt.Sprintf("%v", val)
-	}
-	return ""
+func (c *HeaderCarrier) Get(key string) string {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.gets = append(c.gets, key)
+	return c.data[key]
 }
 
 // Set stores the key-value pair.
-func (hc HeaderCarrier) Set(key, val string) {
-	hc[key] = val
+func (c *HeaderCarrier) Set(key, value string) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.sets = append(c.sets, [2]string{key, value})
+	c.data[key] = value
 }
 
-// Keys lists the keys stored in this carrier.
-func (hc HeaderCarrier) Keys() []string {
-	keys := make([]string, 0, len(hc))
-	for k := range hc {
-		keys = append(keys, k)
+// Keys returns the keys for which this carrier has a value.
+func (c *HeaderCarrier) Keys() []string {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	result := make([]string, 0, len(c.data))
+	for k := range c.data {
+		result = append(result, k)
 	}
-	return keys
+	return result
 }

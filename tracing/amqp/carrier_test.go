@@ -16,7 +16,9 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 		{
 			name: "header exists",
 			carrier: HeaderCarrier{
-				"foo": "bar",
+				data: map[string]string{
+					"foo": "bar",
+				},
 			},
 			key:      "foo",
 			expected: "bar",
@@ -39,7 +41,9 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 
 func TestPublishingCarrierSet(t *testing.T) {
 	carrier := HeaderCarrier{
-		"foo": "bar",
+		data: map[string]string{
+			"foo": "bar",
+		},
 	}
 
 	carrier.Set("foo", "bar1")
@@ -47,11 +51,13 @@ func TestPublishingCarrierSet(t *testing.T) {
 	carrier.Set("hello", "world")
 
 	expected := HeaderCarrier{
-		"foo":   "bar1",
-		"abc":   "test",
-		"hello": "world",
+		data: map[string]string{
+			"foo":   "bar1",
+			"abc":   "test",
+			"hello": "world",
+		},
 	}
-	assert.Equal(t, carrier, expected)
+	assert.Equal(t, carrier.data, expected.data)
 }
 
 func TestPublishingHeaderCarrierKeys(t *testing.T) {
@@ -63,7 +69,9 @@ func TestPublishingHeaderCarrierKeys(t *testing.T) {
 		{
 			name: "one header",
 			carrier: HeaderCarrier{
-				"foo": "bar1",
+				data: map[string]string{
+					"foo": "bar1",
+				},
 			},
 			expected: []string{"foo"},
 		},
@@ -75,9 +83,11 @@ func TestPublishingHeaderCarrierKeys(t *testing.T) {
 		{
 			name: "multiple headers",
 			carrier: HeaderCarrier{
-				"foo":   "bar1",
-				"abc":   "test",
-				"hello": "world",
+				data: map[string]string{
+					"foo":   "bar1",
+					"abc":   "test",
+					"hello": "world",
+				},
 			},
 			expected: []string{"foo", "abc", "hello"},
 		},
