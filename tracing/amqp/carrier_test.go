@@ -9,21 +9,23 @@ import (
 func TestPublishingHeaderCarrierGet(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  HeaderCarrier
+		carrier  *HeaderCarrier
 		key      string
 		expected string
 	}{
 		{
 			name: "header exists",
-			carrier: HeaderCarrier{
-				"foo": "bar",
+			carrier: &HeaderCarrier{
+				data: map[string]string{
+					"foo": "bar",
+				},
 			},
 			key:      "foo",
 			expected: "bar",
 		},
 		{
 			name:     "header does not exists",
-			carrier:  HeaderCarrier{},
+			carrier:  &HeaderCarrier{},
 			key:      "foo",
 			expected: "",
 		},
@@ -39,7 +41,9 @@ func TestPublishingHeaderCarrierGet(t *testing.T) {
 
 func TestPublishingCarrierSet(t *testing.T) {
 	carrier := HeaderCarrier{
-		"foo": "bar",
+		data: map[string]string{
+			"foo": "bar",
+		},
 	}
 
 	carrier.Set("foo", "bar1")
@@ -47,37 +51,43 @@ func TestPublishingCarrierSet(t *testing.T) {
 	carrier.Set("hello", "world")
 
 	expected := HeaderCarrier{
-		"foo":   "bar1",
-		"abc":   "test",
-		"hello": "world",
+		data: map[string]string{
+			"foo":   "bar1",
+			"abc":   "test",
+			"hello": "world",
+		},
 	}
-	assert.Equal(t, carrier, expected)
+	assert.Equal(t, carrier.data, expected.data)
 }
 
 func TestPublishingHeaderCarrierKeys(t *testing.T) {
 	testCases := []struct {
 		name     string
-		carrier  HeaderCarrier
+		carrier  *HeaderCarrier
 		expected []string
 	}{
 		{
 			name: "one header",
-			carrier: HeaderCarrier{
-				"foo": "bar1",
+			carrier: &HeaderCarrier{
+				data: map[string]string{
+					"foo": "bar1",
+				},
 			},
 			expected: []string{"foo"},
 		},
 		{
 			name:     "no headers",
-			carrier:  HeaderCarrier{},
+			carrier:  &HeaderCarrier{},
 			expected: []string{},
 		},
 		{
 			name: "multiple headers",
-			carrier: HeaderCarrier{
-				"foo":   "bar1",
-				"abc":   "test",
-				"hello": "world",
+			carrier: &HeaderCarrier{
+				data: map[string]string{
+					"foo":   "bar1",
+					"abc":   "test",
+					"hello": "world",
+				},
 			},
 			expected: []string{"foo", "abc", "hello"},
 		},

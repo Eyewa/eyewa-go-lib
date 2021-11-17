@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/codes"
+
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/semconv"
 
@@ -211,7 +213,7 @@ func (rmq *RMQClient) Consume(queue string, callback base.MessageBrokerCallbackF
 
 			// extract context from headers, if none, the
 			// context will use the background context.
-			carrier := amqptracing.HeaderCarrier(msg.Headers)
+			carrier := amqptracing.NewHeaderCarrier(msg.Headers)
 			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
 
 			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
@@ -368,7 +370,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 
 			// extract context from headers, if none, the
 			// context will use the background context.
-			carrier := amqptracing.HeaderCarrier(msg.Headers)
+			carrier := amqptracing.NewHeaderCarrier(msg.Headers)
 			log.Debug(fmt.Sprintf("carrier before extract: %v", carrier.Keys()))
 
 			ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
@@ -402,11 +404,12 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			// nack if callback/service yields an error for whatever reason
 			if err := callback(ctx, event, nil); err != nil {
 				span.RecordError(err)
-
+				span.SetStatus(codes.Error, err.Error())
 				// nack message and remove from queue
 				if errNack := msg.Nack(false, false); errNack != nil {
 					go standardMetrics.NackFailureCounter.Add(1)
 					span.RecordError(errNack)
+					span.SetStatus(codes.Error, errNack.Error())
 					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errNack.Error())
 				}
 
@@ -414,6 +417,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				if errDL := rmq.SendToDeadletterQueue(msg, err); errDL != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
 					span.RecordError(errDL)
+					span.SetStatus(codes.Error, errDL.Error())
 					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errDL.Error())
 				}
 
@@ -428,6 +432,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 			// ack message
 			if err := msg.Ack(false); err != nil {
 				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
 				log.ErrorWithTraceID(span.SpanContext().TraceID().String(),
 					err.Error(),
 					zap.String("queue", queue),
@@ -437,6 +442,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 				if err := msg.Nack(false, true); err != nil {
 					go standardMetrics.NackFailureCounter.Add(1)
 					span.RecordError(err)
+					span.SetStatus(codes.Error, err.Error())
 					log.ErrorWithTraceID(span.SpanContext().TraceID().String(),
 						err.Error(),
 						zap.String("queue", queue),
@@ -501,7 +507,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 
 		// inject context into headers, if none, the
 		// context will use the Background context.
-		carrier := amqptracing.HeaderCarrier(msg.Headers)
+		carrier := amqptracing.NewHeaderCarrier(msg.Headers)
 
 		log.Debug("Injecting trace context into rabbitmq Table headers", zap.Any("headers", carrier.Keys()))
 		otel.GetTextMapPropagator().Inject(ctx, carrier)
@@ -597,7 +603,7 @@ func (rmq *RMQClient) PublishMagentoProductEvent(ctx context.Context, queue stri
 
 		// inject context into headers, if none, the
 		// context will use the Background context.
-		carrier := amqptracing.HeaderCarrier(msg.Headers)
+		carrier := amqptracing.NewHeaderCarrier(msg.Headers)
 
 		log.Debug("Injecting trace context into rabbitmq Table headers", zap.Any("headers", carrier.Keys()))
 		otel.GetTextMapPropagator().Inject(ctx, carrier)
