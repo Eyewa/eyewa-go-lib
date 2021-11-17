@@ -1,5 +1,7 @@
 package tracing
 
+const ProductETLInstrumentationName string = "github.com/eyewa/product-etl-service"
+
 // Config is the tracing environment configuration.
 type Config struct {
 	// Required
