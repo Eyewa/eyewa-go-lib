@@ -7,7 +7,7 @@ import (
 )
 
 type HeaderCarrier struct {
-	mtx sync.Mutex
+	mtx sync.RWMutex
 
 	gets []string
 	sets [][2]string
