@@ -175,6 +175,8 @@ type GeneralProduct struct {
 	Price               ProductPrice               `json:"price"`
 	MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
 	Image               ProductImage               `json:"image"`
+	Status              *int                       `json:"status"`
+	Visibility          *int                       `json:"visibility"`
 }
 
 // ProductCategory product category definition
