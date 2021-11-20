@@ -870,7 +870,7 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 
 func getNameForChannel(queue string) string {
 	if config.HostName != "" {
-		return config.HostName
+		return fmt.Sprintf("%s-%d", config.HostName, rand.Uint64())
 	}
 
 	if config.ServiceName == "" {
