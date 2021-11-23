@@ -40,6 +40,7 @@ func (mock *ClientMock) ConnectionListener() {
 
 func (mock *ClientMock) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	mock.Called(ctx, queue, event, callback, wg)
+	wg.Done()
 }
 
 func (mock *ClientMock) PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {

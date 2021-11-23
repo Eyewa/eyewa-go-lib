@@ -15,6 +15,7 @@ const (
 	ProductEventType                string = "Product"
 	ProductCreated                  string = "product.created"
 	ProductUpdated                  string = "product.updated"
+	ProductDeleted                  string = "product.deleted"
 	SimpleProductEventSubType       string = "product-" + string(base.SimpleProductType)
 	ConfigurableProductEventSubType string = "product-" + string(base.ConfigurableProductType)
 )
