@@ -139,6 +139,9 @@ type SimpleVariant struct {
 	OptionLabels        *string                    `json:"option_labels"` // stringified OptionLabels
 }
 
+type ProductStatus int
+type ProductVisibility int
+
 // GeneralProduct a typical definition of a product common to both configurables or simples.
 type GeneralProduct struct {
 	EntityID            int                        `json:"id"`
@@ -175,8 +178,8 @@ type GeneralProduct struct {
 	Price               ProductPrice               `json:"price"`
 	MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
 	Image               ProductImage               `json:"image"`
-	Status              *int                       `json:"status"`
-	Visibility          *int                       `json:"visibility"`
+	Status              ProductStatus              `json:"status"`
+	Visibility          ProductVisibility          `json:"visibility"`
 }
 
 // ProductCategory product category definition
