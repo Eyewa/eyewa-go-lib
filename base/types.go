@@ -25,6 +25,11 @@ type EyewaEvent struct {
 	CreatedAt string          `json:"created_at"` // time in RFC3339 format
 }
 
+type DeleteEventPayload struct {
+	EntityID  int    `json:"id"`
+	ParentIDs *[]int `json:"parent_ids"`
+}
+
 // MagentoProductEvent a representation of a product event in Magento
 type MagentoProductEvent struct {
 	ID           string  `json:"id"`               // uuid
