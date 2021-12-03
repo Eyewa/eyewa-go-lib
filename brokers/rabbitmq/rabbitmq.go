@@ -463,7 +463,7 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 }
 
 // Publish publishes a message to a queue
-func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+func (rmq *RMQClient) Publish(ctx context.Context, queue string, priority int, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	rmq.mutex.RLock()
@@ -494,6 +494,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 		msg := &amqp.Publishing{
 			ContentType:  "application/json",
 			DeliveryMode: amqp.Persistent,
+			Priority:     uint8(priority),
 		}
 
 		// set amqp message span attributes.
@@ -559,7 +560,7 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, event *base.Eye
 }
 
 // PublishMagentoEvent publishes a message to a queue
-func (rmq *RMQClient) PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
+func (rmq *RMQClient) PublishMagentoProductEvent(ctx context.Context, queue string, priority int, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	rmq.mutex.RLock()
@@ -590,6 +591,7 @@ func (rmq *RMQClient) PublishMagentoProductEvent(ctx context.Context, queue stri
 		msg := &amqp.Publishing{
 			ContentType:  "application/json",
 			DeliveryMode: amqp.Persistent,
+			Priority:     uint8(priority),
 		}
 
 		// set amqp message span attributes.
@@ -679,7 +681,7 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, e
 
 	// declare queue if exhange type is not fanout
 	if exchType != amqp.ExchangeFanout {
-		q, err := channel.QueueDeclare(queue, true, false, false, false, nil)
+		q, err := channel.QueueDeclare(queue, true, false, false, false, amqp.Table{"x-max-priority": 5})
 		if err != nil {
 			return fmt.Errorf(libErrs.ErrorQueueDeclareFailure.Error(), q.Name, err)
 		}

@@ -26,11 +26,11 @@ func (mock *RMQClientMock) Connect() error {
 	return args.Error(0)
 }
 
-func (mock *RMQClientMock) Publish(queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+func (mock *RMQClientMock) Publish(ctx context.Context, queue string, priority int, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
 	_ = mock.Called()
 }
 
-func (mock *RMQClientMock) PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
+func (mock *RMQClientMock) PublishMagentoProductEvent(ctx context.Context, queue string, priority int, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
 	_ = mock.Called()
 }
 

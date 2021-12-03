@@ -8,6 +8,14 @@ This package provides an abstraction layer for the `github.com/streadway/amqp` p
 - spinning up 1+ instances of the **catalogconsumer** service to consume messages from the **eyewacatalog** queue
 - etc
 
+The rabbitmq pkg supports declaring queues with priorities (0-5).
+
+See more info on setting priority queues in RMQ:
+
+- https://www.rabbitmq.com/priority.html
+
+- https://www.cloudamqp.com/blog/message-priority-in-rabbitmq.html
+
 
 # How to use
 The following variables should be injected in order to use this pkg
@@ -112,7 +120,7 @@ Publishing to RMQ entails creating a publisher Goroutine with a callback func. T
 
 	// publish to message broker
 	// once the wg.Done() is called from within the Publish func this Goroutine seizes to exist.
-	go broker.Client.Publish(config.Config.RabbitMQ.PublisherQueueName, event, func(event *base.EyewaEvent, err error) {
+	go broker.Client.Publish(context, config.Config.RabbitMQ.PublisherQueueName, brokers.PriorityNone, event, func(event *base.EyewaEvent, err error) {
 		log.Debug("Publishing event", zap.String("event", event.ID))
 
 		if err != nil {
@@ -149,7 +157,7 @@ A service could require both publishing and consuming capabilities. In such case
 	}
 
 	// publish to message broker
-	go broker.Client.Publish(config.Config.RabbitMQ.PublisherQueueName, event, func(event *base.EyewaEvent, err error) {
+	go broker.Client.Publish(context, config.Config.RabbitMQ.PublisherQueueName, brokers.PriorityHigh, event, func(event *base.EyewaEvent, err error) {
 		log.Debug("Publishing event", zap.String("event", event.ID))
 
 		if err != nil {

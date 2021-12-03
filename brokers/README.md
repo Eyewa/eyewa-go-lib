@@ -10,6 +10,18 @@ Clients implement exponential backoffs in the following instances:
 - on the start of a service, and a connection to the broker cannot be established.
 - during the running of a service, and the connection to the broker is lost for whatever reason.
 
+Clients should support declaring queues and publishing with priorities. The following priority levels 0-5 exists. Consumers can implement as deemed fit for each use case:
+
+| Priority     |   Level 
+| ----------- | -----------
+| 0   | None (when priority is not important)
+| 1   | Low
+| 2   | Medium
+| 3   | MediumHigh
+| 4   | High
+| 5   | Critical
+
+
 # How to use
 
 ```go
@@ -56,7 +68,7 @@ func main() {
 	}
 
 	// publish to message broker
-	go broker.Client.Publish(config.Config.RabbitMQ.PublisherQueueName, event, func(event *base.EyewaEvent, err error) {
+	go broker.Client.Publish(context, config.Config.RabbitMQ.PublisherQueueName, brokers.PriorityNone, event, func(event *base.EyewaEvent, err error) {
 		log.Debug("Publishing event", zap.String("event", event.ID))
 
 		if err != nil {
