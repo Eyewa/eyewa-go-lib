@@ -490,7 +490,6 @@ func (rmq *RMQClient) Publish(ctx context.Context, queue string, priority int, e
 	rmq.mutex.RUnlock()
 
 	if exists && channel != nil {
-
 		msg := &amqp.Publishing{
 			ContentType:  "application/json",
 			DeliveryMode: amqp.Persistent,
@@ -665,6 +664,10 @@ func (rmq *RMQClient) CloseConnection() error {
 func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, exchangeName string) error {
 	var err error
 
+	if queue == "" {
+		return libErrs.ErrorQueueNotSpecified
+	}
+
 	if channel == nil {
 		if channel, err = rmq.CreateNewChannel(queue); err != nil {
 			return err
@@ -672,7 +675,7 @@ func (rmq *RMQClient) declareQueue(channel *amqp.Channel, queue, exchangeType, e
 	}
 
 	exchType := exchangeTypes[exchangeType]
-	exchName := ""
+	var exchName string
 	if exchType == exchangeBind {
 		exchName = exchangeName
 	} else if exchType != "" {

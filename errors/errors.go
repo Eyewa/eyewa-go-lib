@@ -8,6 +8,7 @@ var (
 	// MessageBrokerClient errors
 	ErrorNoQueuesSpecified               = errors.New("No queues specified! Cannot consume/publish to any queue.")
 	ErrorNoConsumerQueueSpecified        = errors.New("No queue specified to consume from!")
+	ErrorQueueNotSpecified               = errors.New("Queue not specified. Cannot declare exchange!")
 	ErrorNoPublisherQueueSpecified       = errors.New("No queue specified to publish to!")
 	ErrorNoRMQConnection                 = errors.New("No connection to RMQ exists!")
 	ErrorChannelDoesNotExist             = errors.New("Channel does not exist!")
