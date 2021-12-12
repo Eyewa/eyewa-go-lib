@@ -26,7 +26,7 @@ type ProductModel struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeleteAt  time.Time
+	DeletedAt time.Time
 }
 
 // ProductMeta these are fields internal to the service either
