@@ -38,13 +38,13 @@ func (mock *ClientMock) ConnectionListener() {
 	mock.Called()
 }
 
-func (mock *ClientMock) Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
-	mock.Called(ctx, queue, event, callback, wg)
+func (mock *ClientMock) Publish(ctx context.Context, queue string, priority int, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup) {
+	mock.Called(ctx, queue, priority, event, callback, wg)
 	wg.Done()
 }
 
-func (mock *ClientMock) PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
-	mock.Called(ctx, queue, event, callback, wg)
+func (mock *ClientMock) PublishMagentoProductEvent(ctx context.Context, queue string, priority int, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup) {
+	mock.Called(ctx, queue, priority, event, callback, wg)
 	wg.Done()
 }
 

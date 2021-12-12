@@ -8,6 +8,16 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// Queue priorities for declaring queues and publishing
+const (
+	PriorityNone = iota
+	PriorityLow
+	PriorityMedium
+	PriorityMediumHigh
+	PriorityHigh
+	PriorityCritical
+)
+
 // ConnectFunc is the function that starts consuming from the given broker.
 type ConsumeFunc func(broker *MessageBrokerClient) error
 
@@ -61,6 +71,6 @@ type Consumer interface {
 type Publisher interface {
 	Connect() error
 	CloseConnection() error
-	Publish(ctx context.Context, queue string, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup)
-	PublishMagentoProductEvent(ctx context.Context, queue string, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup)
+	Publish(ctx context.Context, queue string, priority int, event *base.EyewaEvent, callback base.MessageBrokerCallbackFunc, wg *sync.WaitGroup)
+	PublishMagentoProductEvent(ctx context.Context, queue string, priority int, event *base.MagentoProductEvent, callback base.MessageBrokerMagentoProductCallbackFunc, wg *sync.WaitGroup)
 }
