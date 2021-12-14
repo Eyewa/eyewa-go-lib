@@ -208,3 +208,9 @@ type EyewaProductOptions struct {
 type ProductMediaAssets struct {
 	Assets json.RawMessage `json:"assets"`
 }
+
+// CMDProductEvent for cmd ops working with product related data/events
+type CMDProductEvent struct {
+	Product *ProductModel
+	Event   *MagentoProductEvent
+}
