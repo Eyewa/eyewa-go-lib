@@ -26,7 +26,7 @@ type EyewaEvent struct {
 }
 
 type DeleteEventPayload struct {
-	EntityID  int    `json:"id"`
+	EntityID  string `json:"id"`
 	ParentIDs *[]int `json:"parent_ids"`
 }
 
