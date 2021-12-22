@@ -25,9 +25,12 @@ type EyewaEvent struct {
 	CreatedAt string          `json:"created_at"` // time in RFC3339 format
 }
 
+// DeleteEventPayload used solely for publishing deleted events
+// Such deletion should take into account and delete all the
+// occurence of the simple/child for all its parents
 type DeleteEventPayload struct {
-	EntityID  string `json:"id"`
-	ParentIDs *[]int `json:"parent_ids"`
+	EntityID  int    `json:"id"`         // ID of the product in magento simple/configurable
+	ParentIDs *[]int `json:"parent_ids"` // all the parents the simple pdt is assigned to
 }
 
 // MagentoProductEvent a representation of a product event in Magento
