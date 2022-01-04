@@ -13,7 +13,6 @@ import (
 func GenerateSimpleProduct() base.SimpleProduct {
 	return base.SimpleProduct{
 		GeneralProduct: GenerateGeneralProduct(base.SimpleProductType),
-		Options:        []base.SimplesCustomOption{},
 	}
 }
 
