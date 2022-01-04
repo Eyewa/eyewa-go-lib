@@ -50,7 +50,6 @@ type ConfigurableProduct struct {
 // SimpleProduct magento's simple product definition
 type SimpleProduct struct {
 	GeneralProduct
-	Options []SimplesCustomOption `json:"options"`
 }
 
 // ConfigurableSimpleProduct definition for simples embedded in a configurable
@@ -171,6 +170,7 @@ type GeneralProduct struct {
 	MetaKeyword         string                     `json:"meta_keyword"`
 	MetaTitle           string                     `json:"meta_title"`
 	OptionLabels        *string                    `json:"option_labels"` // stringified OptionLabels
+	Options             []CustomOption             `json:"options"`
 	VirtualTryon        *int                       `json:"virtual_tryon"`
 	Categories          []ProductCategory          `json:"categories"`
 	SpecialPrice        *float64                   `json:"special_price"`
@@ -287,17 +287,17 @@ type ProductDescriptionHTML struct {
 	HTML string `json:"html"`
 }
 
-// SimplesCustomOption product options for simples
-type SimplesCustomOption struct {
-	OptionID  int                        `json:"option_id"`
-	Required  bool                       `json:"required"`
-	SortOrder int                        `json:"sort_order"`
-	Title     string                     `json:"title"`
-	Value     []SimplesCustomOptionValue `json:"value,omitempty"`
+// CustomOption product options for a product
+type CustomOption struct {
+	OptionID  int                 `json:"option_id"`
+	Required  bool                `json:"required"`
+	SortOrder int                 `json:"sort_order"`
+	Title     string              `json:"title"`
+	Value     []CustomOptionValue `json:"value,omitempty"`
 }
 
-// SimplesCustomOptionValue product option values for product options
-type SimplesCustomOptionValue struct {
+// CustomOptionValue product option values for product options
+type CustomOptionValue struct {
 	Price        float64 `json:"price"`
 	PriceType    string  `json:"price_type"`
 	SKU          *string `json:"sku"`
