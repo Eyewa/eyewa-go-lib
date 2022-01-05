@@ -135,6 +135,7 @@ func GenerateGeneralProduct(productType base.EyewaProductType) base.GeneralProdu
 		SpecialToDate:       ConvertStringToPointer("N/A"),
 		Price:               GeneratePrice(),
 		MediaGalleryEntries: []base.ProductMediaGalleryEntry{},
+		Options:             []base.CustomOption{},
 		Image:               image,
 	}
 }
