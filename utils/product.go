@@ -155,6 +155,7 @@ func GenerateConfigurableSimpleProduct() base.ConfigurableSimpleProduct {
 			SpecialFromDate: ConvertStringToPointer("N/A"),
 			SpecialToDate:   ConvertStringToPointer("N/A"),
 			Price:           GeneratePrice(),
+			Visibility:      3,
 		},
 	}
 }
