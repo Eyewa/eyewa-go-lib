@@ -137,6 +137,8 @@ type SimpleVariant struct {
 	MediaGalleryEntries []ProductMediaGalleryEntry `json:"media_gallery_entries"`
 	OptionLabels        *string                    `json:"option_labels"` // stringified OptionLabels
 	Categories          []ProductCategory          `json:"categories"`
+	Status              ProductStatus              `json:"status"`
+	Visibility          ProductVisibility          `json:"visibility"`
 }
 
 type ProductStatus int
