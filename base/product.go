@@ -38,6 +38,9 @@ type ProductMeta struct {
 	EntityID        int    `gorm:"index:uix_pdt_store_entity, unique"`
 	TypeID          string
 	ParentEntityIDs *datatypes.JSON // if simple, list of configurables it is assigned to
+
+	Status     ProductStatus     `gorm:"index:indx_pdt_status"`
+	Visibility ProductVisibility `gorm:"index:indx_pdt_visibility"`
 }
 
 // ConfigurableProduct magento's configurable product definition
