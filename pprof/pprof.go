@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func init() {
+func Init() {
 	if os.Getenv("ENV") == "dev" {
 		// initiate pprof
 		go func() {
