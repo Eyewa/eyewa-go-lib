@@ -12,6 +12,8 @@ Shared Go Lib for Eyewa's microservices
   - Generate  uuids in UUID.v4 format
   - Exposing profiling endpoint using pprof
   - Database drivers
+  - Slack Client
+
 # How to use
 This is a private repository, so in order to include it in a microservice or application the following steps need to be carried out:
 

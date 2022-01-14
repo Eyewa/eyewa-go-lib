@@ -12,6 +12,7 @@ require (
 	github.com/onsi/gomega v1.14.0
 	github.com/ory/viper v1.7.5
 	github.com/prometheus/common v0.29.0
+	github.com/slack-go/slack v0.10.1
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0
