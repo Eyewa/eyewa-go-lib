@@ -3,13 +3,15 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/eyewa/eyewa-go-lib/utils"
 	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/eyewa/eyewa-go-lib/utils"
 
 	"go.opentelemetry.io/otel/codes"
 
@@ -648,6 +650,78 @@ func (rmq *RMQClient) PublishMagentoProductEvent(ctx context.Context, queue stri
 	}
 }
 
+// PublishEvent publishes a message to a queue base on priority
+// This is a convenient func for publishing any event structure to a queue specified
+// by a given client. It also doesn't rely on callbacks in comparison to its counterparts
+// ie. Publish & PublishMagentoProductEvent. Clients choose to handle publishing errors.
+func (rmq *RMQClient) PublishEvent(ctx context.Context, queue string, priority int, event *[]byte, wg *sync.WaitGroup) error {
+	defer wg.Done()
+
+	if event == nil {
+		return errors.New("Event is empty!")
+	}
+
+	rmq.mutex.RLock()
+	channel, exists := rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	// determine if channel exists for queue
+	if !exists && channel == nil {
+		channel, err := rmq.CreateNewChannel(config.PublisherQueueName)
+		if err != nil {
+			return err
+		}
+
+		errQ := rmq.declareQueue(channel, queue, "direct", queue)
+		if errQ != nil {
+			return err
+		}
+	}
+
+	rmq.mutex.RLock()
+	channel, exists = rmq.channels[queue]
+	rmq.mutex.RUnlock()
+
+	if exists && channel != nil {
+		msg := &amqp.Publishing{
+			ContentType:  "application/json",
+			DeliveryMode: amqp.Persistent,
+			Priority:     uint8(priority),
+		}
+
+		// set amqp message span attributes.
+		spanOpts := []trace.SpanOption{
+			trace.WithAttributes(
+				semconv.MessagingSystemKey.String(strings.ToUpper(config.MessageBroker)),
+				semconv.MessagingDestinationKindKeyQueue,
+				semconv.MessagingRabbitMQRoutingKeyKey.String(queue)),
+			trace.WithSpanKind(trace.SpanKindProducer),
+		}
+
+		// inject context into headers, if none, the
+		// context will use the Background context.
+		carrier := amqptracing.NewHeaderCarrier(msg.Headers)
+
+		log.Debug("Injecting trace context into rabbitmq Table headers", zap.Any("headers", carrier.Keys()))
+		otel.GetTextMapPropagator().Inject(ctx, carrier)
+
+		// start the span and and receive a new ctx containing the parent
+		_, span := otel.Tracer(tracerName).Start(ctx, "RabbitMQ.PublishEvent", spanOpts...)
+		defer span.End()
+
+		msg.Body = *event
+
+		// attempt to publish event
+		err := channel.Publish("", queue, false, false, *msg)
+		if err != nil {
+			span.RecordError(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 // CloseConnection closes a connection as well as any
 // underlying channels associated to it.
 func (rmq *RMQClient) CloseConnection() error {
@@ -843,12 +917,14 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 	if err != nil {
 		return err
 	}
+
 	event.Errors = []base.Error{
 		{
 			ErrorMessage: eventErr.Error(),
 			CreatedAt:    utils.NowRFC3339(),
 		},
 	}
+
 	errJSON, err := json.Marshal(event)
 	if err != nil {
 		return err
