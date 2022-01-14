@@ -842,12 +842,15 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 			ErrorMessage: eventErr.Error(),
 		},
 	}
-	// define error
-	eyewaEventErr := base.EyewaEvent{
-		Payload:   msg.Body,
-		Errors:    errMsg,
-		CreatedAt: time.Now().Format(time.RFC3339),
+
+	var eyewaEventErr *base.EyewaEvent
+
+	err := json.Unmarshal(msg.Body, &eyewaEventErr)
+	if err != nil {
+		return err
 	}
+
+	eyewaEventErr.Errors = errMsg
 
 	errJSON, err := json.Marshal(eyewaEventErr)
 	if err != nil {
