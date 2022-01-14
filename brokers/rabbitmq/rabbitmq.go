@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/eyewa/eyewa-go-lib/utils"
 	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/eyewa/eyewa-go-lib/utils"
 
 	"go.opentelemetry.io/otel/codes"
 
@@ -916,12 +917,14 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 	if err != nil {
 		return err
 	}
+
 	event.Errors = []base.Error{
 		{
 			ErrorMessage: eventErr.Error(),
 			CreatedAt:    utils.NowRFC3339(),
 		},
 	}
+
 	errJSON, err := json.Marshal(event)
 	if err != nil {
 		return err
