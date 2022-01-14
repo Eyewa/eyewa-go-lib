@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/eyewa/eyewa-go-lib/utils"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -837,14 +838,18 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 		}
 	}
 
-	// define error
-	eyewaEventErr := base.EyewaEventError{
-		Event:        string(msg.Body),
-		ErrorMessage: eventErr.Error(),
-		CreatedAt:    time.Now().Format(time.RFC3339),
+	var event *base.EyewaEvent
+	err := json.Unmarshal(msg.Body, &event)
+	if err != nil {
+		return err
 	}
-
-	errJSON, err := json.Marshal(eyewaEventErr)
+	event.Errors = []base.Error{
+		{
+			ErrorMessage: eventErr.Error(),
+			CreatedAt:    utils.NowRFC3339(),
+		},
+	}
+	errJSON, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
