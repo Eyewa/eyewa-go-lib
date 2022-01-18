@@ -365,6 +365,6 @@ func (ProductModel) TableName() string {
 }
 
 // TableName overrides the table name for VariantModel
-func (ProductModel) TableName() string {
+func (VariantModel) TableName() string {
 	return "variants"
 }
