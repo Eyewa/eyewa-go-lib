@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	logger    *zap.Logger
-	logLevels map[string]zapcore.Level
+	logger      *zap.Logger
+	logLevels   map[string]zapcore.Level
+	slackLogger *slackLogHook
 )
 
 func init() {
@@ -21,6 +22,7 @@ func init() {
 		"fatal": zap.FatalLevel,
 		"error": zap.ErrorLevel,
 	}
+	slackLogger = GetWebhook()
 }
 
 // SetLogLevel sets the log level detected from the env - LOG_LEVEL
@@ -110,6 +112,7 @@ func ErrorWithTraceID(traceID, message string, fields ...zap.Field) {
 // Error log entryat error level
 func Error(message string, fields ...zap.Field) {
 	logger.Error(message, fields...)
+	go slackLogger.Log(message, fields...)
 }
 
 // FatalWithTraceID log fatal entry with a trace id

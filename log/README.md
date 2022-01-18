@@ -6,6 +6,13 @@ This package provides an abstraction layer for Uber's Zap logger pkg under the h
 
 For each log level supported, there are equivalent log funcs for tracing capabilities if and when required.
 
+# Slack web hook integration
+Set below settings
+```dotenv
+LOG_ENABLE_SLACK=true
+SLACK_WEBHOOK_URL=YOUR_SLACK_WEBHOOK_URL
+```
+
 # How to use
 
 ```go
