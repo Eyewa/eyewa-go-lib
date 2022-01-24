@@ -58,6 +58,7 @@ type VariantModel struct {
 // VariantMeta is a meta data for a variant of a configurable product
 type VariantMeta struct {
 	ID              uint   `gorm:"primaryKey" json:"-"`
+	ParentEntityID  int    `gorm:"index:uix_vnt_store_entity, unique"`
 	VariantEntityID int    `gorm:"index:uix_vnt_store_entity, unique"`
 	StoreID         int    `gorm:"index:uix_vnt_store_entity, unique"`
 	StoreCode       string `gorm:"index:uix_vnt_store_entity, unique"`
