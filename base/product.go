@@ -72,14 +72,6 @@ type ConfigurableProduct struct {
 	JSONConfigData JSONConfigData              `json:"jsonConfigData"`
 }
 
-// ConfigurableProductForAPI magento's configurable product definition
-// It keeps just id of variants
-type ConfigurableProductForAPI struct {
-	GeneralProduct
-	Variants       []ConfigurableSimpleProductForAPI `json:"variants"`
-	JSONConfigData JSONConfigData                    `json:"jsonConfigData"`
-}
-
 // SimpleProduct magento's simple product definition
 type SimpleProduct struct {
 	GeneralProduct
@@ -143,11 +135,6 @@ type SimpleProduct struct {
 type ConfigurableSimpleProduct struct {
 	Attributes []ConfigurableVariantAttribute `json:"attributes"`
 	Product    SimpleVariant                  `json:"product"`
-}
-
-type ConfigurableSimpleProductForAPI struct {
-	Attributes []ConfigurableVariantAttribute `json:"attributes"`
-	Product    int                            `json:"product_id"`
 }
 
 // ConfigurableVariantAttribute attributes data for configurable variants
