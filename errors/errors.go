@@ -42,4 +42,5 @@ var (
 	ErrorNoDBDriverSpecified          = errors.New("No DB driver specified.")
 	ErrorUnsupportedDBDriverSpecified = errors.New("Unsupported DB driver specified.")
 	ErrorNoDBClientFound              = errors.New("Failed to close connection. No db client found.")
+	ErrorReadOnlyInstance             = errors.New("Error 1290: The MySQL server is running with the --read-only option so it cannot execute this statement")
 )
