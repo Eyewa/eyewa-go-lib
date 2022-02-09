@@ -416,6 +416,10 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 					log.ErrorWithTraceID(span.SpanContext().TraceID().String(), errNack.Error())
 				}
 
+				// set this header to be sure that base.MagentoProductEvent
+				// will be sent to the dead letter queue instead of base.EyewaEvent
+				msg.Headers["x-type-of-event"] = "magento"
+
 				// publish message to DL
 				if errDL := rmq.SendToDeadletterQueue(msg, err); errDL != nil {
 					go standardMetrics.DeadletterPublishFailureCounter.Add(1)
@@ -912,22 +916,46 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 		}
 	}
 
-	var event *base.EyewaEvent
-	err := json.Unmarshal(msg.Body, &event)
-	if err != nil {
-		return err
-	}
+	var (
+		eventData []byte
+		err       error
+	)
 
-	event.Errors = []base.Error{
-		{
-			ErrorMessage: eventErr.Error(),
-			CreatedAt:    utils.NowRFC3339(),
-		},
-	}
+	if msg.Headers["x-type-of-event"] == "magento" {
+		var mgntEvent *base.MagentoProductEvent
+		err = json.Unmarshal(msg.Body, &mgntEvent)
+		if err != nil {
+			return err
+		}
 
-	errJSON, err := json.Marshal(event)
-	if err != nil {
-		return err
+		mgntEvent.Errors = []base.Error{
+			{
+				ErrorMessage: eventErr.Error(),
+				CreatedAt:    utils.NowRFC3339(),
+			},
+		}
+		eventData, err = json.Marshal(mgntEvent)
+		if err != nil {
+			return err
+		}
+	} else {
+		var event *base.EyewaEvent
+		err = json.Unmarshal(msg.Body, &event)
+		if err != nil {
+			return err
+		}
+
+		event.Errors = []base.Error{
+			{
+				ErrorMessage: eventErr.Error(),
+				CreatedAt:    utils.NowRFC3339(),
+			},
+		}
+
+		eventData, err = json.Marshal(event)
+		if err != nil {
+			return err
+		}
 	}
 
 	rmq.mutex.RLock()
@@ -939,12 +967,12 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 		err = channel.Publish("", deadletterQ, false, false,
 			amqp.Publishing{
 				ContentType:  "application/json",
-				Body:         errJSON,
+				Body:         eventData,
 				DeliveryMode: amqp.Persistent,
 			})
 		if err != nil {
 			log.Error(libErrs.ErrorFailedToPublishToDeadletter.Error(),
-				zap.String("event", string(errJSON)),
+				zap.String("event", string(eventData)),
 				zap.String("deadletter_queue", deadletterQ), zap.Error(err))
 
 			return err
