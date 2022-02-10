@@ -43,7 +43,29 @@ type ProductMeta struct {
 	Visibility ProductVisibility `gorm:"index:indx_pdt_visibility"`
 }
 
+// VariantModel represents a variant of a configurable product
+type VariantModel struct {
+	VariantMeta
+
+	// The data contained here is a Variant Product marshalled as a JSON blob
+	Data datatypes.JSON `json:"data"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+}
+
+// VariantMeta is a meta data for a variant of a configurable product
+type VariantMeta struct {
+	ID              uint   `gorm:"primaryKey" json:"-"`
+	ParentEntityID  int    `gorm:"index:uix_vnt_store_entity, unique"`
+	VariantEntityID int    `gorm:"index:uix_vnt_store_entity, unique"`
+	StoreID         int    `gorm:"index:uix_vnt_store_entity, unique"`
+	StoreCode       string `gorm:"index:uix_vnt_store_entity, unique"`
+}
+
 // ConfigurableProduct magento's configurable product definition
+// It keeps variants with data
 type ConfigurableProduct struct {
 	GeneralProduct
 	Variants       []ConfigurableSimpleProduct `json:"variants"`
@@ -144,8 +166,10 @@ type SimpleVariant struct {
 	Visibility          ProductVisibility          `json:"visibility"`
 }
 
-type ProductStatus int
-type ProductVisibility int
+type (
+	ProductStatus     int
+	ProductVisibility int
+)
 
 // GeneralProduct a typical definition of a product common to both configurables or simples.
 type GeneralProduct struct {
@@ -340,4 +364,9 @@ type JSONConfigData struct {
 // TableName overrides the table name for ProductModel
 func (ProductModel) TableName() string {
 	return "products"
+}
+
+// TableName overrides the table name for VariantModel
+func (VariantModel) TableName() string {
+	return "variants"
 }
