@@ -921,7 +921,7 @@ func (rmq *RMQClient) SendToDeadletterQueue(msg amqp.Delivery, eventErr error) e
 		err       error
 	)
 
-	if msg.Headers["x-type-of-event"] == "magento" {
+	if v, ok := msg.Headers["x-type-of-event"]; ok && v == "magento" {
 		var mgntEvent *base.MagentoProductEvent
 		err = json.Unmarshal(msg.Body, &mgntEvent)
 		if err != nil {
