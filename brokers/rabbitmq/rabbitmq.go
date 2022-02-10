@@ -418,6 +418,9 @@ func (rmq *RMQClient) ConsumeMagentoProductEvents(queue string, callback base.Me
 
 				// set this header to be sure that base.MagentoProductEvent
 				// will be sent to the dead letter queue instead of base.EyewaEvent
+				if msg.Headers == nil {
+					msg.Headers = make(amqp.Table)
+				}
 				msg.Headers["x-type-of-event"] = "magento"
 
 				// publish message to DL
