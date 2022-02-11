@@ -8,6 +8,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	libErrs "github.com/eyewa/eyewa-go-lib/errors"
 )
 
 func (client *MySQLClient) migrateDB() error {
@@ -27,7 +29,7 @@ func (client *MySQLClient) migrateDB() error {
 
 	// check if db exists (if not create it)
 	rs := db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s`;", client.Name))
-	if rs.Error != nil {
+	if rs.Error != nil && rs.Error.Error() != libErrs.ErrorReadOnlyInstance.Error() {
 		return rs.Error
 	}
 
