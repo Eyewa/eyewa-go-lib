@@ -19,19 +19,22 @@ func (c *client) WithAuth() *client {
 	return c
 }
 
-func (c *client) GetURLWithPath(path string) (string, error) {
+func (c *client) GetURL(path, query string) (string, error) {
 	reqUrl, err := url.Parse(c.baseUrl)
 	if err != nil {
 		return "", err
 	}
 
 	reqUrl.Path = path
+	if query != "" {
+		reqUrl.RawQuery = query
+	}
 
 	return reqUrl.String(), nil
 }
 
-func (c *client) Get(path string) (*http.Response, error) {
-	reqUrl, err := c.GetURLWithPath(path)
+func (c *client) Get(path, query string) (*http.Response, error) {
+	reqUrl, err := c.GetURL(path, query)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +47,8 @@ func (c *client) Get(path string) (*http.Response, error) {
 	return c.Do(req)
 }
 
-func (c *client) Post(path string, body interface{}) (*http.Response, error) {
-	reqUrl, err := c.GetURLWithPath(path)
+func (c *client) Post(path, query string, body interface{}) (*http.Response, error) {
+	reqUrl, err := c.GetURL(path, query)
 	if err != nil {
 		return nil, err
 	}
